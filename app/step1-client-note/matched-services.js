@@ -1,6 +1,6 @@
 /* ReintegrAIt Step 2: Matched services (storyboard Step 2 and the first part of Step 3).
    Loaded after the main script in index.html and uses its helpers: Store, SIM, state, app, go, render,
-   logEvent, toast, esc, fmt, parseDate, iso, TODAY, TODAY_ISO, clients, mock, secs.
+   logEvent, toast, esc, fmt, parseDate, iso, TODAY, TODAY_ISO, clients, mockbar, secs.
    - Matches, drafts and provider replies come from SIM.matched_services (simulated_responses.json).
    - Eligibility checks (✓ ✗ ?) and the ranking are simple rules in this file.
    - Referrals, case file entries and reminders are saved as Referral, Interaction and Goal records.
@@ -143,7 +143,7 @@ function renderServices() {
   if (B.fresh) { B.fresh = false; logEvent(c.name, "Needs board opened", `${needs.length} needs · ${open} open`); }
   if (!needs.find(n => n.rec.Id === B.open)) B.open = (needs.find(n => n.status !== "handled") || needs[0] || {}).rec?.Id || null;
   const need = needs.find(n => n.rec.Id === B.open);
-  app.innerHTML = mock + `
+  app.innerHTML = mockbar() + `
   <div class="ms-head"><div><p class="small muted">Case file · ${esc(c.age)} · ${esc(c.locality)}</p><h1 id="ms-name">${esc(c.name)}</h1></div>
    <p id="ms-count"><b>${open} of ${needs.length}</b> needs still open</p></div>
   <div class="ms-tabs" role="tablist" aria-label="Case file sections">

@@ -1,0 +1,144 @@
+# Connect the prototype to a real AI model
+
+This folder holds a small helper program that runs on your own laptop. With it, the Step 1 prototype sends the voice recording you upload to a real speech-to-text model (Whisper on Hugging Face) instead of showing the sample transcript.
+
+**What is real and what is still simulated**
+
+| Part of Step 1 | Where it comes from |
+| --- | --- |
+| Turning the recording into text, with time stamps | **Real model** (set in `ai-config.json`) |
+| The drafted client note, flags, next steps | Still `simulated_responses.json` |
+| Step 2 matched services | Still `simulated_responses.json` |
+
+So after a real run you will see the real transcript on the left, and the sample note for Andre on the right.
+
+## What you need
+
+- A Mac or Windows laptop with **Python 3.9 or newer**. Macs usually have it. To check, open Terminal and type `python3 --version`. If it says "command not found", install it from [python.org/downloads](https://www.python.org/downloads/).
+- A free **Hugging Face account** and your own key (step 2 below). The free monthly credit covers a class prototype. Each transcription of a short recording costs a fraction of a cent.
+- Nothing else. The helper uses only what comes with Python, so there is nothing to install.
+
+## Step-by-step setup (about 10 minutes)
+
+### 1. Get the project onto your laptop
+
+On the GitHub page for the project, click the green **Code** button, then **Download ZIP**. Unzip it. (If you use git: `git clone` the repository instead.)
+
+### 2. Create your own Hugging Face key
+
+1. Sign in at [huggingface.co](https://huggingface.co).
+2. Go to [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) and click **Create new token**.
+3. Choose **Fine-grained**. Give it a name, such as `reintegrait-prototype`.
+4. Under **Inference**, tick **Make calls to Inference Providers**. Leave everything else unticked.
+5. Click **Create token** and copy the key. It starts with `hf_`. Hugging Face shows it only once.
+
+Use your own key. Never send it to teammates, never paste it into chat, and never put it in any file other than `.env`.
+
+### 3. Put your key in a `.env` file
+
+1. Open the folder `app/step1-client-note/backend`.
+2. Make a copy of `.env.example` and name the copy `.env` (dot first, nothing after `env`).
+   - On a Mac, Finder hides files that start with a dot. Press **Command + Shift + .** to show them. Or in Terminal, from the `step1-client-note` folder: `cp backend/.env.example backend/.env` then `open -e backend/.env`.
+3. In `.env`, paste your key right after `HF_TOKEN=` with no spaces, so the line looks like `HF_TOKEN=hf_yourkeyhere`. Save.
+
+Git is told to ignore `.env` (see `backend/.gitignore`), so it never gets uploaded. The helper also refuses to show anything in the `backend` folder to a browser.
+
+### 4. Start the helper
+
+Open Terminal (Mac) or Command Prompt (Windows). Go to the prototype folder and start the helper:
+
+```
+cd path/to/reintegrait/app/step1-client-note
+python3 backend/server.py
+```
+
+Tip: type `cd ` with a space, then drag the `step1-client-note` folder into the Terminal window to fill in the path. On Windows, type `python` instead of `python3` if `python3` is not found.
+
+You should see:
+
+```
+ReintegrAIt prototype helper
+  Open:     http://localhost:8000
+  AI mode:  real  (hf-inference · openai/whisper-large-v3)
+  Key:      found in backend/.env
+  Log file: backend/logs/ai-log.jsonl
+  Stop:     press Control + C
+```
+
+If it says **Key: NOT FOUND**, go back to step 3. Leave this window open while you test.
+
+### 5. Try it
+
+1. Open [http://localhost:8000](http://localhost:8000) in your browser. The grey bar at the top should say **Voice to text uses the real model openai/whisper-large-v3** and show a button **AI: Real · switch**.
+2. Click **New client**, then drop in a real recording (MP3, M4A, WAV or AAC). The **Use the sample recording** button always stays simulated, because there is no real audio behind it.
+3. Click **Process with AI**. The step **Turn voice into text** waits for the real model. A short clip takes a few seconds. The first call of the day can take up to a minute while Hugging Face wakes the model.
+4. Click **Review the note**. The transcript now has a green **Real AI** tag. The Terminal window prints one line, such as `✓ openai/whisper-large-v3 transcribed andre-intake.m4a in 6.2 s`.
+
+If anything goes wrong (wrong key, no credits, no internet), the prototype says so in that step, falls back to the sample transcript, and writes the error to the log. Nothing breaks.
+
+## Switching between real and simulated
+
+- **In the prototype:** click **AI: Real · switch** in the grey bar. It flips between Real and Simulated for this browser tab.
+- **For everyone who runs your copy:** open `backend/ai-config.json` and set `"mode"` to `"simulated"` or `"real"`. Reload the page.
+- **Without the helper:** run `python3 -m http.server 8000` instead. The prototype then works exactly as before, fully simulated.
+
+## Switching models in class
+
+All AI calls go through one function, `transcribe()` in `backend/ai_client.py`. You never need to edit it to change models. Edit `backend/ai-config.json` instead:
+
+```json
+"provider": "hf-inference",
+"model": "openai/whisper-large-v3",
+```
+
+The helper rereads this file on every request, so no restart is needed. Examples to try:
+
+| Try | provider | model |
+| --- | --- | --- |
+| Faster, cheaper Whisper | `hf-inference` | `openai/whisper-large-v3-turbo` |
+
+To see which providers host a model, open the model's page on Hugging Face and look at **Inference Providers** on the right. The helper is built for the `hf-inference` provider. Other providers (such as fal-ai) use a different address and request shape, so they need a small change in `ai_client.py`. If a provider refuses, the error appears in the prototype and in the log.
+
+`"instructions"` holds the settings sent with each recording. `"return_timestamps": true` asks the model for time-stamped pieces. Remove it to get one block of text.
+
+## The test log
+
+Every AI request adds one line to `backend/logs/ai-log.jsonl`. Open it in any text editor (TextEdit, Notepad, VS Code). Each line is one event. The newest is at the bottom.
+
+**An AI request** (`"type": "ai_request"`) records:
+
+- `input`: file name, type, size and length of the recording. The audio itself is not copied into the log.
+- `request`: the address called, provider, model, and the instructions sent (for example `return_timestamps`).
+- `output`: the full transcript and each time-stamped piece.
+- `confidence`: Whisper does not return a confidence score, so this says `"not provided by this model"`. If you switch to a model that does, its score appears here.
+- `error`: `null` when it worked. Otherwise the plain-language message and Hugging Face's own error text.
+- `seconds` and `attempts`: how long the model took, and whether a second try was needed.
+
+**Review clicks** (`"type": "activity"`): every click the prototype already tracks in its Activity panel also lands here, with the client name and details. That covers uploads, flag fixes, field edits, need and step changes, suggestions accepted or declined, the review box, note approvals, update changes accepted or removed, Step 2 referrals, and the Real/Simulated switch.
+
+This is not an agent. It makes one call per recording, so there are no tool steps to record.
+
+To start a fresh log, stop the helper, delete `ai-log.jsonl`, and start again. The `logs` folder is never uploaded to GitHub.
+
+## Common problems
+
+| You see | What to do |
+| --- | --- |
+| `Key: NOT FOUND` | The file must be named exactly `.env` and sit in the `backend` folder. Check the line starts with `HF_TOKEN=`. |
+| "Hugging Face did not accept the key" | Copy the key again from Hugging Face. No spaces or quotes around it. |
+| "The key is missing the … Inference Providers permission" | Create a new fine-grained token with that box ticked. |
+| "out of credits" | Wait for next month's free credit or add billing at huggingface.co/settings/billing. |
+| "The model is starting up or busy" | Wait a minute and try again. |
+| `Address already in use` | Another copy is running. Close that Terminal window, or run `PORT=8001 python3 backend/server.py` and open http://localhost:8001. |
+| No **AI: Real** button in the grey bar | The page was opened without the helper. Start it as in step 4 and use http://localhost:8000. |
+
+## Files in this folder
+
+| File | What it is | Shared on GitHub? |
+| --- | --- | --- |
+| `server.py` | The helper. Shows the prototype, passes recordings to the model, writes the log. | Yes |
+| `ai_client.py` | The one function that calls the AI model. | Yes |
+| `ai-config.json` | Provider, model, instructions, and the real/simulated setting. | Yes |
+| `.env.example` | Shows teammates what to put in their own `.env`. | Yes |
+| `.env` | Your key. | **Never** |
+| `logs/ai-log.jsonl` | Your test log. | No |
