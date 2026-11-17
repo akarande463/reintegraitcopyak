@@ -1,0 +1,11 @@
+{
+  "_help": "Change these during class to switch models. The helper rereads this file on every request, so no restart is needed. mode: 'real' calls the model below, 'simulated' uses simulated_responses.json.",
+  "mode": "real",
+  "provider": "hf-inference",
+  "model": "openai/whisper-large-v3",
+  "endpoint": "https://router.huggingface.co/{provider}/models/{model}",
+  "instructions": {
+    "return_timestamps": true
+  },
+  "timeout_seconds": 180
+}

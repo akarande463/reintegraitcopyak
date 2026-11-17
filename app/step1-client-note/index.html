@@ -396,7 +396,33 @@ let SIM=null;
    Shown on screen only, kept in memory for this session. No database. */
 const ACTIVITY=[];
 const clock=()=>{const t=new Date();return String(t.getHours()).padStart(2,"0")+":"+String(t.getMinutes()).padStart(2,"0")+":"+String(t.getSeconds()).padStart(2,"0")};
-function logEvent(client,event,detail){ACTIVITY.unshift({at:clock(),ts:Date.now(),client:client||"",event,detail:detail||""})}
+function logEvent(client,event,detail){ACTIVITY.unshift({at:clock(),ts:Date.now(),client:client||"",event,detail:detail||""});
+ /* With the laptop helper running, every review click also goes to backend/logs/ai-log.jsonl. */
+ if(AI.helper)fetch("api/log",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({client,event,detail})}).catch(()=>{})}
+
+/* ---------- Real AI (backend/README.md) ----------
+   With the helper running (python3 backend/server.py), a recording you upload is sent to the real
+   speech-to-text model named in backend/ai-config.json. Everything else stays simulated.
+   Without the helper, or with the switch on Simulated, the prototype works exactly as before. */
+const AI={helper:false,mode:"simulated",model:"",provider:"",key_found:false,on:false};
+function startRealTx(job,src){
+ if(!(AI.on&&src.kind==="audio"&&src.file))return;
+ job.real={status:"running",model:AI.model};
+ job.realTx=fetch("api/transcribe",{method:"POST",headers:{"Content-Type":src.file.type||"application/octet-stream","X-File-Name":src.name,"X-Audio-Duration":src.dur||""},body:src.file})
+  .then(r=>r.json()).catch(()=>({ok:false,error:"The laptop helper stopped. Restart it with python3 backend/server.py."}))
+  .then(r=>{
+   if(r.ok&&r.text){
+    const mmss=t=>t==null?"–":Math.floor(t/60)+":"+String(Math.round(t%60)).padStart(2,"0");
+    const segs=r.segments&&r.segments.length?r.segments:[{start:0,text:r.text}];
+    job.transcript=segs.map((g,i)=>({id:"rt"+(i+1),time:mmss(g.start),speaker:"Recording",text:g.text,real:true}));
+    job.real={status:"done",model:r.model,seconds:r.seconds};
+    logEvent(job.client?job.client.name:job.key_info.name.value,"Real AI transcript",`${r.model} · ${segs.length} pieces · ${r.seconds} s`);
+   }else{
+    job.real={status:"failed",error:r.error||"Unknown error"};
+    logEvent(job.client?job.client.name:job.key_info.name.value,"Real AI failed",`${job.real.error} Showing the sample transcript.`);
+   }
+  });
+}
 const secs=ms=>{const s=Math.round(ms/1000);return s<60?s+" sec":Math.floor(s/60)+" min "+(s%60)+" sec"};
 
 const state={view:"home",sel:"c1",note:null,update:null,editing:false,newIds:new Set(),filter:""};
@@ -410,14 +436,15 @@ function toast(msg){const t=document.createElement("div");t.className="toast";t.
 function render(){
  ["home","clients","activity"].forEach(v=>{const b=document.getElementById("nav-"+v);if(state.view===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
  ({home:renderHome,clients:renderClients,process:renderProcess,note:renderNote,update:renderUpdate,activity:renderActivity,services:renderServices})[state.view]();
+ app.querySelectorAll("[data-aimode]").forEach(b=>b.onclick=()=>{if(!AI.on&&!AI.key_found){toast("No key found. Add your key to backend/.env, then restart the helper.");return}AI.on=!AI.on;logEvent("","AI switch",AI.on?"Real ("+AI.model+")":"Simulated");render();toast(AI.on?"Real AI on for voice to text.":"Simulated responses on.")});
  app.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{Store.reset();state.sel="c1";state.newIds.clear();state.note=null;state.update=null;go(state.view==="clients"?"clients":"home");toast("Sample data restored.")});
 }
-const mock=`<div class="mockbar"><span class="tag sim">Prototype</span>Sample clients, saved in this browser. AI output comes from simulated_responses.json.<button class="btn ghost small" type="button" data-reset>Reset sample data</button></div>`;
+const mockbar=()=>`<div class="mockbar"><span class="tag sim">Prototype</span>Sample clients, saved in this browser. ${AI.on?`Voice to text uses the real model <b>${esc(AI.model)}</b>. Everything else comes from simulated_responses.json.`:"AI output comes from simulated_responses.json."}${AI.helper?`<button class="btn ghost small" type="button" data-aimode aria-pressed="${AI.on}" title="${AI.key_found?"":"No key found in backend/.env"}">AI: ${AI.on?"Real":"Simulated"} · switch</button>`:""}<button class="btn ghost small" type="button" data-reset>Reset sample data</button></div>`;
 
 /* ---------- Home ---------- */
 function renderHome(){
  const due=clients().filter(c=>c.reminder&&dayDiff(c.reminder.date)<=6).sort((a,b)=>a.reminder.date-b.reminder.date);
- app.innerHTML=mock+`
+ app.innerHTML=mockbar()+`
  <div class="hello"><h1>Welcome back, Denise</h1><p class="muted">Wednesday, November 11. Who are you working with?</p></div>
  <div class="choices">
   <button class="choice" id="btn-new" type="button"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="8" r="4"/><path d="M2 21c0-4 4-6 8-6s8 2 8 6"/><path d="M19 8v6M16 11h6"/></svg></span><b>New client</b><span>Upload the voice note from your first meeting. AI drafts the client note.</span></button>
@@ -440,7 +467,7 @@ function renderClients(){
  const list=CL.filter(c=>!q||[c.name,c.locality,c.status].join(" ").toLowerCase().includes(q));
  const c=CL.find(x=>x.id===state.sel)||CL[0];
  const rd=c.reminder?dayDiff(c.reminder.date):0;
- app.innerHTML=mock+`
+ app.innerHTML=mockbar()+`
  <div class="clients">
   <div class="pane">
    <h2>Clients <span class="tag info">${CL.length}</span></h2>
@@ -517,7 +544,7 @@ function openUpload(opts){
   const okExt=/\.(mp3|m4a|wav|aac)$/i.test(name);
   if(!okExt){audio=null;refresh();box.innerHTML=`<div class="flagitem" role="alert"><b><span class="ic" aria-hidden="true">⚠</span> Can't use this file</b>${esc(name)} isn't an MP3, M4A, WAV or AAC audio file. Export the recording in one of those formats, or type notes instead.</div>`;return}
   if(mb>500){audio=null;refresh();box.innerHTML=`<div class="flagitem" role="alert"><b><span class="ic" aria-hidden="true">⚠</span> File too large</b>This file is ${mb.toFixed(0)} MB. The limit is 500 MB. Split the recording or export it as M4A.</div>`;return}
-  audio={name,mb,dur:f?null:sample.duration};
+  audio={name,mb,dur:f?null:sample.duration,file:f||null};
   box.innerHTML=`<div class="file"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><div class="meta"><div class="nm">${esc(name)}</div><div class="small muted">${mb.toFixed(1)} MB · <span id="fdur">${f?"reading length…":sample.duration}</span> · <span id="fstat">Uploading…</span></div><div class="bar"><i id="fbar"></i></div></div></div>`;
   if(f){try{const a=new Audio();a.preload="metadata";a.onloadedmetadata=()=>{const el=document.getElementById("fdur");if(!el||!audio)return;if(isFinite(a.duration)){const s=Math.round(a.duration);audio.dur=(s>=3600?Math.floor(s/3600)+":"+String(Math.floor(s%3600/60)).padStart(2,"0"):Math.floor(s/60))+":"+String(s%60).padStart(2,"0");el.textContent=audio.dur;if(s>3*3600){document.getElementById("fstat").textContent="Over 3 hours. Split the recording.";audio=null;refresh()}}else el.textContent="length unknown"};a.onerror=()=>{const el=document.getElementById("fdur");if(el)el.textContent="length unknown"};a.src=URL.createObjectURL(f)}catch(e){}}
   uploading=true;refresh();let p=0;const bar=document.getElementById("fbar");
@@ -529,12 +556,13 @@ function openUpload(opts){
    const sim=clone(SIM.new_client_intake);
    state.note={...sim.note,transcript:sim.transcript,processing:sim.processing,reminder:sim.reminder,source,rv1:false,startedAt:Date.now(),edits:0,tsOpened:0};state.editing=false;
    state.note.log={meeting_type:sim.note.meeting.type,minutes:source.kind==="audio"?durToMin(source.dur):"",services:[]};
-   applyStepRules(state.note);
+   applyStepRules(state.note);startRealTx(state.note,source);
    logEvent(sim.note.key_info.name.value,"Upload",source.kind==="audio"?`Voice note ${source.name} (${source.mb.toFixed(1)} MB${source.dur?", "+source.dur:""})`:"Typed notes");
    close();startProcess("note");
   }else{
    const type=curType(), sim=simFor(type);
    state.update={client:opts.client,type,source,...sim,startedAt:Date.now()};
+   startRealTx(state.update,source);
    state.update.log={meeting_type:sim.meeting.type,minutes:source.kind==="audio"&&source.dur?durToMin(source.dur):sim.meeting.minutes,services:[...sim.service_types]};
    logEvent(opts.client.name,"Upload",`${type} · `+(source.kind==="audio"?`voice note ${source.name}`:"typed notes"));
    close();startProcess("update");
@@ -550,8 +578,8 @@ function renderProcess(){
  const job=isNew?state.note:state.update, src=job.source;
  const P=src.kind==="audio"?job.processing:{...job.processing,...SIM.typed_text_processing};
  const stages=[["quality_check","Check recording quality"],["transcription","Turn voice into text"],["missing_info_check","Look for errors and missing information"],["template_match","Match to the template"]]
-  .map(([k,t])=>{const r=P[k]||SIM.typed_text_processing[k];return{t,status:r.status,r:r.result.replace("{duration}",src.dur||"the recording")}});
- app.innerHTML=mock+`<div class="proc">
+  .map(([k,t])=>{const r=P[k]||SIM.typed_text_processing[k];return{k,t,status:r.status,r:r.result.replace("{duration}",src.dur||"the recording")}});
+ app.innerHTML=mockbar()+`<div class="proc">
   <div><h1 style="font-size:22px">${isNew?"Drafting the client note":"Reading the update for "+esc(state.update.client.name)}</h1><p class="muted small">${src.kind==="audio"?esc(src.name)+" · "+esc(src.dur||"")+" · "+src.mb.toFixed(1)+" MB":"Typed notes"}</p></div>
   <div class="pane"><ol class="stages" id="stages">${stages.map((s,i)=>`<li class="wait" data-i="${i}"><span class="dot">${i+1}</span><div><b>${s.t}</b><div class="res" hidden>${esc(s.r)}</div></div></li>`).join("")}</ol></div>
   <div class="btns"><button class="btn primary" id="seenote" type="button" hidden>Review the ${isNew?"note":"update"}</button><button class="btn" id="cancelp" type="button">Cancel</button></div>
@@ -559,7 +587,13 @@ function renderProcess(){
  const lis=[...app.querySelectorAll("#stages li")];let i=0;
  clearTimeout(procTimer);
  const step=()=>{
-  if(i>0){const s=stages[i-1],li=lis[i-1];li.className=s.status==="skip"?"skip":s.status==="flag"?"flag":"done";li.querySelector(".dot").textContent=s.status==="skip"?"–":s.status==="flag"?"!":"✓";li.querySelector(".res").hidden=false}
+  if(!lis[0].isConnected)return;
+  if(i>0&&stages[i-1].k==="transcription"&&job.real){
+   if(job.real.status==="running"){lis[i-1].querySelector("b").textContent="Turn voice into text (real model: "+job.real.model+")";job.realTx.then(step);return}
+   stages[i-1].status=job.real.status==="done"?"done":"flag";
+   stages[i-1].r=job.real.status==="done"?`Real transcript from ${job.real.model} in ${job.real.seconds} sec. The note draft is still the simulated sample.`:`Real AI failed: ${job.real.error} Showing the sample transcript instead.`;
+  }
+  if(i>0){const s=stages[i-1],li=lis[i-1];li.className=s.status==="skip"?"skip":s.status==="flag"?"flag":"done";li.querySelector(".res").textContent=s.r;li.querySelector(".dot").textContent=s.status==="skip"?"–":s.status==="flag"?"!":"✓";li.querySelector(".res").hidden=false}
   if(i<lis.length){lis[i].className="run";lis[i].querySelector(".dot").textContent="";i++;procTimer=setTimeout(step,stages[i-1].status==="skip"?400:1000)}
   else{const b=document.getElementById("seenote");b.hidden=false;b.focus()}
  };
@@ -571,7 +605,8 @@ function renderProcess(){
 /* ---------- Transcript pane ---------- */
 function txPane(lines,src){
  if(src.kind!=="audio"||!lines.length)return`<div class="pane"><h2>Your typed notes</h2><p class="small" style="white-space:pre-wrap">${esc(src.text||"No transcript in this sample.")}</p></div>`;
- return`<div class="pane"><h2>Transcript <span class="tag info">${esc(src.dur||"")}</span></h2>
+ const real=lines[0]&&lines[0].real;
+ return`<div class="pane"><h2>Transcript <span class="tag info">${esc(src.dur||"")}</span>${real?' <span class="tag ok">Real AI</span>':""}</h2>${real?`<p class="small muted" style="margin-bottom:8px">Written by the real speech-to-text model. The note fields are still the simulated sample, so their time stamps do not point here.</p>`:""}
  <div class="tx" id="tx">${lines.map(l=>`<div id="${l.id}"><span class="ts">${l.time}</span><span><span class="sp">${esc(l.speaker)}:</span>${esc(l.text).replace(/\[inaudible[^\]]*\]/,m=>`<span class="gap">⚠ ${m}</span>`)}${l.consent?`<span class="consent">✓ Consent</span>`:""}</span></div>`).join("")}</div>
  <p class="small muted" style="margin-top:8px">Tap a time stamp in the note to see where it came from.</p></div>`;
 }
@@ -622,7 +657,7 @@ function renderNote(){
    ${x.creates_reminder&&x.ticked?`<span class="tag info">Creates reminder</span>`:""}</span></li>`};
  const noneNeeded=!agreedIdx.length;
  const canSave=()=>!open&&n.rv1&&(!noneNeeded||n.noneConfirmed)&&!untyped&&n.log.minutes>0;
- app.innerHTML=mock+`
+ app.innerHTML=mockbar()+`
  <div class="notehead"><div><p class="small muted">New client · ${esc(n.template)}</p><h1>Client note: ${esc(k.name.value||"New client")}</h1></div>
   <div class="btns"><button class="btn" id="btn-edit" type="button" aria-pressed="${state.editing}">${state.editing?"Done editing":"Edit note"}</button></div></div>
  <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(f.field)}</b> Set to ${esc(f.value)}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(f.field)}</b> ${esc(f.text)}</div><div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}">`}<button class="btn" type="button" data-fix="${f.id}">Save</button></div></div>`).join("")}</div>
@@ -700,7 +735,7 @@ function syncNote(){
 /* ---------- Existing client update ---------- */
 function renderUpdate(){
  const u=state.update,c=u.client,S=u.source;
- app.innerHTML=mock+`
+ app.innerHTML=mockbar()+`
  <div class="notehead"><div><p class="small muted">${esc(c.name)} · ${esc(u.type)}</p><h1>Update to case file</h1></div>
   <div class="btns"><button class="btn" id="btn-back" type="button">Back to clients</button></div></div>
  <div class="notegrid">
@@ -756,7 +791,7 @@ function renderUpdate(){
 function renderActivity(){
  const count=e=>ACTIVITY.filter(a=>a.event===e).length;
  const approvals=ACTIVITY.filter(a=>a.event==="Note approved"||a.event==="Update approved");
- app.innerHTML=mock+`
+ app.innerHTML=mockbar()+`
  <div class="notehead"><div><h1>Activity log</h1><p class="small muted">What happened in this session, newest first. Kept on screen only and cleared on reload.</p></div></div>
  <div class="pane">
   <div class="metrics">
@@ -772,8 +807,9 @@ function renderActivity(){
 }
 
 /* ---------- Start: load the simulated AI responses ---------- */
+const helperCheck=fetch("api/status").then(r=>r.ok?r.json():null).then(j=>{if(j&&j.helper){Object.assign(AI,j);AI.on=j.mode==="real"&&j.key_found}}).catch(()=>{});
 fetch("simulated_responses.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
- .then(j=>{SIM=j;Store.load();render()})
+ .then(j=>helperCheck.then(()=>{SIM=j;Store.load();render()}))
  .catch(()=>{app.innerHTML=`<div class="pane"><h3>Couldn't load simulated_responses.json</h3><p class="small" style="margin-top:6px">Browsers block this file when the page is opened by double-click. From this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>. If the JSON was edited, check it for a missing comma or quote.</p></div>`});
 </script>
 <script src="matched-services.js"></script>
