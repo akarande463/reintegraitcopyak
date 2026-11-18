@@ -498,7 +498,7 @@ function applyDraft(n,d){
   n.key_info[k]={value:val,source:v.source_line?fix(v.source_line):null,heard_as:v.heard_as||""};
   const at=lineTime(v.source_line)?" at "+lineTime(v.source_line):"";
   if(v.status==="not said"){if(required)flags.push({id:"f-"+k,field:k,kind:"Missing",text:`${label} was not stated in the recording.`,fix:k==="gender"?"select":"input",options:gOpts,placeholder:""})}
-  else if(v.status==="partly heard"||v.comment)flags.push({id:"f-"+k,field:k,kind:"Unclear",text:v.comment?`${v.comment.replace(/\.?$/,".")}${at?" Heard"+at+".":""}`:`${label} was only partly heard${at}.`,fix:"input",placeholder:v.value||v.heard_as||""});
+  else if(v.status==="partly heard")flags.push({id:"f-"+k,field:k,kind:"Unclear",text:v.comment?`${v.comment.replace(/\.?$/,".")}${at?" Heard"+at+".":""}`:`${label} was only partly heard${at}.`,fix:"input",placeholder:v.value||v.heard_as||""});
  });
  n.flags=flags;
  n.immediate_needs=(d.immediate_needs||[]).map(x=>({priority:x.priority,text:`${x.category}: ${x.detail}`,service_type:x.service_type,source:x.source_line?fix(x.source_line):null}));
@@ -967,7 +967,7 @@ function renderActivity(){
 
 /* ---------- Start: load the simulated AI responses ---------- */
 const helperCheck=fetch("api/status").then(r=>r.ok?r.json():null).then(j=>{if(j&&j.helper){Object.assign(AI,j);AI.on=j.mode==="real"&&j.key_found}}).catch(()=>{});
-fetch("simulated_responses.json").then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
+fetch("simulated_responses.json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()})
  .then(j=>helperCheck.then(()=>{SIM=j;Store.load();render()}))
  .catch(()=>{app.innerHTML=`<div class="pane"><h3>Couldn't load simulated_responses.json</h3><p class="small" style="margin-top:6px">Browsers block this file when the page is opened by double-click. From this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>. If the JSON was edited, check it for a missing comma or quote.</p></div>`});
 </script>

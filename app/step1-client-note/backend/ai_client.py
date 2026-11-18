@@ -136,13 +136,16 @@ def note_schema(lists):
     """JSON schema the model's answer must follow. Lists come from simulated_responses.json templates."""
     def obj(props):
         return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
-    field = obj({"value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
+    # One list entry per key field (not one property per field): a schema with many fields
+    # otherwise becomes too large for the API ("compiled grammar is too large").
+    field = obj({"key": {"type": "string", "enum": [_key(k) for k in lists["key_fields"]]},
+                 "value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
                  "heard_as": {"type": "string"}, "comment": {"type": "string"}, "source_line": {"type": "string"}})
     return obj({
         "turns": {"type": "array", "items": obj({"id": {"type": "string"}, "line_id": {"type": "string"},
                                                   "speaker": {"type": "string", "enum": SPEAKERS},
                                                   "text": {"type": "string"}})},
-        "key_info": obj({_key(k): field for k in lists["key_fields"]}),
+        "key_info": {"type": "array", "items": field},
         "meeting_type": {"type": "string", "enum": lists["meeting_types"]},
         "immediate_needs": {"type": "array", "items": obj({
             "category": {"type": "string", "enum": lists["categories"]},
@@ -248,5 +251,8 @@ def draft_note(lines, lists, config, api_key):
         note = json.loads(text)
     except json.JSONDecodeError:
         raise AIError("The model's answer was not valid JSON.", None, text[:300])
+    # Turn the key field list back into {key: {...}}, the shape the prototype and the log use.
+    if isinstance(note.get("key_info"), list):
+        note["key_info"] = {f.pop("key"): f for f in note["key_info"] if isinstance(f, dict) and f.get("key")}
     return {"request": request, "note": note, "stop_reason": resp.stop_reason, "usage": usage,
             "request_id": getattr(resp, "_request_id", None), "seconds": seconds}
