@@ -116,16 +116,36 @@ FIELD_STATUS = ["heard", "partly heard", "not said"]
 SPEAKERS = ["Case manager", "Client", "Other", "Unclear"]
 
 
+def _key(f):
+    """A key field is either a plain key ("age") or {key, label, type, options} from the template."""
+    return f["key"] if isinstance(f, dict) else f
+
+
+def _describe(f):
+    if not isinstance(f, dict):
+        return f"- {f}"
+    line = f"- {f['key']}: {f.get('label', f['key'])}"
+    if f.get("type") == "date":
+        line += " (a date, written YYYY-MM-DD)"
+    if f.get("options"):
+        line += f" (one of: {', '.join(f['options'])})"
+    return line
+
+
 def note_schema(lists):
     """JSON schema the model's answer must follow. Lists come from simulated_responses.json templates."""
     def obj(props):
         return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
-    field = obj({"value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
-                 "source_line": {"type": "string"}})
+    # One list entry per key field (not one property per field): a schema with many fields
+    # otherwise becomes too large for the API ("compiled grammar is too large").
+    field = obj({"key": {"type": "string", "enum": [_key(k) for k in lists["key_fields"]]},
+                 "value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
+                 "heard_as": {"type": "string"}, "comment": {"type": "string"}, "source_line": {"type": "string"}})
     return obj({
-        "speakers": {"type": "array", "items": obj({"line_id": {"type": "string"},
-                                                     "speaker": {"type": "string", "enum": SPEAKERS}})},
-        "key_info": obj({k: field for k in lists["key_fields"]}),
+        "turns": {"type": "array", "items": obj({"id": {"type": "string"}, "line_id": {"type": "string"},
+                                                  "speaker": {"type": "string", "enum": SPEAKERS},
+                                                  "text": {"type": "string"}})},
+        "key_info": {"type": "array", "items": field},
         "meeting_type": {"type": "string", "enum": lists["meeting_types"]},
         "immediate_needs": {"type": "array", "items": obj({
             "category": {"type": "string", "enum": lists["categories"]},
@@ -141,6 +161,16 @@ def note_schema(lists):
             "addresses": {"type": "array", "items": {"type": "string", "enum": lists["categories"]}},
             "source_line": {"type": "string"}})},
     })
+
+
+def _cause_chain(e):
+    """The underlying reasons behind a connection error, e.g. a certificate or proxy problem."""
+    parts, seen = [], set()
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        parts.append(f"{type(e).__name__}: {e}")
+        e = e.__cause__ or e.__context__
+    return " <- ".join(parts)[:800]
 
 
 def draft_note(lines, lists, config, api_key):
@@ -159,7 +189,9 @@ def draft_note(lines, lists, config, api_key):
 
     instructions = (PROMPTS / "draft-note.md").read_text(encoding="utf-8")
     transcript = "\n".join(f"[{l['id']} {l['time']}] {l['text']}" for l in lines)
-    user = (f"Key fields: {', '.join(lists['key_fields'])}\n"
+    location = config.get("location", "")
+    user = ((f"The agency works in: {location}\n" if location else "") +
+            "Key fields:\n" + "\n".join(_describe(f) for f in lists["key_fields"]) + "\n"
             f"Need categories: {', '.join(lists['categories'])}\n"
             f"Service types: {', '.join(lists['service_types'])}\n\n"
             f"Transcript:\n{transcript}")
@@ -167,7 +199,10 @@ def draft_note(lines, lists, config, api_key):
     request = {"provider": "anthropic", "model": model, "effort": effort,
                "instructions": instructions, "input": user}
 
-    client = anthropic.Anthropic(api_key=api_key, timeout=float(config.get("timeout_seconds", 180)))
+    # Ask for gzip only: some Python installs (e.g. Anaconda) carry an old brotli package that
+    # breaks reading brotli-compressed answers ("unexpected keyword argument 'output_buffer_limit'").
+    client = anthropic.Anthropic(api_key=api_key, timeout=float(config.get("timeout_seconds", 180)),
+                                 default_headers={"Accept-Encoding": "gzip, deflate"})
     started = time.time()
     try:
         resp = client.beta.messages.create(
@@ -196,7 +231,14 @@ def draft_note(lines, lists, config, api_key):
     except anthropic.APIStatusError as e:
         raise AIError(f"Anthropic returned error {e.status_code}. Try again in a minute.", e.status_code, str(e)[:300])
     except anthropic.APIConnectionError as e:
-        raise AIError("Could not reach Anthropic. Check the internet connection.", None, str(e)[:300])
+        cause = _cause_chain(e)
+        msg = "Could not reach Anthropic. Check the internet connection."
+        if "CERTIFICATE_VERIFY_FAILED" in cause:
+            msg = ("Python could not check Anthropic's security certificate. On a Mac, open Finder > Applications > "
+                   "Python 3.x and double-click 'Install Certificates.command', then restart the helper.")
+        elif "timed out" in cause.lower() or "timeout" in cause.lower():
+            msg = "Anthropic took too long to answer. Try again, or raise note.timeout_seconds in ai-config.json."
+        raise AIError(msg, None, cause)
 
     seconds = round(time.time() - started, 1)
     usage = {"input_tokens": resp.usage.input_tokens, "output_tokens": resp.usage.output_tokens}
@@ -209,5 +251,8 @@ def draft_note(lines, lists, config, api_key):
         note = json.loads(text)
     except json.JSONDecodeError:
         raise AIError("The model's answer was not valid JSON.", None, text[:300])
+    # Turn the key field list back into {key: {...}}, the shape the prototype and the log use.
+    if isinstance(note.get("key_info"), list):
+        note["key_info"] = {f.pop("key"): f for f in note["key_info"] if isinstance(f, dict) and f.get("key")}
     return {"request": request, "note": note, "stop_reason": resp.stop_reason, "usage": usage,
             "request_id": getattr(resp, "_request_id", None), "seconds": seconds}

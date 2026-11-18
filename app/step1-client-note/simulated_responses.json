@@ -2,15 +2,27 @@
   "_about": "Every simulated AI response in the Step 1 prototype lives in this file. Edit the text here and reload the page. {first} is replaced with the client's first name and {duration} with the recording length. Later, replace each block with a call to a real model that returns the same shape.",
 
   "templates": {
-    "_about": "Note templates. The intake note's key fields and the list of update types come from here, so a new field or update type needs no code change.",
+    "_about": "Note templates. The intake note's key fields and the list of update types come from here, so a new field or update type needs no code change. Each key field has a group, required (an empty required field becomes a flag; other fields Denise can fill in by hand), the Client record field it is saved to (record), and optionally a type: date (saved as YYYY-MM-DD) or select with options.",
     "intake_notes": {
       "Standard intake note": {
         "key_fields": [
-          { "key": "name", "label": "Name" },
-          { "key": "age", "label": "Age" },
-          { "key": "gender", "label": "Gender" },
-          { "key": "locality", "label": "Neighborhood" },
-          { "key": "contact", "label": "Contact phone" }
+          { "key": "name", "label": "Name", "group": "Profile", "required": true, "record": "Name" },
+          { "key": "age", "label": "Age", "group": "Profile", "required": true, "record": "Age" },
+          { "key": "gender", "label": "Gender", "group": "Profile", "required": true, "record": "Gender" },
+          { "key": "locality", "label": "Neighborhood", "group": "Profile", "required": true, "record": "Locality" },
+          { "key": "contact", "label": "Contact phone", "group": "Profile", "required": true, "record": "Phone" },
+          { "key": "client_number", "label": "Client ID", "group": "Profile", "record": "ClientNumber" },
+          { "key": "birth_date", "label": "Date of birth", "group": "Profile", "record": "BirthDate", "type": "date" },
+          { "key": "household", "label": "Household", "group": "Profile", "record": "Household" },
+          { "key": "emergency_contact", "label": "Emergency contact", "group": "Profile", "record": "EmergencyContact" },
+          { "key": "release_date", "label": "Release date", "group": "Justice", "record": "ReleaseDate", "type": "date" },
+          { "key": "facility", "label": "Facility", "group": "Justice", "record": "Facility" },
+          { "key": "supervision_type", "label": "Supervision", "group": "Justice", "record": "SupervisionType", "type": "select", "options": ["Probation", "Parole", "None"] },
+          { "key": "supervision_officer", "label": "Probation or parole officer", "group": "Justice", "record": "SupervisionOfficer" },
+          { "key": "conditions", "label": "Conditions", "group": "Justice", "record": "Conditions" },
+          { "key": "referral_source", "label": "Referral source", "group": "Intake", "record": "ReferralSource" },
+          { "key": "consent_signed", "label": "Consent form signed", "group": "Intake", "record": "ConsentSigned", "type": "select", "options": ["Yes", "No"] },
+          { "key": "roi_signed", "label": "Release of information signed", "group": "Intake", "record": "RoiSigned", "type": "select", "options": ["Yes", "No"] }
         ]
       }
     },
@@ -51,7 +63,9 @@
         "age": { "value": "34", "source": "t4" },
         "gender": { "value": "", "source": null },
         "locality": { "value": "Englewood", "source": "t5" },
-        "contact": { "value": "773-555-01__", "source": "t11" }
+        "contact": { "value": "773-555-01__", "source": "t11" },
+        "release_date": { "value": "2026-11-02", "source": "t5", "heard_as": "the 2nd" },
+        "facility": { "value": "Sheridan Correctional Center", "source": "t5", "heard_as": "Sheridan" }
       },
       "immediate_needs": [
         { "priority": "Urgent", "text": "Medication: blood pressure pills ran out Saturday", "service_type": "Health", "source": "t7" },

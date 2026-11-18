@@ -27,7 +27,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS  ' : 'FAIL  ') + name); if
   await p.fill('#fx-f2', '773-551-0987'); await p.click('[data-fix="f2"]');
   check('3. A fix that changes the heard digits gets a warning', (await p.textContent('#fxe-f2')).includes('changes the part that was heard') && !!(await p.$('[data-fixforce="f2"]')));
   await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix="f2"]');
-  check('3. A matching 10-digit phone is saved and marked "Entered by Denise"', (await p.textContent('#note')).includes('Entered by Denise'));
+  check('3. A matching 10-digit phone is saved, and the resolved flag says "entered by Denise"', (await p.textContent('#flags')).includes('entered by Denise') && (await p.inputValue('#k-contact')) === '773-555-0186');
 
   // 4. Source for unstated facts
   await p.click('[data-fix="f1"]');
