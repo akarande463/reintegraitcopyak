@@ -143,6 +143,16 @@ def note_schema(lists):
     })
 
 
+def _cause_chain(e):
+    """The underlying reasons behind a connection error, e.g. a certificate or proxy problem."""
+    parts, seen = [], set()
+    while e is not None and id(e) not in seen:
+        seen.add(id(e))
+        parts.append(f"{type(e).__name__}: {e}")
+        e = e.__cause__ or e.__context__
+    return " <- ".join(parts)[:800]
+
+
 def draft_note(lines, lists, config, api_key):
     """Ask Claude to draft the intake note from a transcript.
 
@@ -196,7 +206,14 @@ def draft_note(lines, lists, config, api_key):
     except anthropic.APIStatusError as e:
         raise AIError(f"Anthropic returned error {e.status_code}. Try again in a minute.", e.status_code, str(e)[:300])
     except anthropic.APIConnectionError as e:
-        raise AIError("Could not reach Anthropic. Check the internet connection.", None, str(e)[:300])
+        cause = _cause_chain(e)
+        msg = "Could not reach Anthropic. Check the internet connection."
+        if "CERTIFICATE_VERIFY_FAILED" in cause:
+            msg = ("Python could not check Anthropic's security certificate. On a Mac, open Finder > Applications > "
+                   "Python 3.x and double-click 'Install Certificates.command', then restart the helper.")
+        elif "timed out" in cause.lower() or "timeout" in cause.lower():
+            msg = "Anthropic took too long to answer. Try again, or raise note.timeout_seconds in ai-config.json."
+        raise AIError(msg, None, cause)
 
     seconds = round(time.time() - started, 1)
     usage = {"input_tokens": resp.usage.input_tokens, "output_tokens": resp.usage.output_tokens}
