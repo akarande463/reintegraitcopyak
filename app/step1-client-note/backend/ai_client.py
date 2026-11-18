@@ -121,10 +121,11 @@ def note_schema(lists):
     def obj(props):
         return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
     field = obj({"value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
-                 "source_line": {"type": "string"}})
+                 "comment": {"type": "string"}, "source_line": {"type": "string"}})
     return obj({
-        "speakers": {"type": "array", "items": obj({"line_id": {"type": "string"},
-                                                     "speaker": {"type": "string", "enum": SPEAKERS}})},
+        "turns": {"type": "array", "items": obj({"id": {"type": "string"}, "line_id": {"type": "string"},
+                                                  "speaker": {"type": "string", "enum": SPEAKERS},
+                                                  "text": {"type": "string"}})},
         "key_info": obj({k: field for k in lists["key_fields"]}),
         "meeting_type": {"type": "string", "enum": lists["meeting_types"]},
         "immediate_needs": {"type": "array", "items": obj({

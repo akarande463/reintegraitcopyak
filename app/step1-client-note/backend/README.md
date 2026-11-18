@@ -153,7 +153,7 @@ For **voice to text**:
 For **draft note**:
 
 - `request`: model, effort, the full instructions (from `prompts/draft-note.md`), and the full input sent: the lists and every transcript line.
-- `output`: the model's whole answer: speakers, key fields, needs, next steps.
+- `output`: the model's whole answer: the transcript split into speaker turns, key fields (each with an optional comment), needs, next steps.
 - `confidence`: Claude gives no probability score. Instead, for each key field, the model labels itself `heard`, `partly heard` or `not said`. Those labels are listed here and are what turn into flags.
 - `stop_reason`, `usage` (tokens in and out), `request_id`, `seconds`, and `error`.
 

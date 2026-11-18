@@ -424,7 +424,8 @@ function startRealTx(job,src){
    if(r.ok&&r.text){
     const mmss=t=>t==null?"–":Math.floor(t/60)+":"+String(Math.round(t%60)).padStart(2,"0");
     const segs=r.segments&&r.segments.length?r.segments:[{start:0,text:r.text}];
-    job.transcript=segs.map((g,i)=>({id:"rt"+(i+1),time:mmss(g.start),speaker:"Recording",text:g.text,real:true}));
+    const total=durSec(src.dur);
+    job.transcript=segs.map((g,i)=>({id:"rt"+(i+1),time:mmss(g.start),start:g.start||0,end:g.end??(segs[i+1]?segs[i+1].start:total||null),speaker:"Recording",text:g.text,real:true}));
     job.real={status:"done",model:r.model,seconds:r.seconds};
     logEvent(job.client?job.client.name:job.key_info.name.value,"Real AI transcript",`${r.model} · ${segs.length} pieces · ${r.seconds} s`);
     if(!job.client)startRealDraft(job);
@@ -451,22 +452,46 @@ function startRealDraft(job){
   });
 }
 /* Turn the model's answer into the note the screen already knows how to show. */
+/* The note model splits each long transcript piece into speaker turns, word for word.
+   A piece whose turns do not give back its own words stays whole, so nothing is lost or invented. */
+function speakerName(role,n){
+ if(role==="Case manager")return ME;
+ if(role==="Client"){const v=(n.key_info.name||{}).value||"";return v.split(/\s+/)[0]||"Client"}
+ return role||"Unclear";
+}
+function splitTurns(n,turns){
+ const norm=t=>String(t).toLowerCase().replace(/[^a-z0-9]+/g,"");
+ const mmss=t=>Math.floor(t/60)+":"+String(Math.round(t%60)).padStart(2,"0");
+ const idMap={},out=[];
+ n.transcript.forEach(l=>{
+  const ts=turns.filter(t=>t.line_id===l.id);
+  const whole=norm(l.text),joined=norm(ts.map(t=>t.text).join(""));
+  const ok=ts.length&&whole.length&&ts.every(t=>norm(t.text)&&whole.includes(norm(t.text)))&&Math.abs(joined.length-whole.length)<=Math.max(3,whole.length*0.05);
+  if(!ok){ts.forEach(t=>idMap[t.id]=l.id);out.push({...l,speaker:ts.length===1?ts[0].speaker:"Unclear"});return}
+  let at=0;const span=l.end!=null&&l.end>l.start?l.end-l.start:0;
+  ts.forEach(t=>{const tm=l.start+span*at/whole.length;at+=norm(t.text).length;
+   out.push({id:t.id,time:mmss(tm),start:tm,speaker:t.speaker,text:t.text.trim(),real:true,est:span>0&&tm>l.start})});
+ });
+ n.transcript=out;
+ return id=>idMap[id]||id;
+}
 function applyDraft(n,d){
- const sp={};(d.speakers||[]).forEach(x=>sp[x.line_id]=x.speaker);
- n.transcript.forEach(l=>{if(sp[l.id])l.speaker=sp[l.id]});
- const lineTime=id=>{const l=n.transcript.find(x=>x.id===id);return l?l.time:""};
+ const fix=splitTurns(n,d.turns||[]);
+ const lineTime=id=>{const l=n.transcript.find(x=>x.id===fix(id));return l?(l.est?"~":"")+l.time:""};
  const gOpts=(SIM.new_client_intake.note.flags.find(f=>f.field==="gender")||{}).options||["Male","Female","Non-binary","Prefers not to say"];
  const flags=[];
  keyFields(n.template).forEach(([k,label])=>{
   const v=(d.key_info||{})[k]||{value:"",status:"not said",source_line:""};
   const val=v.status==="not said"?"":v.value;
-  n.key_info[k]={value:k==="gender"&&!gOpts.includes(val)?"":val,source:v.source_line||null};
+  n.key_info[k]={value:k==="gender"&&!gOpts.includes(val)?"":val,source:v.source_line?fix(v.source_line):null};
+  const at=lineTime(v.source_line)?" at "+lineTime(v.source_line):"";
   if(v.status==="not said")flags.push({id:"f-"+k,field:k,kind:"Missing",text:`${label} was not stated in the recording.`,fix:k==="gender"?"select":"input",options:gOpts,placeholder:""});
-  else if(v.status==="partly heard")flags.push({id:"f-"+k,field:k,kind:"Unclear",text:`${label} was only partly heard${lineTime(v.source_line)?" at "+lineTime(v.source_line):""}.`,fix:"input",placeholder:v.value});
+  else if(v.status==="partly heard"||v.comment)flags.push({id:"f-"+k,field:k,kind:"Unclear",text:v.comment?`${v.comment.replace(/\.?$/,".")}${at?" Heard"+at+".":""}`:`${label} was only partly heard${at}.`,fix:"input",placeholder:v.value});
  });
  n.flags=flags;
- n.immediate_needs=(d.immediate_needs||[]).map(x=>({priority:x.priority,text:`${x.category}: ${x.detail}`,service_type:x.service_type,source:x.source_line||null}));
- n.next_steps=(d.next_steps||[]).map(x=>({kind:x.kind,action:x.action,owner:x.owner,due:x.due,addresses:x.addresses||[],source:x.source_line||null,creates_reminder:false}));
+ n.immediate_needs=(d.immediate_needs||[]).map(x=>({priority:x.priority,text:`${x.category}: ${x.detail}`,service_type:x.service_type,source:x.source_line?fix(x.source_line):null}));
+ n.next_steps=(d.next_steps||[]).map(x=>({kind:x.kind,action:x.action,owner:x.owner,due:x.due,addresses:x.addresses||[],source:x.source_line?fix(x.source_line):null,creates_reminder:false}));
+ n.transcript.forEach(l=>l.speaker=speakerName(l.speaker,n));
  applyStepRules(n);
  if(d.meeting_type)n.log.meeting_type=d.meeting_type;
  n.drafted=true;
@@ -662,8 +687,8 @@ function renderProcess(){
 function txPane(lines,src,drafted){
  if(src.kind!=="audio"||!lines.length)return`<div class="pane"><h2>Your typed notes</h2><p class="small" style="white-space:pre-wrap">${esc(src.text||"No transcript in this sample.")}</p></div>`;
  const real=lines[0]&&lines[0].real;
- return`<div class="pane"><h2>Transcript <span class="tag info">${esc(src.dur||"")}</span>${real?' <span class="tag ok">Real AI</span>':""}</h2>${real?`<p class="small muted" style="margin-bottom:8px">Written by the real speech-to-text model.${drafted?" Speakers were labelled by the note model. Time stamps in the note point to these lines.":" The note fields are still the simulated sample, so their time stamps do not point here."}</p>`:""}
- <div class="tx" id="tx">${lines.map(l=>`<div id="${l.id}"><span class="ts">${l.time}</span><span><span class="sp">${esc(l.speaker)}:</span>${esc(l.text).replace(/\[inaudible[^\]]*\]/,m=>`<span class="gap">⚠ ${m}</span>`)}${l.consent?`<span class="consent">✓ Consent</span>`:""}</span></div>`).join("")}</div>
+ return`<div class="pane"><h2>Transcript <span class="tag info">${esc(src.dur||"")}</span>${real?' <span class="tag ok">Real AI</span>':""}</h2>${real?`<p class="small muted" style="margin-bottom:8px">Written by the real speech-to-text model.${drafted?` Split into speakers by the note model. Times marked ~ are estimated. Time stamps in the note point to these lines.`:" The note fields are still the simulated sample, so their time stamps do not point here."}</p>`:""}
+ <div class="tx" id="tx">${lines.map(l=>`<div id="${l.id}"><span class="ts">${l.est?"~":""}${l.time}</span><span><span class="sp">${esc(l.speaker)}:</span>${esc(l.text).replace(/\[inaudible[^\]]*\]/,m=>`<span class="gap">⚠ ${m}</span>`)}${l.consent?`<span class="consent">✓ Consent</span>`:""}</span></div>`).join("")}</div>
  <p class="small muted" style="margin-top:8px">Tap a time stamp in the note to see where it came from.</p></div>`;
 }
 function wireSrc(){app.querySelectorAll("[data-src]").forEach(b=>b.onclick=()=>{const el=document.getElementById(b.dataset.src);if(!el)return;
@@ -693,7 +718,6 @@ const ME="Denise";
 const SOURCES=["Asked client","From ID or documents","Not known"];
 const WHY=["Client has a plan","Already referred elsewhere","Not now, revisit next visit","Client declined"];
 const reviewText=src=>src.kind==="audio"?"I checked this note against the recording myself":"I checked this note against my notes myself";
-const byTag=f=>f&&f.by?`<span class="tag info">Entered by ${esc(f.by)}${f.how?" · "+esc(f.how):""}</span>`:"";
 /* A suggestion that is the only step for an Urgent need needs a reason if left unticked. */
 function needsWhy(n,x){if(x.kind!=="suggested"||x.ticked)return false;
  return x.addresses.some(a=>n.immediate_needs.some(y=>needCat(y.text)===a&&y.priority==="Urgent")&&!n.next_steps.some(s=>s!==x&&s.ticked&&s.addresses.includes(a)))}
@@ -719,8 +743,8 @@ function renderNote(){
  const open=n.flags.filter(f=>!f.resolved).length;
  const fld=(key,label)=>{const flagged=n.flags.some(f=>f.field===key&&!f.resolved);const mark=flagged?`<span aria-hidden="true">⚠ </span>`:"";
   if(key==="gender"){const opts=n.flags.find(f=>f.field==="gender")?.options||["Male","Female","Non-binary","Prefers not to say"];
-   return`<label class="${flagged?"flagged":""}"><span>${mark}${label}${flagged?" (to confirm)":""} ${byTag(k.gender)}</span><select id="k-gender" ${state.editing?"":"disabled"}><option value="">Not stated</option>${opts.map(o=>`<option ${k.gender.value===o?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`}
-  return`<label class="${flagged?"flagged":""}"><span>${mark}${label}${flagged?" (to confirm)":""} ${k[key].by?byTag(k[key]):srcBtn(k[key].source,L,S)}</span><input id="k-${key}" value="${esc(k[key].value)}" ${state.editing?"":"readonly"}></label>`};
+   return`<label class="${flagged?"flagged":""}"><span>${mark}${label}${flagged?" (to confirm)":""}</span><select id="k-gender" ${state.editing?"":"disabled"}><option value="">Not stated</option>${opts.map(o=>`<option ${k.gender.value===o?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`}
+  return`<label class="${flagged?"flagged":""}"><span>${mark}${label}${flagged?" (to confirm)":""} ${k[key].by?"":srcBtn(k[key].source,L,S)}</span><input id="k-${key}" value="${esc(k[key].value)}" ${state.editing?"":"readonly"}></label>`};
  const pc={Urgent:"u",Soon:"s",Later:"l"};
  const ce=state.editing?'contenteditable="true"':"";
  n.log.services=[...new Set(n.immediate_needs.map(x=>x.service_type).filter(Boolean))];
