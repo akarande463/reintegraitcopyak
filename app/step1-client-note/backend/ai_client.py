@@ -177,7 +177,10 @@ def draft_note(lines, lists, config, api_key):
     request = {"provider": "anthropic", "model": model, "effort": effort,
                "instructions": instructions, "input": user}
 
-    client = anthropic.Anthropic(api_key=api_key, timeout=float(config.get("timeout_seconds", 180)))
+    # Ask for gzip only: some Python installs (e.g. Anaconda) carry an old brotli package that
+    # breaks reading brotli-compressed answers ("unexpected keyword argument 'output_buffer_limit'").
+    client = anthropic.Anthropic(api_key=api_key, timeout=float(config.get("timeout_seconds", 180)),
+                                 default_headers={"Accept-Encoding": "gzip, deflate"})
     started = time.time()
     try:
         resp = client.beta.messages.create(
