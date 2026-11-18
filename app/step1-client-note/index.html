@@ -175,6 +175,16 @@ li.skip .dot{border-style:dashed}
 .keyinfo select:disabled,.keyinfo input:read-only{opacity:1;cursor:default;appearance:none}
 .keyinfo input::placeholder{color:var(--muted)}
 .keyinfo .heardas{font-size:11px;color:var(--muted)}
+.keyinfo .verified{font-size:11px;color:var(--ok);font-weight:600}
+.dochead{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.docs{display:flex;flex-direction:column;gap:8px;margin:4px 0 12px}
+.doc{border:1px solid var(--line);border-left:3px solid var(--ok);border-radius:5px;padding:8px 10px;font-size:13px}
+.doc.bad{border-left-color:var(--warn)}
+.doc .offer{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;border-top:1px solid var(--line);padding-top:6px;margin-top:6px}
+.doc .offer .v{flex:1;min-width:180px}
+.choose{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.docprev{max-width:100%;max-height:220px;border:1px solid var(--line);border-radius:5px;align-self:center}
+.samplebtns{display:flex;flex-wrap:wrap;gap:8px}
 .kgroup{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
 .knot{margin-top:8px}
 .linkbtn{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
@@ -286,7 +296,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const fill=(o,vars)=>JSON.parse(JSON.stringify(o).replace(/\{(first|duration)\}/g,(m,k)=>vars[k]??m));
 
 /* ---------- Records ----------
-   Seven record types. Names follow Salesforce Nonprofit Cloud so an export maps cleanly later:
+   Eight record types. Names follow Salesforce Nonprofit Cloud so an export maps cleanly later:
    Client       one person served (Salesforce: Account / Contact)
    Interaction  a visit, call, text or intake note, with meeting type and minutes (Interaction + InteractionSummary)
    Need         an open need found in a note, tagged with a service type (care plan need)
@@ -294,9 +304,11 @@ const fill=(o,vars)=>JSON.parse(JSON.stringify(o).replace(/\{(first|duration)\}/
    Goal         a next step or a dated reminder (GoalAssignment). Reminders are open Goals with a due date.
    Referral     a referral sent to a partner (Referral). Statuses grow in step 4.
    Approval     who approved which note, and when (audit log)
+   Document     a document checked against the note: type, number, and which fields matched or differed
+                (Salesforce: DocumentChecklistItem). Step 4 adds a fuller documents checklist.
    Everything is saved to localStorage under STORE_KEY. "Reset sample data" puts the five sample clients back. */
 const STORE_KEY="reintegrait.records.v2";
-const RECORD_TYPES=["Client","Interaction","Need","Service","Goal","Referral","Approval"];
+const RECORD_TYPES=["Client","Interaction","Need","Service","Goal","Referral","Approval","Document"];
 const uid=t=>t.slice(0,3).toLowerCase()+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 const SAMPLE_CLIENTS=[
@@ -348,6 +360,8 @@ function sampleRecords(){
 const Store={
  data:null,
  load(){let d=null;try{d=JSON.parse(localStorage.getItem(STORE_KEY))}catch(e){}
+  /* A record type added later (Document) starts empty, so saved clients are kept. */
+  if(d&&RECORD_TYPES.slice(0,7).every(t=>Array.isArray(d[t])))RECORD_TYPES.forEach(t=>{if(!Array.isArray(d[t]))d[t]=[]});
   this.data=d&&RECORD_TYPES.every(t=>Array.isArray(d[t]))?d:sampleRecords();this.save()},
  save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(this.data))}catch(e){}},
  reset(){this.data=sampleRecords();this.save()},
@@ -574,6 +588,7 @@ function renderClients(){
    </div>
    ${c.reminder?`<div class="remcard ${rd>0?"calm":""}" id="remcard"><div><b>${rd<0?"Overdue":rd===0?"Due today":"Next"} · ${fmt(c.reminder.date)} · ${esc(c.reminder.type)}</b><br>${esc(c.reminder.text)}</div><button class="btn" id="btn-log" type="button">Log response</button></div>`:""}
    ${(d=>`<div class="dosage" id="dosage"><span><b>${d.contacts}</b> contacts</span><span><b>${d.minutes}</b> min</span><span><b>${d.types.length}</b> service types</span><span><b>${d.referrals}</b> referrals</span></div>`)(dosage(c.id))}
+   ${(ds=>ds.length?`<p class="small" id="docs-on-file" style="margin:0 0 10px"><b>Documents checked:</b> ${ds.map(x=>`${esc(x.DocumentType)} <span class="tag ${x.Differed.length?"warn":"ok"}">${x.Differed.length?"Checked":"Verified"} ${fmt(parseDate(x.VerifiedDate))}</span>`).join(" ")}</p>`:"")(Store.where("Document",x=>x.ClientId===c.id))}
    ${c.needs.length?`<h2 style="margin-top:6px">Open needs</h2><ul class="small" id="needs-list" style="margin:0 0 12px;padding-left:18px">${c.needs.map((n,i)=>`<li>${esc(n)}${c.needTypes[i]?` <span class="tag info">${esc(c.needTypes[i])}</span>`:""}</li>`).join("")}</ul>`:""}
    <h2>Case file</h2>
    <ol class="timeline" id="timeline">${c.entries.map((e,i)=>`<li class="${i===0&&state.newIds.has(c.id)?"new":""}"><span class="d">${fmt(e.date)}</span><div><span class="t">${esc(e.type)}</span><p>${esc(e.text)}</p></div></li>`).join("")}</ol>
@@ -749,6 +764,184 @@ function sampleBanner(job){
  return`<div class="flagitem banner" role="alert" id="sample-banner"><b><span class="ic" aria-hidden="true">⚠</span> This draft is from the sample transcript, not your recording.</b>The real model failed: ${esc(job.real.error)} Check every field against the recording yourself, or switch to Simulated.</div>`;
 }
 
+/* ---------- Verify with a document ----------
+   Denise photographs or uploads release papers, an ID or a letter. AI only reads it (backend/prompts/read-document.md);
+   the comparison below is plain code, so the same values always give the same result, and Denise decides every difference.
+   Match: the field gets a green "Verified" tag. Difference: a flag shows both values and Denise picks one.
+   On the document only: offered to add. Every match and difference goes to the activity log, and saving writes a Document record. */
+const DOC_MAX_MB=20;
+const docDefs=n=>keyDefs(n.template).filter(d=>SIM.document_check.fields.includes(d.key));
+const docReady=()=>!!(AI.helper&&AI.on&&AI.document&&AI.document.enabled&&AI.document.key_found&&AI.document.sdk_installed);
+const normTxt=v=>String(v||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();
+function ageOn(birth){const b=parseDate(birth);let a=TODAY.getFullYear()-b.getFullYear();if(TODAY.getMonth()<b.getMonth()||(TODAY.getMonth()===b.getMonth()&&TODAY.getDate()<b.getDate()))a--;return String(a)}
+/* How a note value compares with the document's value. */
+function compareDoc(def,noteV,docV){
+ noteV=String(noteV||"").trim();docV=String(docV||"").trim();
+ if(!docV)return null;
+ if(!noteV)return"add";
+ if(noteV.includes("_")){const re=new RegExp("^"+noteV.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/_/g,"[A-Za-z0-9]")+"$","i");return re.test(docV)?"add":"differs"}
+ if(def.type==="date"||def.type==="select")return noteV.toLowerCase()===docV.toLowerCase()?"match":"differs";
+ const a=normTxt(noteV),b=normTxt(docV);
+ if(a===b)return"match";
+ if(def.key==="name"){const x=a.split(" "),y=b.split(" ");return x[0]===y[0]&&x[x.length-1]===y[y.length-1]?"match":"differs"}
+ if(a.length>=4&&b.length>=4&&(a.includes(b)||b.includes(a)))return"match";
+ return"differs";
+}
+function markVerified(f,docType,value){
+ if(f.verified&&f.verified.value===value){if(!f.verified.docs.includes(docType))f.verified.docs.push(docType)}
+ else f.verified={docs:[docType],value};
+}
+/* Turn what the AI read into results on the note. */
+function applyDocument(n,doc,meta){
+ const k=n.key_info, who=k.name.value||"New client";
+ const D={id:"doc"+((n.docs||[]).length+1),type:doc.document_type||"Other",file:meta.file,by:meta.by,seconds:meta.seconds,
+  number:doc.document_number||"",issued_by:doc.issued_by||"",comment:doc.comment||"",readable:doc.readable!==false,results:[]};
+ n.docs=n.docs||[];n.docs.push(D);
+ if(!D.readable){logEvent(who,"Document unreadable",`${D.file} · ${D.comment||"AI could not read it"}`);return D}
+ const read={};(doc.fields||[]).forEach(f=>{if(f&&f.key&&String(f.value||"").trim())read[f.key]=f});
+ const docDefsN=docDefs(n);
+ docDefsN.forEach(def=>{const f=read[def.key];if(!f)return;
+  const cur=k[def.key]||(k[def.key]={value:"",source:null});
+  const out=compareDoc(def,cur.value,f.value);if(!out)return;
+  const r={key:def.key,label:def.label,doc:f.value,printed:f.printed_as||"",note:cur.value,outcome:out,state:out==="add"?"offered":"done"};
+  if(out==="match"){markVerified(cur,D.type,cur.value);logEvent(who,"Document matches",`${def.label}: "${cur.value}" · ${D.type}`)}
+  if(out==="differs"){n.flags.push({id:`f-${D.id}-${def.key}`,field:def.key,kind:"Document differs",fix:"choose",noteValue:cur.value,docValue:f.value,printed:r.printed,docType:D.type,
+    text:`The note says “${cur.value}”. The ${D.type.toLowerCase()} say${/s$/i.test(D.type)?"":"s"} “${f.value}”.`});
+   logEvent(who,"Document differs",`${def.label}: note "${cur.value}" · ${D.type} "${f.value}"${r.printed?` (printed "${r.printed}")`:""}`)}
+  if(out==="add")logEvent(who,"Document value found",`${def.label}: "${f.value}" · ${D.type} · offered to add`);
+  D.results.push(r)});
+ /* Age is never read from a document: it is worked out from the date of birth on it. */
+ const bd=read.birth_date&&/^\d{4}-\d{2}-\d{2}$/.test(read.birth_date.value)?read.birth_date.value:"";
+ if(bd&&k.age){const a=ageOn(bd),out=compareDoc({key:"age"},k.age.value,a);
+  if(out){const r={key:"age",label:"Age",doc:a,printed:`from date of birth ${read.birth_date.printed_as||bd}`,note:k.age.value,outcome:out,state:out==="add"?"offered":"done"};
+   if(out==="match"){markVerified(k.age,D.type+" (date of birth)",k.age.value);logEvent(who,"Document matches",`Age: "${k.age.value}" · from date of birth on ${D.type}`)}
+   if(out==="differs"){n.flags.push({id:`f-${D.id}-age`,field:"age",kind:"Document differs",fix:"choose",noteValue:k.age.value,docValue:a,printed:r.printed,docType:D.type,
+     text:`The note says ${k.age.value}. The date of birth on the ${D.type.toLowerCase()} (${bd}) makes the client ${a} today.`});
+    logEvent(who,"Document differs",`Age: note "${k.age.value}" · ${a} from date of birth on ${D.type}`)}
+   D.results.push(r)}}
+ const c=docCounts(D);
+ logEvent(who,"Document read",`${D.type} · ${D.file} · ${D.by}${D.seconds?` · ${D.seconds} s`:""} · ${c.match} match, ${c.differs} differ, ${c.add} to add${D.number?` · no. ${D.number}`:""}`);
+ return D;
+}
+const docCounts=D=>({match:D.results.filter(r=>r.outcome==="match").length,differs:D.results.filter(r=>r.outcome==="differs").length,add:D.results.filter(r=>r.outcome==="add").length});
+/* Fill a field from a document, and close any open flag on it. */
+function fillFromDoc(n,key,value,docType){
+ const f=n.key_info[key];f.value=value;f.by=ME;f.how="From "+docType;markVerified(f,docType,value);
+ n.flags.filter(x=>x.field===key&&!x.resolved).forEach(x=>{x.resolved=true;x.value=value;x.how="From "+docType});
+ n.edits++;
+}
+function docPanel(n){
+ if(!(n.docs||[]).length)return"";
+ return`<div class="docs" id="docs">${n.docs.map(D=>{
+  if(!D.readable)return`<div class="doc bad" data-doc="${D.id}"><b><span aria-hidden="true">⚠ </span>Couldn't read ${esc(D.file)}</b><br>${esc(D.comment||"Try a clearer photo.")}</div>`;
+  const c=docCounts(D),offers=D.results.filter(r=>r.state==="offered"),added=D.results.filter(r=>r.state==="added"),skipped=D.results.filter(r=>r.state==="left out");
+  return`<div class="doc ${c.differs?"bad":""}" data-doc="${D.id}"><b>${esc(D.type)}</b> <span class="muted">· ${esc(D.file)}${D.number?` · no. ${esc(D.number)}`:""} · ${esc(D.by)}</span><br>
+   <span class="tag ok">${c.match} match</span> ${c.differs?`<span class="tag warn">${c.differs} differ${c.differs>1?"":"s"}</span>`:""} ${c.add?`<span class="tag info">${c.add} on the document only</span>`:""}
+   ${D.comment?`<div class="small muted" style="margin-top:4px">${esc(D.comment)}</div>`:""}
+   ${offers.map(r=>`<div class="offer"><span class="v">${esc(r.label)}: <b>${esc(r.doc)}</b>${r.printed&&r.printed!==r.doc?` <span class="small muted">(${esc(r.printed)})</span>`:""}${r.note?` <span class="small muted">· note has “${esc(r.note)}”</span>`:""}</span><button class="btn small" type="button" data-offer="${D.id}|${r.key}|add">Add to note</button><button class="btn ghost small" type="button" data-offer="${D.id}|${r.key}|skip">Leave out</button></div>`).join("")}
+   ${added.length?`<div class="small muted" style="margin-top:4px">Added from this document: ${added.map(r=>esc(r.label)).join(", ")}</div>`:""}
+   ${skipped.length?`<div class="small muted">Left out: ${skipped.map(r=>esc(r.label)).join(", ")}</div>`:""}</div>`}).join("")}</div>`;
+}
+function chooseFlag(f){
+ return`<div class="flagitem" data-flag="${f.id}"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(fieldLabel(state.note,f.field))}</b> ${esc(f.text)}${f.printed&&f.printed!==f.docValue?` Printed as “${esc(f.printed)}”.`:""} Which is right?</div>
+  <div class="choose"><button class="btn" type="button" data-choose="${f.id}|note">Keep the note: ${esc(f.noteValue)}</button><button class="btn" type="button" data-choose="${f.id}|doc">Use the ${esc(f.docType.toLowerCase())}: ${esc(f.docValue)}</button></div></div>`;
+}
+function wireDocs(n){
+ const who=()=>n.key_info.name.value||"New client";
+ const vb=document.getElementById("btn-verify");if(vb)vb.onclick=()=>{syncNote();openDocCheck(n)};
+ app.querySelectorAll("[data-choose]").forEach(b=>b.onclick=()=>{syncNote();const[id,pick]=b.dataset.choose.split("|");const f=n.flags.find(x=>x.id===id);if(!f||f.resolved)return;
+  const label=fieldLabel(n,f.field);
+  if(pick==="doc"){fillFromDoc(n,f.field,f.docValue,f.docType);f.value=f.docValue;f.how="From "+f.docType}
+  else{f.resolved=true;f.value=f.noteValue;f.how=`Kept the note. ${f.docType} says ${f.docValue}`}
+  logEvent(who(),"Document value chosen",`${label}: ${pick==="doc"?`used ${f.docType} "${f.docValue}" (note had "${f.noteValue}")`:`kept note "${f.noteValue}" (${f.docType} has "${f.docValue}")`} · chosen by ${ME}`);
+  renderNote()});
+ app.querySelectorAll("[data-offer]").forEach(b=>b.onclick=()=>{syncNote();const[did,key,act]=b.dataset.offer.split("|");const D=n.docs.find(x=>x.id===did);const r=D&&D.results.find(x=>x.key===key);if(!r)return;
+  if(act==="add"){fillFromDoc(n,key,r.doc,D.type);r.state="added";logEvent(who(),"Document value added",`${r.label}: "${r.doc}" from ${D.type} · added by ${ME}`)}
+  else{r.state="left out";logEvent(who(),"Document value left out",`${r.label}: "${r.doc}" from ${D.type}`)}
+  renderNote()});
+}
+const blobB64=b=>new Promise((ok,no)=>{const fr=new FileReader();fr.onload=()=>ok(String(fr.result).split(",")[1]);fr.onerror=no;fr.readAsDataURL(b)});
+/* Phone photos can be large. Shrink big images so the model gets a sharp but small JPEG. */
+async function shrinkImage(blob){
+ if(!/^image\/(jpeg|png|webp)$/.test(blob.type))return blob;
+ try{const bmp=await createImageBitmap(blob);const sc=Math.min(1,2200/Math.max(bmp.width,bmp.height));
+  if(sc===1&&blob.size<3.5e6)return blob;
+  const cv=document.createElement("canvas");cv.width=Math.round(bmp.width*sc);cv.height=Math.round(bmp.height*sc);cv.getContext("2d").drawImage(bmp,0,0,cv.width,cv.height);
+  return await new Promise(ok=>cv.toBlob(b=>ok(b||blob),"image/jpeg",0.88))}catch(e){return blob}
+}
+function openDocCheck(n){
+ const real=docReady(),dc=SIM.document_check;
+ mroot.innerHTML=`<div class="scrim" id="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="dtitle">
+  <header><div><h3 id="dtitle">Verify with a document</h3><p class="small muted">Take a photo or upload a scan of release papers, a state ID or a benefits letter. AI reads it and compares it with the note. You decide every difference.</p></div><button class="x" id="dclose" type="button" aria-label="Close">×</button></header>
+  <div class="drop" id="ddrop" tabindex="0" role="button" aria-label="Choose a photo or PDF">
+   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="color:var(--accent)"><rect x="3" y="6" width="18" height="14" rx="2"/><circle cx="12" cy="13" r="3.5"/><path d="M8 6l1.5-2h5L16 6"/></svg>
+   <b>Take a photo or choose a file</b><span class="small muted">JPG, PNG or PDF, up to ${DOC_MAX_MB} MB</span>
+   <input type="file" id="dfile" accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,.pdf,.jpg,.jpeg,.png" hidden>
+  </div>
+  <div><p class="small muted" style="margin-bottom:6px">Or try a made-up document for Andre:</p><div class="samplebtns">${dc.samples.map(s=>`<button class="btn ghost small" type="button" data-sample="${s.id}">${esc(s.label)}</button>`).join("")}</div></div>
+  <div id="dbox"></div>
+  <p class="small muted" id="dmode">${real?`Read by <b>${esc(AI.document.model)}</b> on your laptop helper. The document is not saved.`:"Simulated: sample documents use their saved answers. To read your own documents, run the laptop helper with your Anthropic key and switch AI to Real."}</p>
+  <div class="btns" style="justify-content:flex-end"><button class="btn" id="dcancel" type="button">Cancel</button><button class="btn primary" id="dgo" type="button" disabled>Read document</button></div>
+ </div></div>`;
+ let pick=null,busy=false;
+ const close=()=>{mroot.innerHTML="";document.removeEventListener("keydown",onEsc)};
+ const onEsc=e=>{if(e.key==="Escape"&&!busy)close()};document.addEventListener("keydown",onEsc);
+ const go=document.getElementById("dgo"),box=document.getElementById("dbox"),fi=document.getElementById("dfile"),drop=document.getElementById("ddrop");
+ const err=(t,m)=>{box.innerHTML=`<div class="flagitem" role="alert" id="derr"><b><span class="ic" aria-hidden="true">⚠</span> ${esc(t)}</b>${esc(m)}</div>`};
+ document.getElementById("dclose").onclick=close;document.getElementById("dcancel").onclick=close;
+ document.getElementById("scrim").onclick=e=>{if(e.target.id==="scrim"&&!busy)close()};
+ drop.onclick=()=>fi.click();drop.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();fi.click()}};
+ drop.ondragover=e=>{e.preventDefault();drop.classList.add("over")};drop.ondragleave=()=>drop.classList.remove("over");
+ drop.ondrop=e=>{e.preventDefault();drop.classList.remove("over");if(e.dataTransfer.files[0])choose({file:e.dataTransfer.files[0]})};
+ fi.onchange=()=>{if(fi.files[0])choose({file:fi.files[0]})};
+ mroot.querySelectorAll("[data-sample]").forEach(b=>b.onclick=()=>choose({sample:dc.samples.find(s=>s.id===b.dataset.sample)}));
+ function choose(p){
+  pick=null;go.disabled=true;
+  if(p.file){const f=p.file,isPdf=f.type==="application/pdf"||/\.pdf$/i.test(f.name),isImg=/^image\/(jpeg|png|webp|gif)$/.test(f.type);
+   if(!isPdf&&!isImg)return err("Can't use this file",`${f.name} isn't a JPG, PNG or PDF. On an iPhone, set Camera > Formats to "Most Compatible", or take a screenshot of the photo.`);
+   if(f.size>DOC_MAX_MB*1e6)return err("File too large",`This file is ${(f.size/1e6).toFixed(0)} MB. The limit is ${DOC_MAX_MB} MB.`);
+   if(!real)return err("Real AI is off","Reading your own document needs the laptop helper with your Anthropic key, and the AI switch on Real. Try a sample document instead.");
+   pick={name:f.name,blob:f,media_type:isPdf?"application/pdf":f.type}}
+  else pick={name:p.sample.file.split("/").pop(),sample:p.sample,media_type:p.sample.media_type};
+  box.innerHTML=`<div class="file" id="dfilebox"><div class="meta"><div class="nm">${esc(pick.name)}</div><div class="small muted" id="dstat">Ready to read</div></div></div>${pick.media_type!=="application/pdf"?`<img class="docprev" id="dprev" alt="Preview of ${esc(pick.name)}">`:""}`;
+  const pv=document.getElementById("dprev");if(pv)pv.src=pick.blob?URL.createObjectURL(pick.blob):pick.sample.file;
+  go.disabled=false;
+ }
+ go.onclick=async()=>{
+  if(!pick||busy)return;busy=true;go.disabled=true;const st=document.getElementById("dstat");st.textContent=real?"Reading with AI… this takes about 10 to 30 seconds":"Reading…";
+  const who=n.key_info.name.value||"New client";
+  try{
+   let doc,meta;
+   if(!real){await new Promise(r=>setTimeout(r,700));doc=clone(pick.sample.document);meta={file:pick.name,by:"Sample answer (simulated)"}}
+   else{
+    let blob=pick.blob||await fetch(pick.sample.file).then(r=>{if(!r.ok)throw new Error("Could not open the sample document.");return r.blob()});
+    blob=await shrinkImage(blob);
+    const media_type=pick.media_type==="application/pdf"?"application/pdf":(blob.type||pick.media_type);
+    const fields=docDefs(n).map(f=>({key:f.key,label:f.label,type:f.type||"text",options:f.options||[]}));
+    const r=await fetch("api/read-document",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({run:RUN,client:who,file_name:pick.name,media_type,data:await blobB64(blob),fields})})
+     .then(x=>x.json()).catch(()=>({ok:false,error:"The laptop helper stopped. Restart it with python3 backend/server.py."}));
+    if(!r.ok||!r.document){busy=false;go.disabled=false;logEvent(who,"Document read failed",`${pick.name} · ${r.error||"Unknown error"}`);return err("Couldn't read the document",r.error||"Unknown error.")}
+    doc=r.document;meta={file:pick.name,by:`Read by ${r.model}`,seconds:r.seconds};
+   }
+   const D=applyDocument(n,doc,meta);busy=false;close();renderNote();
+   const c=docCounts(D);
+   toast(!D.readable?"Couldn't read that document. See the note.":`${D.type}: ${c.match} match, ${c.differs} differ${c.differs===1?"s":""}, ${c.add} to add.`);
+   const el=document.getElementById("docs");if(el)el.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){busy=false;go.disabled=false;err("Couldn't read the document",String(e.message||e))}
+ };
+}
+/* What each saved field was verified against: {release_date:"Release papers", ...}. */
+function verifiedFields(n){const out={};Object.entries(n.key_info).forEach(([key,f])=>{if(f.verified&&f.value&&f.verified.value===f.value)out[key]=f.verified.docs.join(", ")});return out}
+function saveDocuments(n,clientId,interactionId){
+ (n.docs||[]).filter(D=>D.readable).forEach(D=>{
+  const flagOf=r=>n.flags.find(f=>f.id===`f-${D.id}-${r.key}`);
+  Store.insert("Document",{ClientId:clientId,InteractionId:interactionId,DocumentType:D.type,DocumentNumber:D.number||null,IssuedBy:D.issued_by||null,FileName:D.file,
+   ReadBy:D.by,VerifiedBy:ME,VerifiedDate:TODAY_ISO,Status:"Checked",FileStored:false,
+   Matched:D.results.filter(r=>r.outcome==="match").map(r=>r.key),
+   Differed:D.results.filter(r=>r.outcome==="differs").map(r=>{const f=flagOf(r);return{Field:r.key,Note:r.note,Document:r.doc,Chosen:f&&f.resolved?(f.value===r.doc?"Document":"Note"):null}}),
+   Added:D.results.filter(r=>r.state==="added").map(r=>r.key),LeftOut:D.results.filter(r=>r.state!=="added"&&r.outcome==="add").map(r=>r.key)})});
+}
+
 /* ---------- New client note ---------- */
 function renderNote(){
  const n=state.note, k=n.key_info, L=n.transcript, S=n.source;
@@ -757,11 +950,12 @@ function renderNote(){
  const fld=d=>{const key=d.key,label=d.label,f=k[key];const flagged=n.flags.some(x=>x.field===key&&!x.resolved);const mark=flagged?`<span aria-hidden="true">⚠ </span>`:"";
   const head=`<span>${mark}${esc(label)}${flagged?" (to confirm)":""} ${f.by?"":srcBtn(f.source,L,S)}</span>`;
   const heard=f.heard_as&&f.value&&f.heard_as!==f.value?`<span class="heardas">Heard as “${esc(f.heard_as)}”</span>`:"";
+  const ver=f.verified&&f.value&&f.verified.value===f.value?`<span class="verified" data-verified="${key}"><span aria-hidden="true">✓ </span>Verified · ${esc(f.verified.docs.join(", "))}</span>`:"";
   const opts=key==="gender"?(n.flags.find(x=>x.field==="gender")?.options||["Male","Female","Non-binary","Prefers not to say"]):d.options;
   const ctl=opts&&(key==="gender"||d.type==="select")
    ?`<select id="k-${key}" ${state.editing?"":"disabled"}><option value="">${key==="gender"?"Not stated":"Not said"}</option>${opts.map(o=>`<option ${f.value===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`
    :`<input id="k-${key}" ${d.type==="date"?'type="date"':""} value="${esc(f.value)}" placeholder="Not said" ${state.editing?"":"readonly"}>`;
-  return`<label class="${flagged?"flagged":""}">${head}${ctl}${heard}</label>`};
+  return`<label class="${flagged?"flagged":""}">${head}${ctl}${ver}${heard}</label>`};
  const groups=[...new Set(keyDefs(n.template).map(d=>d.group||"Profile"))];
  const keyInfo=groups.map((g,gi)=>{const defs=keyDefs(n.template).filter(d=>(d.group||"Profile")===g);
   const shown=defs.filter(d=>state.editing||d.required||k[d.key].value||n.flags.some(x=>x.field===d.key&&!x.resolved));
@@ -793,11 +987,12 @@ function renderNote(){
  <div class="notehead"><div><p class="small muted">New client · ${esc(n.template)}</p><h1>Client note: ${esc(k.name.value||"New client")}</h1></div>
   <div class="btns"><button class="btn" id="btn-edit" type="button" aria-pressed="${state.editing}">${state.editing?"Done editing":"Edit note"}</button></div></div>
  ${sampleBanner(n)}
- <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
+ <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>!f.resolved&&f.fix==="choose"?chooseFlag(f):f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
  <div class="notegrid">
   ${txPane(L,S,n.drafted)}
   <div class="pane note ${state.editing?"editing":""}" id="note">
-   <section><h4>Key information ${open?`<span class="tag warn">${open} to confirm</span>`:`<span class="tag ok">Complete</span>`}</h4>
+   <section><div class="dochead"><h4>Key information ${open?`<span class="tag warn">${open} to confirm</span>`:`<span class="tag ok">Complete</span>`}</h4><button class="btn ghost small" id="btn-verify" type="button">Verify with a document</button></div>
+    ${docPanel(n)}
     ${keyInfo}</section>
    <section><h4>Immediate needs</h4><ul class="items" id="needs">${n.immediate_needs.map((x,i)=>`<li>${state.editing?`<select class="pri-sel" data-pri="${i}" aria-label="Priority">${["Urgent","Soon","Later"].map(o=>`<option ${o===x.priority?"selected":""}>${o}</option>`).join("")}</select>`:`<span class="pri ${pc[x.priority]||"l"}">${esc(x.priority)}</span>`}<span class="txt" ${ce} data-list="immediate_needs" data-i="${i}">${esc(x.text)}</span>${stSel(x,i)}${srcBtn(x.source,L,S)}<button class="del" type="button" data-del="immediate_needs" data-i="${i}" aria-label="Remove">×</button></li>`).join("")}</ul><button class="btn ghost add" type="button" data-add="immediate_needs">+ Add need</button></section>
    <section id="steps"><h4>Next steps <span class="small muted" style="font-weight:400">Only ticked steps are saved</span></h4>
@@ -836,6 +1031,7 @@ function renderNote(){
   syncNote();const before=k[f.field].value;const val=how==="Not known"?"":v;
   f.resolved=true;f.value=val;f.how=how;f.warn=false;k[f.field].value=val;k[f.field].by=ME;k[f.field].how=how||(force?"Differs from recording":"");
   logEvent(k.name.value,"Flag resolved",`${f.kind} ${f.field}: "${before||"blank"}" → "${val||"Not stated"}" · entered by ${ME}${how?" · source: "+how:""}${force?" · differs from recording (saved anyway)":""}`);renderNote()};
+ wireDocs(n);
  app.querySelectorAll("[data-addfields]").forEach(b=>b.onclick=()=>{const e=document.getElementById("btn-edit");if(e&&!state.editing)e.click()});
  app.querySelectorAll("[data-fix]").forEach(b=>b.onclick=()=>fixFlag(n.flags.find(x=>x.id===b.dataset.fix),false));
  app.querySelectorAll("[data-fixforce]").forEach(b=>b.onclick=()=>fixFlag(n.flags.find(x=>x.id===b.dataset.fixforce),true));
@@ -862,9 +1058,13 @@ function renderNote(){
   /* Extra template fields go onto the Client record under their "record" name. Empty stays empty. */
   const extra={};keyDefs(n.template).filter(d=>!d.required&&d.record).forEach(d=>{const v=(k[d.key]||{}).value||"";
    if(d.options&&d.options.join()==="Yes,No"){extra[d.record]=v?v.toLowerCase():"";extra[d.record+"Date"]=v==="Yes"?TODAY_ISO:""}else extra[d.record]=v});
-  const c=Store.insert("Client",{Name:nm,Age:k.age.value,Gender:k.gender.value||"Not stated",Locality:k.locality.value,Phone:k.contact.value,...extra,ClientSince:TODAY_ISO,Status:"New intake"},true);
+  const verified=verifiedFields(n);
+  const c=Store.insert("Client",{Name:nm,Age:k.age.value,Gender:k.gender.value||"Not stated",Locality:k.locality.value,Phone:k.contact.value,...extra,ClientSince:TODAY_ISO,Status:"New intake",
+   ...(Object.keys(verified).length?{VerifiedFields:verified}:{})},true);
+  const docs=(n.docs||[]).filter(d=>d.readable);
   const it=Store.insert("Interaction",{ClientId:c.Id,Date:TODAY_ISO,Type:"Intake note",Template:n.template,Channel:n.source.kind==="audio"?"Voice note":"Typed",SourceName:n.source.name||null,MeetingType:n.log.meeting_type,Minutes:n.log.minutes,
-   Summary:`Needs: ${n.immediate_needs.map(x=>x.text).join("; ")}. Next steps: ${kept.map(x=>x.text).join("; ")||"none agreed"}.`});
+   Summary:`Needs: ${n.immediate_needs.map(x=>x.text).join("; ")}. Next steps: ${kept.map(x=>x.text).join("; ")||"none agreed"}.`+(docs.length?` Checked against: ${docs.map(d=>d.type).join(", ")}.`:"")});
+  saveDocuments(n,c.Id,it.Id);
   logServices(c.Id,it,n.log.services);
   n.immediate_needs.forEach(x=>{const d=n.next_steps.find(s=>s.kind==="suggested"&&!s.ticked&&s.why&&s.addresses.includes(needCat(x.text)));
    Store.insert("Need",{ClientId:c.Id,Text:x.text,ServiceType:x.service_type,Priority:x.priority,Status:"Open",CreatedDate:TODAY_ISO,InteractionId:it.Id,...(d?{DeclinedStep:d.text,DeclineReason:d.why}:{})})});
