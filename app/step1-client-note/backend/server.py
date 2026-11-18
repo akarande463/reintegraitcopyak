@@ -54,6 +54,14 @@ def write_log(entry):
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def _run(v):
+    """Run number sent by the prototype: one per upload, so its log lines group together."""
+    try:
+        return int(v) or None
+    except (TypeError, ValueError):
+        return None
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(SITE), **kwargs)
@@ -105,7 +113,7 @@ class Handler(SimpleHTTPRequestHandler):
                 ev = json.loads(body or b"{}")
             except json.JSONDecodeError:
                 return self._json(400, {"ok": False})
-            write_log({"type": "activity", "client": ev.get("client", ""),
+            write_log({"run": _run(ev.get("run")), "type": "activity", "client": ev.get("client", ""),
                        "event": ev.get("event", ""), "detail": ev.get("detail", "")})
             return self._json(200, {"ok": True})
         self.send_error(404)
@@ -114,7 +122,7 @@ class Handler(SimpleHTTPRequestHandler):
         cfg = read_config()
         name = self.headers.get("X-File-Name", "recording")
         ctype = self.headers.get("Content-Type") or mimetypes.guess_type(name)[0] or "application/octet-stream"
-        entry = {"type": "ai_request", "step": "voice to text",
+        entry = {"run": _run(self.headers.get("X-Run")), "type": "ai_request", "step": "voice to text",
                  "input": {"file_name": name, "content_type": ctype, "size_bytes": len(audio),
                            "duration": self.headers.get("X-Audio-Duration", ""),
                            "note": "The audio itself is not stored in this log."}}
@@ -125,7 +133,8 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             r = transcribe(audio, ctype, cfg, read_env().get("HF_TOKEN", ""))
         except AIError as e:
-            entry.update(mode="real", request={"provider": cfg.get("provider"), "model": cfg.get("model"),
+            entry.update(mode="real", request={"endpoint": cfg.get("endpoint", "").format(provider=cfg.get("provider"), model=cfg.get("model")),
+                                               "provider": cfg.get("provider"), "model": cfg.get("model"),
                                                "instructions": cfg.get("instructions", {})},
                          error={"message": str(e), "status": e.status, "detail": e.detail})
             write_log(entry)

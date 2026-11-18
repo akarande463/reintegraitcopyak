@@ -103,7 +103,7 @@ To see which providers host a model, open the model's page on Hugging Face and l
 
 ## The test log
 
-Every AI request adds one line to `backend/logs/ai-log.jsonl`. Open it in any text editor (TextEdit, Notepad, VS Code). Each line is one event. The newest is at the bottom.
+Every AI request adds one line to `backend/logs/ai-log.jsonl`. Open it in any text editor (TextEdit, Notepad, VS Code). Each line is one event. The newest is at the bottom. Every line carries a `run` number: each upload starts a new run, so all the lines from one test share the same number.
 
 **An AI request** (`"type": "ai_request"`) records:
 
