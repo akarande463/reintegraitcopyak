@@ -173,6 +173,11 @@ li.skip .dot{border-style:dashed}
 .editing .keyinfo input,.editing .keyinfo select{border-color:var(--line);background:var(--panel);margin-left:0}
 .keyinfo .flagged input,.keyinfo .flagged select{background:var(--warn-soft);border-color:var(--warn)}
 .keyinfo select:disabled,.keyinfo input:read-only{opacity:1;cursor:default;appearance:none}
+.keyinfo input::placeholder{color:var(--muted)}
+.keyinfo .heardas{font-size:11px;color:var(--muted)}
+.kgroup{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 6px}
+.knot{margin-top:8px}
+.linkbtn{font:inherit;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline}
 .items{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .items li{display:flex;gap:8px;align-items:baseline}
 .items .txt{flex:1;min-width:0;border-radius:3px;padding:1px 3px;margin-left:-3px}
@@ -394,7 +399,11 @@ const approve=(recordId,statement)=>Store.insert("Approval",{RecordType:"Interac
 
 /* Templates come from simulated_responses.json ("templates"). */
 const updateTypes=()=>SIM.templates.update_types;
-const keyFields=tpl=>SIM.templates.intake_notes[tpl].key_fields.map(f=>[f.key,f.label]);
+const keyDefs=tpl=>SIM.templates.intake_notes[tpl].key_fields;
+const keyFields=tpl=>keyDefs(tpl).map(f=>[f.key,f.label]);
+/* Fields the template added later may be missing from a saved or sample note: give them an empty value. */
+const fieldLabel=(n,key)=>((keyDefs(n.template).find(d=>d.key===key)||{}).label||key);
+function ensureKeys(n){keyDefs(n.template).forEach(f=>{if(!n.key_info[f.key])n.key_info[f.key]={value:"",source:null}})}
 
 let SIM=null;
 
@@ -441,7 +450,7 @@ function startRealDraft(job){
  if(!ns.enabled)return;
  if(!ns.key_found||!ns.sdk_installed){job.realDraft={status:"failed",error:!ns.key_found?"No Anthropic key in backend/.env.":"The Anthropic package is not installed (python3 -m pip install anthropic)."};return}
  job.realDraft={status:"running",model:ns.model};
- const lists={key_fields:keyFields(job.template).map(f=>f[0]),categories:SIM.matched_services.categories,service_types:serviceTypes(),meeting_types:SIM.templates.meeting_types};
+ const lists={key_fields:keyDefs(job.template).map(f=>({key:f.key,label:f.label,type:f.type||"text",options:f.options||[]})),categories:SIM.matched_services.categories,service_types:serviceTypes(),meeting_types:SIM.templates.meeting_types};
  job.realDraftTx=fetch("api/draft-note",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({run:RUN,lists,lines:job.transcript.map(l=>({id:l.id,time:l.time,text:l.text}))})})
   .then(r=>r.json()).catch(()=>({ok:false,error:"The laptop helper stopped. Restart it with python3 backend/server.py."}))
   .then(r=>{
@@ -480,13 +489,16 @@ function applyDraft(n,d){
  const lineTime=id=>{const l=n.transcript.find(x=>x.id===fix(id));return l?(l.est?"~":"")+l.time:""};
  const gOpts=(SIM.new_client_intake.note.flags.find(f=>f.field==="gender")||{}).options||["Male","Female","Non-binary","Prefers not to say"];
  const flags=[];
- keyFields(n.template).forEach(([k,label])=>{
+ keyDefs(n.template).forEach(({key:k,label,required,type,options})=>{
   const v=(d.key_info||{})[k]||{value:"",status:"not said",source_line:""};
-  const val=v.status==="not said"?"":v.value;
-  n.key_info[k]={value:k==="gender"&&!gOpts.includes(val)?"":val,source:v.source_line?fix(v.source_line):null};
+  let val=v.status==="not said"?"":v.value;
+  if(k==="gender"&&!gOpts.includes(val))val="";
+  if(type==="select"&&!(options||[]).includes(val))val="";
+  if(type==="date"&&!/^\d{4}-\d{2}-\d{2}$/.test(val))val="";
+  n.key_info[k]={value:val,source:v.source_line?fix(v.source_line):null,heard_as:v.heard_as||""};
   const at=lineTime(v.source_line)?" at "+lineTime(v.source_line):"";
-  if(v.status==="not said")flags.push({id:"f-"+k,field:k,kind:"Missing",text:`${label} was not stated in the recording.`,fix:k==="gender"?"select":"input",options:gOpts,placeholder:""});
-  else if(v.status==="partly heard"||v.comment)flags.push({id:"f-"+k,field:k,kind:"Unclear",text:v.comment?`${v.comment.replace(/\.?$/,".")}${at?" Heard"+at+".":""}`:`${label} was only partly heard${at}.`,fix:"input",placeholder:v.value});
+  if(v.status==="not said"){if(required)flags.push({id:"f-"+k,field:k,kind:"Missing",text:`${label} was not stated in the recording.`,fix:k==="gender"?"select":"input",options:gOpts,placeholder:""})}
+  else if(v.status==="partly heard"||v.comment)flags.push({id:"f-"+k,field:k,kind:"Unclear",text:v.comment?`${v.comment.replace(/\.?$/,".")}${at?" Heard"+at+".":""}`:`${label} was only partly heard${at}.`,fix:"input",placeholder:v.value||v.heard_as||""});
  });
  n.flags=flags;
  n.immediate_needs=(d.immediate_needs||[]).map(x=>({priority:x.priority,text:`${x.category}: ${x.detail}`,service_type:x.service_type,source:x.source_line?fix(x.source_line):null}));
@@ -741,10 +753,21 @@ function sampleBanner(job){
 function renderNote(){
  const n=state.note, k=n.key_info, L=n.transcript, S=n.source;
  const open=n.flags.filter(f=>!f.resolved).length;
- const fld=(key,label)=>{const flagged=n.flags.some(f=>f.field===key&&!f.resolved);const mark=flagged?`<span aria-hidden="true">⚠ </span>`:"";
-  if(key==="gender"){const opts=n.flags.find(f=>f.field==="gender")?.options||["Male","Female","Non-binary","Prefers not to say"];
-   return`<label class="${flagged?"flagged":""}"><span>${mark}${label}${flagged?" (to confirm)":""}</span><select id="k-gender" ${state.editing?"":"disabled"}><option value="">Not stated</option>${opts.map(o=>`<option ${k.gender.value===o?"selected":""}>${esc(o)}</option>`).join("")}</select></label>`}
-  return`<label class="${flagged?"flagged":""}"><span>${mark}${label}${flagged?" (to confirm)":""} ${k[key].by?"":srcBtn(k[key].source,L,S)}</span><input id="k-${key}" value="${esc(k[key].value)}" ${state.editing?"":"readonly"}></label>`};
+ ensureKeys(n);
+ const fld=d=>{const key=d.key,label=d.label,f=k[key];const flagged=n.flags.some(x=>x.field===key&&!x.resolved);const mark=flagged?`<span aria-hidden="true">⚠ </span>`:"";
+  const head=`<span>${mark}${esc(label)}${flagged?" (to confirm)":""} ${f.by?"":srcBtn(f.source,L,S)}</span>`;
+  const heard=f.heard_as&&f.value&&f.heard_as!==f.value?`<span class="heardas">Heard as “${esc(f.heard_as)}”</span>`:"";
+  const opts=key==="gender"?(n.flags.find(x=>x.field==="gender")?.options||["Male","Female","Non-binary","Prefers not to say"]):d.options;
+  const ctl=opts&&(key==="gender"||d.type==="select")
+   ?`<select id="k-${key}" ${state.editing?"":"disabled"}><option value="">${key==="gender"?"Not stated":"Not said"}</option>${opts.map(o=>`<option ${f.value===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`
+   :`<input id="k-${key}" ${d.type==="date"?'type="date"':""} value="${esc(f.value)}" placeholder="Not said" ${state.editing?"":"readonly"}>`;
+  return`<label class="${flagged?"flagged":""}">${head}${ctl}${heard}</label>`};
+ const groups=[...new Set(keyDefs(n.template).map(d=>d.group||"Profile"))];
+ const keyInfo=groups.map((g,gi)=>{const defs=keyDefs(n.template).filter(d=>(d.group||"Profile")===g);
+  const shown=defs.filter(d=>state.editing||d.required||k[d.key].value||n.flags.some(x=>x.field===d.key&&!x.resolved));
+  const rest=defs.filter(d=>!shown.includes(d));
+  if(!shown.length&&!rest.length)return"";
+  return`${gi?`<div class="kgroup">${esc(g)}</div>`:""}${shown.length?`<div class="keyinfo">${shown.map(fld).join("")}</div>`:""}${rest.length?`<p class="knot small muted">Not mentioned: ${rest.map(d=>esc(d.label)).join(", ")}. <button class="linkbtn" type="button" data-addfields>Add by hand</button></p>`:""}`}).join("");
  const pc={Urgent:"u",Soon:"s",Later:"l"};
  const ce=state.editing?'contenteditable="true"':"";
  n.log.services=[...new Set(n.immediate_needs.map(x=>x.service_type).filter(Boolean))];
@@ -770,12 +793,12 @@ function renderNote(){
  <div class="notehead"><div><p class="small muted">New client · ${esc(n.template)}</p><h1>Client note: ${esc(k.name.value||"New client")}</h1></div>
   <div class="btns"><button class="btn" id="btn-edit" type="button" aria-pressed="${state.editing}">${state.editing?"Done editing":"Edit note"}</button></div></div>
  ${sampleBanner(n)}
- <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(f.field)}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(f.field)}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
+ <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
  <div class="notegrid">
   ${txPane(L,S,n.drafted)}
   <div class="pane note ${state.editing?"editing":""}" id="note">
    <section><h4>Key information ${open?`<span class="tag warn">${open} to confirm</span>`:`<span class="tag ok">Complete</span>`}</h4>
-    <div class="keyinfo">${keyFields(n.template).map(([f,l])=>fld(f,l)).join("")}</div></section>
+    ${keyInfo}</section>
    <section><h4>Immediate needs</h4><ul class="items" id="needs">${n.immediate_needs.map((x,i)=>`<li>${state.editing?`<select class="pri-sel" data-pri="${i}" aria-label="Priority">${["Urgent","Soon","Later"].map(o=>`<option ${o===x.priority?"selected":""}>${o}</option>`).join("")}</select>`:`<span class="pri ${pc[x.priority]||"l"}">${esc(x.priority)}</span>`}<span class="txt" ${ce} data-list="immediate_needs" data-i="${i}">${esc(x.text)}</span>${stSel(x,i)}${srcBtn(x.source,L,S)}<button class="del" type="button" data-del="immediate_needs" data-i="${i}" aria-label="Remove">×</button></li>`).join("")}</ul><button class="btn ghost add" type="button" data-add="immediate_needs">+ Add need</button></section>
    <section id="steps"><h4>Next steps <span class="small muted" style="font-weight:400">Only ticked steps are saved</span></h4>
     <div class="stepgrp">Agreed in meeting</div>
@@ -813,6 +836,7 @@ function renderNote(){
   syncNote();const before=k[f.field].value;const val=how==="Not known"?"":v;
   f.resolved=true;f.value=val;f.how=how;f.warn=false;k[f.field].value=val;k[f.field].by=ME;k[f.field].how=how||(force?"Differs from recording":"");
   logEvent(k.name.value,"Flag resolved",`${f.kind} ${f.field}: "${before||"blank"}" → "${val||"Not stated"}" · entered by ${ME}${how?" · source: "+how:""}${force?" · differs from recording (saved anyway)":""}`);renderNote()};
+ app.querySelectorAll("[data-addfields]").forEach(b=>b.onclick=()=>{const e=document.getElementById("btn-edit");if(e&&!state.editing)e.click()});
  app.querySelectorAll("[data-fix]").forEach(b=>b.onclick=()=>fixFlag(n.flags.find(x=>x.id===b.dataset.fix),false));
  app.querySelectorAll("[data-fixforce]").forEach(b=>b.onclick=()=>fixFlag(n.flags.find(x=>x.id===b.dataset.fixforce),true));
  document.getElementById("rv1").onchange=e=>{n.rv1=e.target.checked;logEvent(k.name.value,e.target.checked?"Review box ticked":"Review box unticked",reviewText(S)+(txFailed?" · sample transcript banner showing":""));document.getElementById("btn-save").disabled=!canSave()};
@@ -835,7 +859,10 @@ function renderNote(){
   const r=fill(n.reminder,{first});
   const kept=n.next_steps.filter(x=>x.ticked);
   const makesReminder=kept.some(x=>x.creates_reminder);
-  const c=Store.insert("Client",{Name:nm,Age:k.age.value,Gender:k.gender.value||"Not stated",Locality:k.locality.value,Phone:k.contact.value,ClientSince:TODAY_ISO,Status:"New intake"},true);
+  /* Extra template fields go onto the Client record under their "record" name. Empty stays empty. */
+  const extra={};keyDefs(n.template).filter(d=>!d.required&&d.record).forEach(d=>{const v=(k[d.key]||{}).value||"";
+   if(d.options&&d.options.join()==="Yes,No"){extra[d.record]=v?v.toLowerCase():"";extra[d.record+"Date"]=v==="Yes"?TODAY_ISO:""}else extra[d.record]=v});
+  const c=Store.insert("Client",{Name:nm,Age:k.age.value,Gender:k.gender.value||"Not stated",Locality:k.locality.value,Phone:k.contact.value,...extra,ClientSince:TODAY_ISO,Status:"New intake"},true);
   const it=Store.insert("Interaction",{ClientId:c.Id,Date:TODAY_ISO,Type:"Intake note",Template:n.template,Channel:n.source.kind==="audio"?"Voice note":"Typed",SourceName:n.source.name||null,MeetingType:n.log.meeting_type,Minutes:n.log.minutes,
    Summary:`Needs: ${n.immediate_needs.map(x=>x.text).join("; ")}. Next steps: ${kept.map(x=>x.text).join("; ")||"none agreed"}.`});
   logServices(c.Id,it,n.log.services);

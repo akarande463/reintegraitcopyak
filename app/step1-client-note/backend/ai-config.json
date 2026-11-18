@@ -9,11 +9,12 @@
   },
   "timeout_seconds": 180,
   "note": {
-    "_help": "Drafts the note from the real transcript. Needs ANTHROPIC_API_KEY in .env and: python3 -m pip install anthropic. Set enabled to false to keep the sample note.",
+    "_help": "Drafts the note from the real transcript. Needs ANTHROPIC_API_KEY in .env and: python3 -m pip install anthropic. Set enabled to false to keep the sample note. location: where the agency works, so misheard place names can be corrected to real places there.",
     "enabled": true,
     "provider": "anthropic",
     "model": "claude-opus-5-5",
     "effort": "medium",
+    "location": "Chicago, Illinois",
     "max_tokens": 16000,
     "timeout_seconds": 180
   }

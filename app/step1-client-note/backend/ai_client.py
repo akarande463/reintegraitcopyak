@@ -116,17 +116,33 @@ FIELD_STATUS = ["heard", "partly heard", "not said"]
 SPEAKERS = ["Case manager", "Client", "Other", "Unclear"]
 
 
+def _key(f):
+    """A key field is either a plain key ("age") or {key, label, type, options} from the template."""
+    return f["key"] if isinstance(f, dict) else f
+
+
+def _describe(f):
+    if not isinstance(f, dict):
+        return f"- {f}"
+    line = f"- {f['key']}: {f.get('label', f['key'])}"
+    if f.get("type") == "date":
+        line += " (a date, written YYYY-MM-DD)"
+    if f.get("options"):
+        line += f" (one of: {', '.join(f['options'])})"
+    return line
+
+
 def note_schema(lists):
     """JSON schema the model's answer must follow. Lists come from simulated_responses.json templates."""
     def obj(props):
         return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
     field = obj({"value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
-                 "comment": {"type": "string"}, "source_line": {"type": "string"}})
+                 "heard_as": {"type": "string"}, "comment": {"type": "string"}, "source_line": {"type": "string"}})
     return obj({
         "turns": {"type": "array", "items": obj({"id": {"type": "string"}, "line_id": {"type": "string"},
                                                   "speaker": {"type": "string", "enum": SPEAKERS},
                                                   "text": {"type": "string"}})},
-        "key_info": obj({k: field for k in lists["key_fields"]}),
+        "key_info": obj({_key(k): field for k in lists["key_fields"]}),
         "meeting_type": {"type": "string", "enum": lists["meeting_types"]},
         "immediate_needs": {"type": "array", "items": obj({
             "category": {"type": "string", "enum": lists["categories"]},
@@ -170,7 +186,9 @@ def draft_note(lines, lists, config, api_key):
 
     instructions = (PROMPTS / "draft-note.md").read_text(encoding="utf-8")
     transcript = "\n".join(f"[{l['id']} {l['time']}] {l['text']}" for l in lines)
-    user = (f"Key fields: {', '.join(lists['key_fields'])}\n"
+    location = config.get("location", "")
+    user = ((f"The agency works in: {location}\n" if location else "") +
+            "Key fields:\n" + "\n".join(_describe(f) for f in lists["key_fields"]) + "\n"
             f"Need categories: {', '.join(lists['categories'])}\n"
             f"Service types: {', '.join(lists['service_types'])}\n\n"
             f"Transcript:\n{transcript}")

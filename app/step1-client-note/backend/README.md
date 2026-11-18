@@ -135,6 +135,10 @@ The note model lives under `"note"`:
 
 Try `"model": "claude-sonnet-5-5"` or `"claude-haiku-5-5"` for faster, cheaper drafts, or `"effort": "high"` for more careful ones. Set `"enabled": false` to keep the sample note. To change what the model is asked to do, edit `backend/prompts/draft-note.md`.
 
+`"location"` (set to `"Chicago, Illinois"`) tells the model where the agency works, so a misheard place such as "Enelwood" is written as Englewood. The note then shows a small **Heard as "Enelwood"** under the field, so the case manager can see what was changed. People's names are never corrected.
+
+The key fields come from the note template in `simulated_responses.json` (`templates` → `intake_notes`). Fields marked `"required": true` become a flag when they are missing. The others (date of birth, release date, facility, supervision, referral source, consent forms and so on) are filled only when they were said. If they weren't, the note lists them under **Not mentioned**, and the case manager can add them by hand.
+
 ## The test log
 
 Every AI request adds one line to `backend/logs/ai-log.jsonl`. Open it in any text editor (TextEdit, Notepad, VS Code). Each line is one event. The newest is at the bottom. Every line carries a `run` number: each upload starts a new run, so all the lines from one test share the same number.
