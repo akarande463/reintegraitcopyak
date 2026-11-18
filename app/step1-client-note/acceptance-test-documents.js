@@ -37,7 +37,8 @@ const verifiedText = (p, key) => p.$eval(`[data-verified="${key}"]`, e => e.text
   await p.click('#dcancel');
 
   // 2. Release papers: matches, a difference and values found only on the document
-  await readSample(p, 'release');
+  await p.click('#btn-verify'); await p.click('[data-sample="release"]'); await p.check('#dkeep');
+  await p.click('#dgo'); await p.waitForSelector('#dtitle', { state: 'detached', timeout: 10000 });
   check('2. Name, neighborhood and facility match and get a Verified tag',
     (await verifiedText(p, 'name')).includes('Verified · Release papers') && (await verifiedText(p, 'facility')).includes('Release papers') && (await verifiedText(p, 'locality')).includes('Release papers'));
   check('2. Age is checked from the date of birth', (await verifiedText(p, 'age')).includes('date of birth'));
@@ -73,22 +74,54 @@ const verifiedText = (p, key) => p.$eval(`[data-verified="${key}"]`, e => e.text
   await p.click('#btn-save'); const ok = await p.waitForSelector('#fast-ok', { timeout: 800 }).catch(() => null); if (ok) await ok.click();
   await p.waitForSelector('#ms-board');
   const rec = await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('reintegrait.records.v2')); const c = d.Client.find(x => x.Name === 'Andre Williams'); return { c, docs: d.Document.filter(x => x.ClientId === c.Id), it: d.Interaction.find(x => x.ClientId === c.Id) }; });
-  check('4. Saving writes one Document record per document read', rec.docs.length === 2 && rec.docs[0].DocumentType === 'Release papers' && rec.docs[0].DocumentNumber === 'S00000' && rec.docs[0].FileStored === false);
+  check('4. Saving writes one Document record per document read', rec.docs.length === 2 && rec.docs[0].DocumentType === 'Release papers' && rec.docs[0].DocumentNumber === 'S00000' && rec.docs[0].Status === 'Checked');
   check('4. The Document record keeps what matched, what differed and what was chosen',
     rec.docs[0].Matched.includes('name') && rec.docs[0].Differed[0].Field === 'release_date' && rec.docs[0].Differed[0].Chosen === 'Document' && rec.docs[0].Added.includes('birth_date') && rec.docs[0].LeftOut.includes('conditions'));
   check('4. The client record notes which fields were verified', rec.c.VerifiedFields && rec.c.VerifiedFields.release_date === 'Release papers' && rec.c.VerifiedFields.name === 'Release papers, State ID' && !rec.c.VerifiedFields.facility);
   check('4. The intake note says which documents it was checked against', rec.it.Summary.includes('Checked against: Release papers, State ID'));
   await p.click('#nav-clients'); await p.click('tr:has-text("Andre Williams")');
-  check('4. The case file lists the documents checked', (await p.textContent('#docs-on-file')).includes('Release papers'));
+  const dl = await p.textContent('#doclist');
+  check('4. The client\'s Documents list shows both documents with their check result', dl.includes('Release papers') && dl.includes('State ID') && dl.includes('Checked, differed') && dl.includes('Verified'));
+  check('4. "Keep a copy" saved the release papers file, and only that one', rec.docs[0].FileStored === true && rec.docs[1].FileStored === false && (await p.$$('[data-viewdoc]')).length === 1);
+  check('4. The kept file is in this browser', await p.evaluate(k => Files.get(k).then(b => !!b && b.size > 1000), rec.docs[0].FileKey));
   await p.click('#nav-activity');
   const log = await p.textContent('#activity');
   for (const ev of ['Document read', 'Document matches', 'Document differs', 'Document value found', 'Document value added', 'Document value left out', 'Document value chosen'])
     check(`4. Activity log records "${ev}"`, log.includes(ev));
 
+  // 4b. Add a document by hand on an existing client
+  await p.click('#nav-clients'); await p.click('tr:has-text("Marcus Reed")');
+  check('4b. A client with no documents says so and offers "Add document"', !!(await p.$('#doclist-empty')) && !!(await p.$('#btn-adddoc')));
+  await p.click('#btn-adddoc');
+  await p.setInputFiles('#afile', path.join(__dirname, 'README.md'));
+  check('4b. A file that is not a photo or PDF is refused', (await p.textContent('#aerr')).includes("isn't a JPG, PNG or PDF"));
+  await p.setInputFiles('#afile', { name: 'marcus-snap-letter.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 sample benefits letter for testing') });
+  check('4b. "Add to documents" waits for a document type', await p.isDisabled('#ago'));
+  await p.selectOption('#atype', 'Benefits letter'); await p.fill('#anote', 'SNAP approval');
+  await p.click('#ago'); await p.waitForSelector('#atitle', { state: 'detached' });
+  const m = await p.evaluate(() => { const c = Store.all('Client').find(x => x.Name === 'Marcus Reed'); return Store.where('Document', d => d.ClientId === c.Id); });
+  check('4b. The document is saved as a Document record with its file', m.length === 1 && m[0].DocumentType === 'Benefits letter' && m[0].Status === 'On file' && m[0].FileStored && m[0].Note === 'SNAP approval');
+  check('4b. It shows in the list as "On file"', (await p.textContent('#doclist')).includes('Benefits letter') && (await p.textContent('#doclist')).includes('On file'));
+  const popup = p.waitForEvent('popup', { timeout: 3000 }).catch(() => null);
+  await p.click('[data-viewdoc]'); const pop = await popup;
+  check('4b. View opens the file', !!pop); if (pop) await pop.close();
+  await p.click('#btn-adddoc'); await p.click('[data-asample="stateid"]'); await p.waitForSelector('#afilebox');
+  check('4b. A sample fills in its type and number', (await p.inputValue('#atype')) === 'State ID' && (await p.inputValue('#anum')) === 'W000-0000-0000');
+  await p.click('#acancel');
+  await p.click('[data-rmdoc]');
+  check('4b. Remove asks once more before removing', (await p.textContent('[data-rmdoc]')).includes('Remove for good?'));
+  await p.click('[data-rmdoc]');
+  check('4b. Remove deletes the record and its file', !!(await p.$('#doclist-empty')) && await p.evaluate(k => Files.get(k).then(b => !b), m[0].FileKey));
+  await p.click('#nav-activity');
+  const log2 = await p.textContent('#activity');
+  for (const ev of ['Document added', 'Document opened', 'Document removed']) check(`4b. Activity log records "${ev}"`, log2.includes(ev));
+  await p.click('[data-reset]');
+  check('4b. Reset sample data also clears the files', await p.evaluate(k => new Promise(r => setTimeout(r, 300)).then(() => Files.get(k)).then(b => !b), rec.docs[0].FileKey));
+
   // 5. Saved data from before this change still loads
   await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('reintegrait.records.v2')); delete d.Document; localStorage.setItem('reintegrait.records.v2', JSON.stringify(d)); });
   await p.reload(); await p.waitForSelector('#btn-new');
-  check('5. Saved clients from before documents were added are kept', await p.evaluate(() => Store.all('Client').some(c => c.Name === 'Andre Williams') && Array.isArray(Store.all('Document'))));
+  check('5. Saved clients from before documents were added are kept', await p.evaluate(() => Store.all('Client').some(c => c.Name === 'Marcus Reed') && Array.isArray(Store.all('Document'))));
 
   // 6. Real AI path (helper faked): what is sent, and an unreadable photo
   const sent = [];

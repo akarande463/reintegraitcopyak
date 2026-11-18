@@ -479,7 +479,7 @@
   "document_check": {
     "_about": "Verify with a document. 'fields' are the key fields a document is checked against (gender is left out on purpose: a sex marker on an ID is not the client's gender, and age is checked from the date of birth). 'samples' are made-up documents for a fictional client, with what the AI reads from each. In Simulated mode the prototype uses these answers. With the helper and real AI on, the sample image itself is sent to the model.",
     "fields": ["name", "birth_date", "locality", "release_date", "facility", "supervision_type", "supervision_officer", "conditions"],
-    "document_types": ["Release papers", "State ID", "Benefits letter", "Other"],
+    "document_types": ["Release papers", "State ID", "Birth certificate", "Social Security card", "Benefits letter", "Signed consent form", "Release of information", "Other"],
     "samples": [
       {
         "id": "release", "label": "Sample release papers", "file": "sample-documents/andre-release-papers.png", "media_type": "image/png",

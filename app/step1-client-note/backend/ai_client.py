@@ -273,7 +273,8 @@ def draft_note(lines, lists, config, api_key):
 # The instructions live in prompts/read-document.md. The prototype compares the values
 # with the note itself, so the model only reads; it never decides what is right.
 # ---------------------------------------------------------------------------
-DOCUMENT_TYPES = ["Release papers", "State ID", "Benefits letter", "Other"]
+DOCUMENT_TYPES = ["Release papers", "State ID", "Birth certificate", "Social Security card", "Benefits letter",
+                  "Signed consent form", "Release of information", "Other"]
 IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"]
 
 
