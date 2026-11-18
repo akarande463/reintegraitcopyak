@@ -3,6 +3,12 @@
 transcribe() sends one audio recording to the speech-to-text model named in
 ai-config.json and returns the text with time stamps. To try another model or
 provider, edit ai-config.json. Nothing here needs to change for that.
+
+draft_update() sends a case manager's typed notes for an existing client to a
+real language model and gets back a summary and a list of case-file changes,
+so the output is grounded in what was actually typed instead of a canned
+sample. It flags anything said by someone other than the client, or anything
+unclear, instead of writing it in as a confirmed fact.
 """
 import base64
 import json
@@ -100,5 +106,100 @@ def transcribe(audio_bytes, content_type, config, token):
         "segments": segments,
         "confidence": out.get("score") or out.get("confidence"),
         "attempts": attempts,
+        "seconds": round(time.time() - started, 1),
+    }
+
+
+ANTHROPIC_HTTP_ERRORS = {
+    400: "The model could not read this request.",
+    401: "Anthropic did not accept the key. Check ANTHROPIC_API_KEY in backend/.env.",
+    403: "This key does not have access to that model.",
+    404: "Unknown model. Check ANTHROPIC_MODEL in backend/.env.",
+    413: "The notes are too long for one request.",
+    429: "Too many requests. Wait a minute and try again.",
+    529: "Anthropic is overloaded. Wait a minute and try again.",
+}
+
+DRAFT_SYSTEM_PROMPT = """You are helping a case manager at a Chicago reentry organization keep a client's case file accurate. You are given the case manager's own typed notes from a check-in call or visit, plus the client's current open needs. Summarize only what is in the notes. You never invent facts that are not in the notes.
+
+List the changes this update makes to the case file. For each change: if it updates an existing open need, set "from" to that need's exact current text (match it from the list given) and "to" to the new text; if it's a new need or a next step, leave "from" empty.
+
+If a sentence is clearly said by someone other than the client (a family member, someone overheard in the background) or is unclear or inaudible, set "flagged": true on that change and give a one-phrase "flag_reason" explaining why it needs confirming, instead of writing it in as a confirmed fact about the client. Never flag something as true that is only hearsay.
+
+Respond with ONLY valid JSON (no markdown fences, no commentary), matching exactly this shape:
+{
+  "summary": "one or two plain sentences summarizing the update",
+  "changes": [
+    {
+      "kind": "add" | "change",
+      "field": "need" | "note",
+      "label": "short label, e.g. Medication or Next step",
+      "from": "",
+      "to": "the new value",
+      "flagged": false,
+      "flag_reason": ""
+    }
+  ]
+}
+If nothing changed, return an empty changes array."""
+
+
+def draft_update(text, client, update_type, token, model):
+    """Send a case manager's typed update to a real language model.
+
+    Returns a dict: model, summary, changes (list of dicts matching the
+    shape in DRAFT_SYSTEM_PROMPT), seconds. Raises AIError on failure.
+    """
+    if not token:
+        raise AIError("No key found. Copy backend/.env.example to backend/.env and paste your Anthropic key.")
+    needs = client.get("openNeeds") or []
+    user_content = (
+        f"Client: {client.get('name', 'Unknown')}, age {client.get('age', 'unknown')}. "
+        f"Update type: {update_type}.\n"
+        f"Current open needs: {', '.join(needs) if needs else 'none on file'}.\n\n"
+        f"Case manager's typed notes:\n{text}"
+    )
+    body = json.dumps({
+        "model": model,
+        "max_tokens": 1024,
+        "system": DRAFT_SYSTEM_PROMPT,
+        "messages": [{"role": "user", "content": user_content}],
+    }).encode()
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages", data=body, method="POST", headers={
+        "x-api-key": token,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+    })
+    started = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            out = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as e:
+        detail = e.read().decode("utf-8", "replace")[:500]
+        raise AIError(ANTHROPIC_HTTP_ERRORS.get(e.code, f"Anthropic returned error {e.code}."), e.code, detail)
+    except urllib.error.URLError as e:
+        raise AIError("Could not reach Anthropic. Check the internet connection.", None, str(e.reason))
+    except TimeoutError:
+        raise AIError("The model took longer than 60 seconds.", None, "timeout")
+    except json.JSONDecodeError:
+        raise AIError("Anthropic sent back something that is not JSON.", None, "")
+
+    raw = "".join(b.get("text", "") for b in out.get("content", []) if b.get("type") == "text")
+    candidate = raw.split("```")[1] if "```" in raw else raw
+    if candidate.lstrip().startswith("json"):
+        candidate = candidate.lstrip()[4:]
+    try:
+        parsed = json.loads(candidate.strip())
+    except json.JSONDecodeError:
+        raise AIError("The model answered, but not in the expected format.", None, raw[:500])
+
+    if not isinstance(parsed.get("summary"), str) or not isinstance(parsed.get("changes"), list):
+        raise AIError("The model's answer was missing summary or changes.", None, json.dumps(parsed)[:500])
+
+    return {
+        "model": model,
+        "summary": parsed["summary"],
+        "changes": parsed["changes"],
         "seconds": round(time.time() - started, 1),
     }

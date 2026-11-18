@@ -3,3 +3,5 @@
 # Test logs stay on your laptop.
 logs/*
 !logs/.gitkeep
+# Python build cache.
+__pycache__/
