@@ -427,11 +427,49 @@ function startRealTx(job,src){
     job.transcript=segs.map((g,i)=>({id:"rt"+(i+1),time:mmss(g.start),speaker:"Recording",text:g.text,real:true}));
     job.real={status:"done",model:r.model,seconds:r.seconds};
     logEvent(job.client?job.client.name:job.key_info.name.value,"Real AI transcript",`${r.model} · ${segs.length} pieces · ${r.seconds} s`);
+    if(!job.client)startRealDraft(job);
    }else{
     job.real={status:"failed",error:r.error||"Unknown error"};
     logEvent(job.client?job.client.name:job.key_info.name.value,"Real AI failed",`${job.real.error} Showing the sample transcript.`);
    }
   });
+}
+/* Second AI step: draft the note from the real transcript (backend/prompts/draft-note.md). */
+function startRealDraft(job){
+ const ns=AI.note||{};
+ if(!ns.enabled)return;
+ if(!ns.key_found||!ns.sdk_installed){job.realDraft={status:"failed",error:!ns.key_found?"No Anthropic key in backend/.env.":"The Anthropic package is not installed (python3 -m pip install anthropic)."};return}
+ job.realDraft={status:"running",model:ns.model};
+ const lists={key_fields:keyFields(job.template).map(f=>f[0]),categories:SIM.matched_services.categories,service_types:serviceTypes(),meeting_types:SIM.templates.meeting_types};
+ job.realDraftTx=fetch("api/draft-note",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({run:RUN,lists,lines:job.transcript.map(l=>({id:l.id,time:l.time,text:l.text}))})})
+  .then(r=>r.json()).catch(()=>({ok:false,error:"The laptop helper stopped. Restart it with python3 backend/server.py."}))
+  .then(r=>{
+   if(r.ok&&r.note){applyDraft(job,r.note);job.realDraft={status:"done",model:r.model,seconds:r.seconds};
+    logEvent(job.key_info.name.value||"New client","Real AI note drafted",`${r.model} · ${job.immediate_needs.length} needs · ${job.next_steps.length} steps · ${job.flags.length} to confirm · ${r.seconds} s`)}
+   else{job.realDraft={status:"failed",error:r.error||"Unknown error"};
+    logEvent(job.key_info.name.value||"New client","Real AI note failed",`${job.realDraft.error} Showing the sample note.`)}
+  });
+}
+/* Turn the model's answer into the note the screen already knows how to show. */
+function applyDraft(n,d){
+ const sp={};(d.speakers||[]).forEach(x=>sp[x.line_id]=x.speaker);
+ n.transcript.forEach(l=>{if(sp[l.id])l.speaker=sp[l.id]});
+ const lineTime=id=>{const l=n.transcript.find(x=>x.id===id);return l?l.time:""};
+ const gOpts=(SIM.new_client_intake.note.flags.find(f=>f.field==="gender")||{}).options||["Male","Female","Non-binary","Prefers not to say"];
+ const flags=[];
+ keyFields(n.template).forEach(([k,label])=>{
+  const v=(d.key_info||{})[k]||{value:"",status:"not said",source_line:""};
+  const val=v.status==="not said"?"":v.value;
+  n.key_info[k]={value:k==="gender"&&!gOpts.includes(val)?"":val,source:v.source_line||null};
+  if(v.status==="not said")flags.push({id:"f-"+k,field:k,kind:"Missing",text:`${label} was not stated in the recording.`,fix:k==="gender"?"select":"input",options:gOpts,placeholder:""});
+  else if(v.status==="partly heard")flags.push({id:"f-"+k,field:k,kind:"Unclear",text:`${label} was only partly heard${lineTime(v.source_line)?" at "+lineTime(v.source_line):""}.`,fix:"input",placeholder:v.value});
+ });
+ n.flags=flags;
+ n.immediate_needs=(d.immediate_needs||[]).map(x=>({priority:x.priority,text:`${x.category}: ${x.detail}`,service_type:x.service_type,source:x.source_line||null}));
+ n.next_steps=(d.next_steps||[]).map(x=>({kind:x.kind,action:x.action,owner:x.owner,due:x.due,addresses:x.addresses||[],source:x.source_line||null,creates_reminder:false}));
+ applyStepRules(n);
+ if(d.meeting_type)n.log.meeting_type=d.meeting_type;
+ n.drafted=true;
 }
 const secs=ms=>{const s=Math.round(ms/1000);return s<60?s+" sec":Math.floor(s/60)+" min "+(s%60)+" sec"};
 
@@ -449,7 +487,7 @@ function render(){
  app.querySelectorAll("[data-aimode]").forEach(b=>b.onclick=()=>{if(!AI.on&&!AI.key_found){toast("No key found. Add your key to backend/.env, then restart the helper.");return}AI.on=!AI.on;logEvent("","AI switch",AI.on?"Real ("+AI.model+")":"Simulated");render();toast(AI.on?"Real AI on for voice to text.":"Simulated responses on.")});
  app.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{Store.reset();state.sel="c1";state.newIds.clear();state.note=null;state.update=null;go(state.view==="clients"?"clients":"home");toast("Sample data restored.")});
 }
-const mockbar=()=>`<div class="mockbar"><span class="tag sim">Prototype</span>Sample clients, saved in this browser. ${AI.on?`Voice to text uses the real model <b>${esc(AI.model)}</b>. Everything else comes from simulated_responses.json.`:"AI output comes from simulated_responses.json."}${AI.helper?`<button class="btn ghost small" type="button" data-aimode aria-pressed="${AI.on}" title="${AI.key_found?"":"No key found in backend/.env"}">AI: ${AI.on?"Real":"Simulated"} · switch</button>`:""}<button class="btn ghost small" type="button" data-reset>Reset sample data</button></div>`;
+const mockbar=()=>`<div class="mockbar"><span class="tag sim">Prototype</span>Sample clients, saved in this browser. ${AI.on?`Voice to text uses the real model <b>${esc(AI.model)}</b>.${AI.note&&AI.note.enabled&&AI.note.key_found&&AI.note.sdk_installed?` The new-client note is drafted by <b>${esc(AI.note.model)}</b>.`:""} Everything else comes from simulated_responses.json.`:"AI output comes from simulated_responses.json."}${AI.helper?`<button class="btn ghost small" type="button" data-aimode aria-pressed="${AI.on}" title="${AI.key_found?"":"No key found in backend/.env"}">AI: ${AI.on?"Real":"Simulated"} · switch</button>`:""}<button class="btn ghost small" type="button" data-reset>Reset sample data</button></div>`;
 
 /* ---------- Home ---------- */
 function renderHome(){
@@ -598,10 +636,18 @@ function renderProcess(){
  clearTimeout(procTimer);
  const step=()=>{
   if(!lis[0].isConnected)return;
+  if(i>0&&stages[i-1].k==="quality_check"&&job.real){stages[i-1].status="done";stages[i-1].r=`Recording received${src.dur?" ("+src.dur+")":""}. An automatic quality check is not part of the real AI yet.`}
+  if(i>0&&(stages[i-1].k==="missing_info_check"||stages[i-1].k==="template_match")&&job.realDraft){
+   const d=job.realDraft,cur=stages[i-1];
+   if(d.status==="running"){lis[i-1].querySelector("b").textContent=cur.t+" (real model: "+d.model+")";job.realDraftTx.then(step);return}
+   if(d.status==="failed"){cur.status=cur.k==="template_match"?"done":"flag";cur.r=cur.k==="template_match"?"Sample note used.":`Note drafting failed: ${d.error} Showing the sample note instead.`}
+   else if(cur.k==="missing_info_check"){cur.status=job.flags.length?"flag":"done";cur.r=job.flags.length?`${job.flags.length} thing${job.flags.length>1?"s":""} to confirm: ${job.flags.map(f=>f.text.replace(/\.$/,"").toLowerCase()).join("; ")}.`:"Nothing missing or unclear."}
+   else{const ag=job.next_steps.filter(x=>x.kind==="agreed").length;cur.status="done";cur.r=`Drafted by ${d.model} in ${d.seconds} sec. ${job.immediate_needs.length} needs, ${ag} agreed next step${ag===1?"":"s"}, ${job.next_steps.length-ag} suggestion${job.next_steps.length-ag===1?"":"s"}.`}
+  }
   if(i>0&&stages[i-1].k==="transcription"&&job.real){
    if(job.real.status==="running"){lis[i-1].querySelector("b").textContent="Turn voice into text (real model: "+job.real.model+")";job.realTx.then(step);return}
    stages[i-1].status=job.real.status==="done"?"done":"flag";
-   stages[i-1].r=job.real.status==="done"?`Real transcript from ${job.real.model} in ${job.real.seconds} sec. The note draft is still the simulated sample.`:`Real AI failed: ${job.real.error} Showing the sample transcript instead.`;
+   stages[i-1].r=job.real.status==="done"?`Real transcript from ${job.real.model} in ${job.real.seconds} sec.${job.realDraft?"":" The note draft is still the simulated sample."}`:`Real AI failed: ${job.real.error} Showing the sample transcript instead.`;
   }
   if(i>0){const s=stages[i-1],li=lis[i-1];li.className=s.status==="skip"?"skip":s.status==="flag"?"flag":"done";li.querySelector(".res").textContent=s.r;li.querySelector(".dot").textContent=s.status==="skip"?"–":s.status==="flag"?"!":"✓";li.querySelector(".res").hidden=false}
   if(i<lis.length){lis[i].className="run";lis[i].querySelector(".dot").textContent="";i++;procTimer=setTimeout(step,stages[i-1].status==="skip"?400:1000)}
@@ -613,10 +659,10 @@ function renderProcess(){
 }
 
 /* ---------- Transcript pane ---------- */
-function txPane(lines,src){
+function txPane(lines,src,drafted){
  if(src.kind!=="audio"||!lines.length)return`<div class="pane"><h2>Your typed notes</h2><p class="small" style="white-space:pre-wrap">${esc(src.text||"No transcript in this sample.")}</p></div>`;
  const real=lines[0]&&lines[0].real;
- return`<div class="pane"><h2>Transcript <span class="tag info">${esc(src.dur||"")}</span>${real?' <span class="tag ok">Real AI</span>':""}</h2>${real?`<p class="small muted" style="margin-bottom:8px">Written by the real speech-to-text model. The note fields are still the simulated sample, so their time stamps do not point here.</p>`:""}
+ return`<div class="pane"><h2>Transcript <span class="tag info">${esc(src.dur||"")}</span>${real?' <span class="tag ok">Real AI</span>':""}</h2>${real?`<p class="small muted" style="margin-bottom:8px">Written by the real speech-to-text model.${drafted?" Speakers were labelled by the note model. Time stamps in the note point to these lines.":" The note fields are still the simulated sample, so their time stamps do not point here."}</p>`:""}
  <div class="tx" id="tx">${lines.map(l=>`<div id="${l.id}"><span class="ts">${l.time}</span><span><span class="sp">${esc(l.speaker)}:</span>${esc(l.text).replace(/\[inaudible[^\]]*\]/,m=>`<span class="gap">⚠ ${m}</span>`)}${l.consent?`<span class="consent">✓ Consent</span>`:""}</span></div>`).join("")}</div>
  <p class="small muted" style="margin-top:8px">Tap a time stamp in the note to see where it came from.</p></div>`;
 }
@@ -661,6 +707,8 @@ function checkFix(f,v,how){
  return{};
 }
 function sampleBanner(job){
+ if(job.realDraft&&job.realDraft.status==="failed")return`<div class="flagitem banner" role="alert" id="sample-banner"><b><span class="ic" aria-hidden="true">⚠</span> The transcript is from your recording, but the note below is the sample note.</b>Note drafting failed: ${esc(job.realDraft.error)} Fill the note from the transcript yourself, or switch to Simulated.</div>`;
+ if(job.drafted)return`<p class="small muted" id="draft-note-info" style="margin-bottom:10px">Drafted by ${esc(job.realDraft.model)} from your recording. Check every line against the transcript before you approve.</p>`;
  if(!(job.real&&job.real.status==="failed"))return"";
  return`<div class="flagitem banner" role="alert" id="sample-banner"><b><span class="ic" aria-hidden="true">⚠</span> This draft is from the sample transcript, not your recording.</b>The real model failed: ${esc(job.real.error)} Check every field against the recording yourself, or switch to Simulated.</div>`;
 }
@@ -693,14 +741,14 @@ function renderNote(){
  const why=n.next_steps.map((x,i)=>i).filter(i=>needsWhy(n,n.next_steps[i]));
  const noWhy=why.filter(i=>!n.next_steps[i].why).length;
  const canSave=()=>!open&&n.rv1&&(!noneNeeded||n.noneConfirmed)&&!untyped&&n.log.minutes>0&&!noWhy;
- const txFailed=!!(n.real&&n.real.status==="failed");
+ const txFailed=!!((n.real&&n.real.status==="failed")||(n.realDraft&&n.realDraft.status==="failed"));
  app.innerHTML=mockbar()+`
  <div class="notehead"><div><p class="small muted">New client · ${esc(n.template)}</p><h1>Client note: ${esc(k.name.value||"New client")}</h1></div>
   <div class="btns"><button class="btn" id="btn-edit" type="button" aria-pressed="${state.editing}">${state.editing?"Done editing":"Edit note"}</button></div></div>
  ${sampleBanner(n)}
  <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(f.field)}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(f.field)}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
  <div class="notegrid">
-  ${txPane(L,S)}
+  ${txPane(L,S,n.drafted)}
   <div class="pane note ${state.editing?"editing":""}" id="note">
    <section><h4>Key information ${open?`<span class="tag warn">${open} to confirm</span>`:`<span class="tag ok">Complete</span>`}</h4>
     <div class="keyinfo">${keyFields(n.template).map(([f,l])=>fld(f,l)).join("")}</div></section>

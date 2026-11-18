@@ -9,6 +9,7 @@ import json
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 FRIENDLY_HTTP_ERRORS = {
     400: "The model could not read this request. The audio format may not be supported. Try MP3 or WAV.",
@@ -102,3 +103,111 @@ def transcribe(audio_bytes, content_type, config, token):
         "attempts": attempts,
         "seconds": round(time.time() - started, 1),
     }
+
+
+# ---------------------------------------------------------------------------
+# Step 2 of the AI: draft the note from the transcript (Claude, Anthropic API).
+# Needs the Anthropic Python SDK:  python3 -m pip install anthropic
+# The instructions live in prompts/draft-note.md so the class can read and edit them.
+# ---------------------------------------------------------------------------
+PROMPTS = Path(__file__).resolve().parent / "prompts"
+
+FIELD_STATUS = ["heard", "partly heard", "not said"]
+SPEAKERS = ["Case manager", "Client", "Other", "Unclear"]
+
+
+def note_schema(lists):
+    """JSON schema the model's answer must follow. Lists come from simulated_responses.json templates."""
+    def obj(props):
+        return {"type": "object", "properties": props, "required": list(props), "additionalProperties": False}
+    field = obj({"value": {"type": "string"}, "status": {"type": "string", "enum": FIELD_STATUS},
+                 "source_line": {"type": "string"}})
+    return obj({
+        "speakers": {"type": "array", "items": obj({"line_id": {"type": "string"},
+                                                     "speaker": {"type": "string", "enum": SPEAKERS}})},
+        "key_info": obj({k: field for k in lists["key_fields"]}),
+        "meeting_type": {"type": "string", "enum": lists["meeting_types"]},
+        "immediate_needs": {"type": "array", "items": obj({
+            "category": {"type": "string", "enum": lists["categories"]},
+            "detail": {"type": "string"},
+            "priority": {"type": "string", "enum": ["Urgent", "Soon", "Later"]},
+            "service_type": {"type": "string", "enum": lists["service_types"]},
+            "source_line": {"type": "string"}})},
+        "next_steps": {"type": "array", "items": obj({
+            "kind": {"type": "string", "enum": ["agreed", "suggested"]},
+            "action": {"type": "string"},
+            "owner": {"type": "string", "enum": ["Case manager", "Client", "Both"]},
+            "due": {"type": "string"},
+            "addresses": {"type": "array", "items": {"type": "string", "enum": lists["categories"]}},
+            "source_line": {"type": "string"}})},
+    })
+
+
+def draft_note(lines, lists, config, api_key):
+    """Ask Claude to draft the intake note from a transcript.
+
+    lines  [{id, time, text}] from transcribe()
+    lists  {key_fields, categories, service_types, meeting_types}
+    Returns {request, note, stop_reason, usage, request_id, seconds}. Raises AIError on failure.
+    """
+    if not api_key:
+        raise AIError("No Anthropic key found. Add ANTHROPIC_API_KEY to backend/.env, then restart the helper.")
+    try:
+        import anthropic
+    except ImportError:
+        raise AIError("The Anthropic package is not installed. In Terminal run: python3 -m pip install anthropic")
+
+    instructions = (PROMPTS / "draft-note.md").read_text(encoding="utf-8")
+    transcript = "\n".join(f"[{l['id']} {l['time']}] {l['text']}" for l in lines)
+    user = (f"Key fields: {', '.join(lists['key_fields'])}\n"
+            f"Need categories: {', '.join(lists['categories'])}\n"
+            f"Service types: {', '.join(lists['service_types'])}\n\n"
+            f"Transcript:\n{transcript}")
+    model, effort = config["model"], config.get("effort", "medium")
+    request = {"provider": "anthropic", "model": model, "effort": effort,
+               "instructions": instructions, "input": user}
+
+    client = anthropic.Anthropic(api_key=api_key, timeout=float(config.get("timeout_seconds", 180)))
+    started = time.time()
+    try:
+        resp = client.beta.messages.create(
+            model=model,
+            max_tokens=int(config.get("max_tokens", 16000)),
+            system=instructions,
+            messages=[{"role": "user", "content": user}],
+            output_config={"effort": effort, "format": {"type": "json_schema", "schema": note_schema(lists)}},
+            # If a safety check declines the request, the API retries it on another model in the same call.
+            betas=["server-side-fallback-2026-07-01"],
+            fallbacks="default",
+        )
+    except anthropic.AuthenticationError as e:
+        raise AIError("Anthropic did not accept the key. Check ANTHROPIC_API_KEY in backend/.env.", 401, str(e)[:300])
+    except anthropic.PermissionDeniedError as e:
+        raise AIError("This Anthropic key is not allowed to use this model.", 403, str(e)[:300])
+    except anthropic.NotFoundError as e:
+        raise AIError("Anthropic does not know this model. Check note.model in ai-config.json.", 404, str(e)[:300])
+    except anthropic.RateLimitError as e:
+        raise AIError("Too many requests, or the account is out of credit. Wait a minute or check billing.", 429, str(e)[:300])
+    except anthropic.BadRequestError as e:
+        msg = "Anthropic could not read the request."
+        if "credit" in str(e).lower():
+            msg = "Your Anthropic account is out of credit. Add credit at console.anthropic.com."
+        raise AIError(msg, 400, str(e)[:300])
+    except anthropic.APIStatusError as e:
+        raise AIError(f"Anthropic returned error {e.status_code}. Try again in a minute.", e.status_code, str(e)[:300])
+    except anthropic.APIConnectionError as e:
+        raise AIError("Could not reach Anthropic. Check the internet connection.", None, str(e)[:300])
+
+    seconds = round(time.time() - started, 1)
+    usage = {"input_tokens": resp.usage.input_tokens, "output_tokens": resp.usage.output_tokens}
+    if resp.stop_reason == "refusal":
+        raise AIError("The model declined to draft this note.", None, str(getattr(resp, "stop_details", "")))
+    if resp.stop_reason == "max_tokens":
+        raise AIError("The note was cut off before it finished. Raise note.max_tokens in ai-config.json.", None, "")
+    text = next((b.text for b in resp.content if b.type == "text"), "")
+    try:
+        note = json.loads(text)
+    except json.JSONDecodeError:
+        raise AIError("The model's answer was not valid JSON.", None, text[:300])
+    return {"request": request, "note": note, "stop_reason": resp.stop_reason, "usage": usage,
+            "request_id": getattr(resp, "_request_id", None), "seconds": seconds}
