@@ -146,7 +146,7 @@ class Handler(SimpleHTTPRequestHandler):
             write_log(entry)
             return self._json(200, {"ok": False, "mode": "simulated", "error": "Simulated mode is on in ai-config.json."})
         try:
-            r = transcribe(audio, ctype, cfg, read_env().get("HF_TOKEN", ""))
+            r = transcribe(audio, ctype, cfg, read_env().get("HF_TOKEN", ""), name)
         except AIError as e:
             entry.update(mode="real", request={"endpoint": cfg.get("endpoint", "").format(provider=cfg.get("provider"), model=cfg.get("model")),
                                                "provider": cfg.get("provider"), "model": cfg.get("model"),
@@ -186,7 +186,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, {"ok": False, "mode": "simulated", "error": "Simulated mode is on in ai-config.json."})
         model = read_env().get("ANTHROPIC_MODEL") or DEFAULT_DRAFT_MODEL
         try:
-            r = draft_update(text, client, update_type, read_env().get("ANTHROPIC_API_KEY", ""), model)
+            r = draft_update(text, client, update_type, read_env().get("ANTHROPIC_API_KEY", ""), model,
+                             payload.get("date") or "")
         except AIError as e:
             entry.update(mode="real", error={"message": str(e), "status": e.status, "detail": e.detail})
             write_log(entry)
@@ -223,7 +224,7 @@ def _draft_note_handler(handler, body):
         write_log(entry)
         return handler._json(200, {"ok": False, "mode": "simulated", "error": "Note drafting is off in ai-config.json."})
     try:
-        r = draft_note(lines, lists, ncfg, read_env().get("ANTHROPIC_API_KEY", ""))
+        r = draft_note(lines, lists, {**ncfg, "meeting_date": req.get("meeting_date") or ""}, read_env().get("ANTHROPIC_API_KEY", ""))
     except AIError as e:
         entry.update(mode="real", request={"provider": ncfg.get("provider"), "model": ncfg.get("model"),
                                            "effort": ncfg.get("effort")},

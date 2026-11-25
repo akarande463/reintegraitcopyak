@@ -11,7 +11,11 @@ sample. It flags anything said by someone other than the client, or anything
 unclear, instead of writing it in as a confirmed fact.
 """
 import base64
+import datetime
 import json
+import shutil
+import subprocess
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -27,6 +31,56 @@ FRIENDLY_HTTP_ERRORS = {
     429: "Too many requests. Wait a minute and try again.",
     503: "The model is starting up or busy. Wait a minute and try again.",
 }
+
+
+# Whisper on Hugging Face takes WAV, FLAC, MP3, OGG and WebM, but not the .m4a/.mp4/.aac files
+# that iPhone voice memos and the Mac `say` command make. Those are converted to 16 kHz mono WAV first.
+NEEDS_CONVERSION = {"audio/mp4", "audio/x-m4a", "audio/m4a", "audio/aac", "audio/x-aac", "video/mp4",
+                    "audio/quicktime", "video/quicktime", "audio/x-caf", "audio/3gpp", "audio/amr"}
+CONVERT_EXTENSIONS = (".m4a", ".mp4", ".aac", ".caf", ".mov", ".3gp", ".amr")
+
+
+def needs_conversion(content_type, file_name=""):
+    ctype = (content_type or "").split(";")[0].strip().lower()
+    return ctype in NEEDS_CONVERSION or (ctype in ("", "application/octet-stream") and
+                                          (file_name or "").lower().endswith(CONVERT_EXTENSIONS))
+
+
+def to_wav(audio_bytes, file_name="recording.m4a"):
+    """Convert a recording to 16 kHz mono WAV with afconvert (built into macOS) or ffmpeg."""
+    suffix = Path(file_name).suffix or ".m4a"
+    with tempfile.TemporaryDirectory() as tmp:
+        src, dst = Path(tmp) / f"in{suffix}", Path(tmp) / "out.wav"
+        src.write_bytes(audio_bytes)
+        if shutil.which("afconvert"):
+            cmd = ["afconvert", "-f", "WAVE", "-d", "LEI16@16000", "-c", "1", str(src), str(dst)]
+        elif shutil.which("ffmpeg"):
+            cmd = ["ffmpeg", "-nostdin", "-loglevel", "error", "-y", "-i", str(src), "-ac", "1", "-ar", "16000", str(dst)]
+        else:
+            raise AIError("This recording is .m4a, which Whisper can't read, and there is no converter on this "
+                          "computer. On a Mac this works without installing anything; elsewhere install ffmpeg, "
+                          "or upload MP3 or WAV.")
+        try:
+            subprocess.run(cmd, capture_output=True, check=True, timeout=120)
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:
+            raise AIError("The recording could not be converted to WAV for Whisper.", None,
+                          (getattr(e, "stderr", b"") or b"").decode("utf-8", "replace")[:300])
+        return dst.read_bytes()
+
+
+def calendar_lines(today, days_back=35, days_ahead=21):
+    """A short calendar around the meeting date, so weekdays and dates can be checked against each other."""
+    start = today - datetime.timedelta(days=days_back)
+    return ", ".join(f"{(start + datetime.timedelta(days=i)).strftime('%a %Y-%m-%d')}"
+                     for i in range(days_back + days_ahead + 1))
+
+
+def meeting_date(value=None):
+    """The meeting date as a date: the value given (YYYY-MM-DD) or today."""
+    try:
+        return datetime.date.fromisoformat(str(value)[:10]) if value else datetime.date.today()
+    except ValueError:
+        return datetime.date.today()
 
 
 class AIError(Exception):
@@ -58,7 +112,7 @@ def _post(url, token, body, content_type, timeout):
         raise AIError("Hugging Face sent back something that is not JSON.", None, "")
 
 
-def transcribe(audio_bytes, content_type, config, token):
+def transcribe(audio_bytes, content_type, config, token, file_name=""):
     """Send one recording to the configured model.
 
     Returns a dict:
@@ -77,6 +131,10 @@ def transcribe(audio_bytes, content_type, config, token):
     instructions = config.get("instructions", {})
     timeout = int(config.get("timeout_seconds", 180))
     request = {"endpoint": url, "provider": provider, "model": model, "instructions": instructions}
+    if needs_conversion(content_type, file_name):
+        audio_bytes = to_wav(audio_bytes, file_name or "recording.m4a")
+        request["converted"] = f"{content_type or 'unknown type'} converted to 16 kHz mono WAV before sending"
+        content_type = "audio/wav"
 
     started = time.time()
     attempts = 1
@@ -239,7 +297,10 @@ def draft_note(lines, lists, config, api_key):
     instructions = (PROMPTS / "draft-note.md").read_text(encoding="utf-8")
     transcript = "\n".join(f"[{l['id']} {l['time']}] {l['text']}" for l in lines)
     location = config.get("location", "")
+    day = meeting_date(config.get("meeting_date"))
     user = ((f"The agency works in: {location}\n" if location else "") +
+            f"Meeting date (today, unless the recording says otherwise): {day.strftime('%A %Y-%m-%d')}\n"
+            f"Calendar around it: {calendar_lines(day)}\n" +
             "Key fields:\n" + "\n".join(_describe(f) for f in lists["key_fields"]) + "\n"
             f"Need categories: {', '.join(lists['categories'])}\n"
             f"Service types: {', '.join(lists['service_types'])}\n\n"
@@ -355,11 +416,15 @@ ANTHROPIC_HTTP_ERRORS = {
     529: "Anthropic is overloaded. Wait a minute and try again.",
 }
 
-DRAFT_SYSTEM_PROMPT = """You are helping a case manager at a Chicago reentry organization keep a client's case file accurate. You are given the case manager's own typed notes from a check-in call or visit, plus the client's current open needs. Summarize only what is in the notes. You never invent facts that are not in the notes.
+DRAFT_SYSTEM_PROMPT = """You are helping a case manager at a reentry organization keep a client's case file accurate. You are given the case manager's own typed notes from a check-in call or visit, plus the client's current open needs. Summarize only what is in the notes. You never invent facts that are not in the notes.
 
 List the changes this update makes to the case file. For each change: if it updates an existing open need, set "from" to that need's exact current text (match it from the list given) and "to" to the new text; if it's a new need or a next step, leave "from" empty.
 
 If a sentence is clearly said by someone other than the client (a family member, someone overheard in the background) or is unclear or inaudible, set "flagged": true on that change and give a one-phrase "flag_reason" explaining why it needs confirming, instead of writing it in as a confirmed fact about the client. Never flag something as true that is only hearsay.
+
+Dates: the message gives the date of this update and a calendar. Work out dates such as "Thursday" or "this Sunday" from it and write them as dates (for example "Thu Nov 19"). If a weekday and a date said together do not match the calendar (for example "Sunday the 30th" when the 30th is a Monday), set "flagged": true and say so in "flag_reason".
+
+A next step the case manager says they will do ("I'll call the shelter line") is a next step even if the client only says "okay".
 
 Respond with ONLY valid JSON (no markdown fences, no commentary), matching exactly this shape:
 {
@@ -379,7 +444,7 @@ Respond with ONLY valid JSON (no markdown fences, no commentary), matching exact
 If nothing changed, return an empty changes array."""
 
 
-def draft_update(text, client, update_type, token, model):
+def draft_update(text, client, update_type, token, model, meeting=None):
     """Send a case manager's typed update to a real language model.
 
     Returns a dict: model, summary, changes (list of dicts matching the
@@ -388,7 +453,9 @@ def draft_update(text, client, update_type, token, model):
     if not token:
         raise AIError("No key found. Copy backend/.env.example to backend/.env and paste your Anthropic key.")
     needs = client.get("openNeeds") or []
+    day = meeting_date(meeting)
     user_content = (
+        f"Date of this update: {day.strftime('%A %Y-%m-%d')}. Calendar around it: {calendar_lines(day, 14, 21)}\n"
         f"Client: {client.get('name', 'Unknown')}, age {client.get('age', 'unknown')}. "
         f"Update type: {update_type}.\n"
         f"Current open needs: {', '.join(needs) if needs else 'none on file'}.\n\n"
@@ -396,7 +463,7 @@ def draft_update(text, client, update_type, token, model):
     )
     body = json.dumps({
         "model": model,
-        "max_tokens": 1024,
+        "max_tokens": 4096,
         "system": DRAFT_SYSTEM_PROMPT,
         "messages": [{"role": "user", "content": user_content}],
     }).encode()
@@ -408,7 +475,7 @@ def draft_update(text, client, update_type, token, model):
     })
     started = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             out = json.loads(resp.read().decode("utf-8"))
     except urllib.error.HTTPError as e:
         detail = e.read().decode("utf-8", "replace")[:500]
@@ -416,10 +483,12 @@ def draft_update(text, client, update_type, token, model):
     except urllib.error.URLError as e:
         raise AIError("Could not reach Anthropic. Check the internet connection.", None, str(e.reason))
     except TimeoutError:
-        raise AIError("The model took longer than 60 seconds.", None, "timeout")
+        raise AIError("The model took longer than 120 seconds.", None, "timeout")
     except json.JSONDecodeError:
         raise AIError("Anthropic sent back something that is not JSON.", None, "")
 
+    if out.get("stop_reason") == "max_tokens":
+        raise AIError("The update was cut off before it finished. The notes may be too long for one update.", None, "")
     raw = "".join(b.get("text", "") for b in out.get("content", []) if b.get("type") == "text")
     candidate = raw.split("```")[1] if "```" in raw else raw
     if candidate.lstrip().startswith("json"):
