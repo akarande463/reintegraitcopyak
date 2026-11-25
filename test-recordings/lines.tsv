@@ -185,3 +185,214 @@ case	line	speaker	voices	text
 10-nadia-toronto-corrections	16	Nadia	Amélie|Amelie|Thomas|Samantha	Four one six, five five five, zero one three nine.
 10-nadia-toronto-corrections	17	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Today we'll start your Ontario Works application online, and Friday we go to ServiceOntario for the health card.
 10-nadia-toronto-corrections	18	Nadia	Amélie|Amelie|Thomas|Samantha	Parfait. Merci.
+il-01-marcus-stateville-chatham	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Marcus Bell, Monday November sixteenth. I'd like to record this so I can listen instead of write. Is that okay?
+il-01-marcus-stateville-chatham	02	Marcus	Fred|Reed (English (US))|Alex	That's cool.
+il-01-marcus-stateville-chatham	03	Case manager	Samantha|Kathy|Sandy (English (US))	Can I get your IDOC number?
+il-01-marcus-stateville-chatham	04	Marcus	Fred|Reed (English (US))|Alex	Y as in yellow, four two zero one seven. Y four two zero one seven.
+il-01-marcus-stateville-chatham	05	Case manager	Samantha|Kathy|Sandy (English (US))	And your date of birth?
+il-01-marcus-stateville-chatham	06	Marcus	Fred|Reed (English (US))|Alex	June ninth, eighty-four.
+il-01-marcus-stateville-chatham	07	Case manager	Samantha|Kathy|Sandy (English (US))	When did you get out?
+il-01-marcus-stateville-chatham	08	Marcus	Fred|Reed (English (US))|Alex	The sixth. Out of Stateville. I did eleven years, the last two at Sheridan though, they moved me for the drug program.
+il-01-marcus-stateville-chatham	09	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. You're on MSR?
+il-01-marcus-stateville-chatham	10	Marcus	Fred|Reed (English (US))|Alex	Yeah, MSR, one year. My agent is Agent Dominguez. He came by the house already Thursday.
+il-01-marcus-stateville-chatham	11	Case manager	Samantha|Kathy|Sandy (English (US))	And the host site is where?
+il-01-marcus-stateville-chatham	12	Marcus	Fred|Reed (English (US))|Alex	My sister's, in Chatham. Eighty-third and Cottage. She approved it, it's her lease.
+il-01-marcus-stateville-chatham	13	Case manager	Samantha|Kathy|Sandy (English (US))	Do you have your ID?
+il-01-marcus-stateville-chatham	14	Marcus	Fred|Reed (English (US))|Alex	They gave me the state ID when I walked out, but it got my old address on it, from before. In Englewood.
+il-01-marcus-stateville-chatham	15	Case manager	Samantha|Kathy|Sandy (English (US))	Are you on LINK?
+il-01-marcus-stateville-chatham	16	Marcus	Fred|Reed (English (US))|Alex	Not yet. I don't know how to do the online thing.
+il-01-marcus-stateville-chatham	17	Case manager	Samantha|Kathy|Sandy (English (US))	Who should we call in an emergency?
+il-01-marcus-stateville-chatham	18	Marcus	Fred|Reed (English (US))|Alex	My sister, Denise Bell. Seven seven three, five five five, zero one four six.
+il-01-marcus-stateville-chatham	19	Case manager	Samantha|Kathy|Sandy (English (US))	And your number?
+il-01-marcus-stateville-chatham	20	Marcus	Fred|Reed (English (US))|Alex	Same as hers for now. I ain't got a phone yet.
+il-01-marcus-stateville-chatham	21	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Today I'll do the LINK application with you on the computer here. Wednesday we go to the Secretary of State on King Drive to fix the address on your ID. And I'll get you a phone through the Lifeline program.
+il-01-marcus-stateville-chatham	22	Marcus	Fred|Reed (English (US))|Alex	Bet. Wednesday.
+il-02-luis-dixon-little-village	01	Case manager	Samantha|Kathy|Sandy (English (US))	This is intake for Luis Ortiz, Wednesday the eighteenth. Is it okay to record?
+il-02-luis-dixon-little-village	02	Luis	Eddy (English (US))|Alex|Fred	Yeah. My mom's here too, she don't speak much English.
+il-02-luis-dixon-little-village	03	Mother (Señora Ortiz)	Paulina|Mónica|Monica|Samantha	Buenas tardes.
+il-02-luis-dixon-little-village	04	Case manager	Samantha|Kathy|Sandy (English (US))	Buenas tardes. Luis, when were you released?
+il-02-luis-dixon-little-village	05	Luis	Eddy (English (US))|Alex|Fred	November tenth. From Dixon.
+il-02-luis-dixon-little-village	06	Case manager	Samantha|Kathy|Sandy (English (US))	And you're on MSR with the monitor?
+il-02-luis-dixon-little-village	07	Luis	Eddy (English (US))|Alex|Fred	Yeah, the bracelet for ninety days. I only get movement like nine to five, Monday to Friday. Two years MSR total.
+il-02-luis-dixon-little-village	08	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you staying?
+il-02-luis-dixon-little-village	09	Luis	Eddy (English (US))|Alex|Fred	With my mom on Twenty-sixth Street, by Kostner. La Villita.
+il-02-luis-dixon-little-village	10	Mother (Señora Ortiz)	Paulina|Mónica|Monica|Samantha	Dile que el cuarto es muy chiquito y que su hermano también vive ahí.
+il-02-luis-dixon-little-village	11	Luis	Eddy (English (US))|Alex|Fred	She's saying the room is small and my brother lives there too. It's fine though.
+il-02-luis-dixon-little-village	12	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you, Luis?
+il-02-luis-dixon-little-village	13	Luis	Eddy (English (US))|Alex|Fred	Twenty-seven.
+il-02-luis-dixon-little-village	14	Case manager	Samantha|Kathy|Sandy (English (US))	Work?
+il-02-luis-dixon-little-village	15	Luis	Eddy (English (US))|Alex|Fred	My cousin got a spot for me at a restaurant in Pilsen, but it's nights. Six to midnight.
+il-02-luis-dixon-little-village	16	Case manager	Samantha|Kathy|Sandy (English (US))	That won't work with your movement hours right now.
+il-02-luis-dixon-little-village	17	Luis	Eddy (English (US))|Alex|Fred	I know. Can you talk to my agent? Her name's Agent Kowalczyk.
+il-02-luis-dixon-little-village	18	Mother (Señora Ortiz)	Paulina|Mónica|Monica|Samantha	Y que tome su medicina. No se la ha tomado.
+il-02-luis-dixon-little-village	19	Luis	Eddy (English (US))|Alex|Fred	Ma. I'm taking it.
+il-02-luis-dixon-little-village	20	Case manager	Samantha|Kathy|Sandy (English (US))	What medicine is that?
+il-02-luis-dixon-little-village	21	Luis	Eddy (English (US))|Alex|Fred	For my asthma. The inhaler. I got one left.
+il-02-luis-dixon-little-village	22	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. I'll call Agent Kowalczyk tomorrow about changing your movement for a night job, and we'll find day work with the Safer Foundation in case it doesn't get approved. Let's get you to the clinic on Twenty-sixth for the inhaler this week.
+il-02-luis-dixon-little-village	23	Luis	Eddy (English (US))|Alex|Fred	Okay. Thank you.
+il-03-tanya-logan-peoria	01	Case manager	Kathy|Samantha	Intake for Tanya Reed, November nineteenth. Okay with recording?
+il-03-tanya-logan-peoria	02	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	Yes, that's okay.
+il-03-tanya-logan-peoria	03	Case manager	Kathy|Samantha	Who referred you to us?
+il-03-tanya-logan-peoria	04	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	My counselor at Logan gave me your card. And my DCFS caseworker said to come.
+il-03-tanya-logan-peoria	05	Case manager	Kathy|Samantha	When did you get out?
+il-03-tanya-logan-peoria	06	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	October twenty-ninth. Logan, in Lincoln. I'm on MSR for six months.
+il-03-tanya-logan-peoria	07	Case manager	Kathy|Samantha	Where are you living?
+il-03-tanya-logan-peoria	08	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	The South Side here in Peoria, on Western Avenue, at a women's recovery house.
+il-03-tanya-logan-peoria	09	Case manager	Kathy|Samantha	Tell me about your kids.
+il-03-tanya-logan-peoria	10	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	I have three. They're in foster care with DCFS. My court date for the visits is December fifteenth, at the courthouse downtown.
+il-03-tanya-logan-peoria	11	Case manager	Kathy|Samantha	What medications are you on?
+il-03-tanya-logan-peoria	12	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	Abilify, ten milligrams. Lamictal, a hundred. And trazodone at night. They gave me thirty days, so I'm almost out. Like two days.
+il-03-tanya-logan-peoria	13	Case manager	Kathy|Samantha	Do you have a medical card?
+il-03-tanya-logan-peoria	14	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	They signed me up for Medicaid before I left, I got a letter. Meridian, I think. But I don't have a doctor.
+il-03-tanya-logan-peoria	15	Case manager	Kathy|Samantha	Okay. Date of birth?
+il-03-tanya-logan-peoria	16	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	Two, fourteen, eighty-eight.
+il-03-tanya-logan-peoria	17	Case manager	Kathy|Samantha	And can you sign this release so I can talk to your DCFS caseworker?
+il-03-tanya-logan-peoria	18	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	Yes. I'll sign it.
+il-03-tanya-logan-peoria	19	Case manager	Kathy|Samantha	Okay, that's signed. Today I'm calling the Human Service Center for a same-day psych appointment so your meds don't run out, and I'll talk to your caseworker before the December fifteenth court date.
+il-03-tanya-logan-peoria	20	Tanya	Shelley (English (US))|Grandma (English (US))|Victoria	Thank you so much.
+il-04-terrence-menard-rockford	01	Case manager	Samantha|Kathy|Sandy (English (US))	This is intake for Terrence Hale, Friday the twentieth. Is it okay if I record?
+il-04-terrence-menard-rockford	02	Terrence	Ralph|Rocko (English (US))|Fred	Yes ma'am.
+il-04-terrence-menard-rockford	03	Case manager	Samantha|Kathy|Sandy (English (US))	When were you released?
+il-04-terrence-menard-rockford	04	Terrence	Ralph|Rocko (English (US))|Fred	Tuesday. The seventeenth. From Menard, down in Chester. I was there twenty-two years.
+il-04-terrence-menard-rockford	05	Case manager	Samantha|Kathy|Sandy (English (US))	And your supervision?
+il-04-terrence-menard-rockford	06	Terrence	Ralph|Rocko (English (US))|Fred	MSR, three years to life, they told me. I have to register with Rockford police by Monday. Can't be near schools or parks, no internet without approval.
+il-04-terrence-menard-rockford	07	Case manager	Samantha|Kathy|Sandy (English (US))	Where is your host site?
+il-04-terrence-menard-rockford	08	Terrence	Ralph|Rocko (English (US))|Fred	A transitional house on the west side, off Kilburn. It took them two years to approve anywhere, so I sat in there past my out date.
+il-04-terrence-menard-rockford	09	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you?
+il-04-terrence-menard-rockford	10	Terrence	Ralph|Rocko (English (US))|Fred	Fifty-eight. Fifty-nine in April.
+il-04-terrence-menard-rockford	11	Case manager	Samantha|Kathy|Sandy (English (US))	Any family?
+il-04-terrence-menard-rockford	12	Terrence	Ralph|Rocko (English (US))|Fred	A brother in Belvidere. We don't really talk.
+il-04-terrence-menard-rockford	13	Case manager	Samantha|Kathy|Sandy (English (US))	Health?
+il-04-terrence-menard-rockford	14	Terrence	Ralph|Rocko (English (US))|Fred	Bad knee. I need a cane. And my eyes, I can't read small print no more.
+il-04-terrence-menard-rockford	15	Case manager	Samantha|Kathy|Sandy (English (US))	What would help most right now?
+il-04-terrence-menard-rockford	16	Terrence	Ralph|Rocko (English (US))|Fred	A job I'm allowed to have. And learning the phone. Everything is on the phone now.
+il-04-terrence-menard-rockford	17	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Monday morning I'll drive you to register at the police department so you're on time. I'll ask your agent which jobs and phones are approved, and we'll get you an eye exam.
+il-04-terrence-menard-rockford	18	Terrence	Ralph|Rocko (English (US))|Fred	Monday. Thank you, ma'am.
+il-05-jamal-cook-county-roseland	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Jamal Carter, Monday the twenty-third. I'm going to record so I can focus on you. Is that alright?
+il-05-jamal-cook-county-roseland	02	Jamal	Reed (English (US))|Ralph|Fred	Yeah.
+il-05-jamal-cook-county-roseland	03	Case manager	Samantha|Kathy|Sandy (English (US))	When did you get out?
+il-05-jamal-cook-county-roseland	04	Jamal	Reed (English (US))|Ralph|Fred	Friday. From Cook County. I took a plea, so I'm on probation now, eighteen months.
+il-05-jamal-cook-county-roseland	05	Girlfriend (Brianna)	Sandy (English (US))|Kathy|Victoria	It was Thursday night, babe. They let you out at like midnight.
+il-05-jamal-cook-county-roseland	06	Jamal	Reed (English (US))|Ralph|Fred	Thursday night, yeah, I guess. Late.
+il-05-jamal-cook-county-roseland	07	Case manager	Samantha|Kathy|Sandy (English (US))	Who's your probation officer?
+il-05-jamal-cook-county-roseland	08	Jamal	Reed (English (US))|Ralph|Fred	I don't know yet. I gotta report to Twenty-sixth and Cal on the first.
+il-05-jamal-cook-county-roseland	09	Case manager	Samantha|Kathy|Sandy (English (US))	Did they give you an ID at the jail?
+il-05-jamal-cook-county-roseland	10	Jamal	Reed (English (US))|Ralph|Fred	Yeah, they did the state ID thing. I got it right here.
+il-05-jamal-cook-county-roseland	11	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you?
+il-05-jamal-cook-county-roseland	12	Jamal	Reed (English (US))|Ralph|Fred	Twenty-three.
+il-05-jamal-cook-county-roseland	13	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you living?
+il-05-jamal-cook-county-roseland	14	Girlfriend (Brianna)	Sandy (English (US))|Kathy|Victoria	With me, in Roseland. On a Hundred and Eleventh. And I'm due in February, so he needs a job.
+il-05-jamal-cook-county-roseland	15	Jamal	Reed (English (US))|Ralph|Fred	I need a job.
+il-05-jamal-cook-county-roseland	16	Case manager	Samantha|Kathy|Sandy (English (US))	Any job experience?
+il-05-jamal-cook-county-roseland	17	Jamal	Reed (English (US))|Ralph|Fred	I did a forklift class in the jail. I got the card from it.
+il-05-jamal-cook-county-roseland	18	Girlfriend (Brianna)	Sandy (English (US))|Kathy|Victoria	He also owes child support for his son. Like two thousand.
+il-05-jamal-cook-county-roseland	19	Jamal	Reed (English (US))|Ralph|Fred	Why would you say that.
+il-05-jamal-cook-county-roseland	20	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Phone number?
+il-05-jamal-cook-county-roseland	21	Jamal	Reed (English (US))|Ralph|Fred	Eight seven two, five five five, zero one seven eight.
+il-05-jamal-cook-county-roseland	22	Case manager	Samantha|Kathy|Sandy (English (US))	Alright. This week I'll set you up with a forklift job lead through our employment specialist, and remind you to report on December first.
+il-06-marcus-followup-agent	01	Case manager	Samantha|Kathy|Sandy (English (US))	Hi Marcus, it's Denise, Tuesday the twenty-fourth. Quick check-in. Still okay to record?
+il-06-marcus-followup-agent	02	Marcus	Fred|Reed (English (US))|Alex	Yeah.
+il-06-marcus-followup-agent	03	Case manager	Samantha|Kathy|Sandy (English (US))	Did the LINK card come?
+il-06-marcus-followup-agent	04	Marcus	Fred|Reed (English (US))|Alex	It came Saturday. Two ninety-eight on it.
+il-06-marcus-followup-agent	05	Case manager	Samantha|Kathy|Sandy (English (US))	Great. And the ID?
+il-06-marcus-followup-agent	06	Marcus	Fred|Reed (English (US))|Alex	Fixed. New address and everything.
+il-06-marcus-followup-agent	07	Case manager	Samantha|Kathy|Sandy (English (US))	And the phone?
+il-06-marcus-followup-agent	08	Marcus	Fred|Reed (English (US))|Alex	That's this phone. Lifeline came yesterday. The number is three one two, five five five, zero one nine one.
+il-06-marcus-followup-agent	09	Case manager	Samantha|Kathy|Sandy (English (US))	Good. Anything else?
+il-06-marcus-followup-agent	10	Marcus	Fred|Reed (English (US))|Alex	My sister's landlord found out I'm there. He says I gotta go by the end of the month or he'll file on her.
+il-06-marcus-followup-agent	11	Sister (background)	Grandma (English (US))|Grandma|Victoria	Tell her the agent said he'll violate you if you move without telling him.
+il-06-marcus-followup-agent	12	Marcus	Fred|Reed (English (US))|Alex	Yeah. Agent Dominguez said if I move without a new host site approved, that's a violation.
+il-06-marcus-followup-agent	13	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. That's serious. Today I'll call St. Leonard's and the Safer Foundation for a residence that IDOC approves as a host site, and I'll call Agent Dominguez myself on Thursday. Call me Friday.
+il-06-marcus-followup-agent	14	Marcus	Fred|Reed (English (US))|Alex	Thursday's Thanksgiving though.
+il-06-marcus-followup-agent	15	Case manager	Samantha|Kathy|Sandy (English (US))	You're right. I'll call him Wednesday then. Call me Friday.
+il-06-marcus-followup-agent	16	Marcus	Fred|Reed (English (US))|Alex	Okay.
+il-07-gloria-decatur-springfield	01	Case manager	Kathy|Samantha	Intake for Gloria Watts, Tuesday November seventeenth. Is it okay to record this?
+il-07-gloria-decatur-springfield	02	Gloria	Grandma (English (US))|Grandma|Victoria	Go ahead, honey.
+il-07-gloria-decatur-springfield	03	Case manager	Kathy|Samantha	And your daughter is on the phone with us?
+il-07-gloria-decatur-springfield	04	Daughter (speakerphone)	Sandy (English (US))|Kathy|Victoria	Yes, this is Monique. I'm in St. Louis.
+il-07-gloria-decatur-springfield	05	Case manager	Kathy|Samantha	Gloria, when did you come home?
+il-07-gloria-decatur-springfield	06	Gloria	Grandma (English (US))|Grandma|Victoria	Oh, it was around Halloween. A day or two before.
+il-07-gloria-decatur-springfield	07	Daughter (speakerphone)	Sandy (English (US))|Kathy|Victoria	It was the twenty-ninth, Mama. I picked you up in Decatur.
+il-07-gloria-decatur-springfield	08	Gloria	Grandma (English (US))|Grandma|Victoria	That's right, the twenty-ninth.
+il-07-gloria-decatur-springfield	09	Case manager	Kathy|Samantha	And are you on MSR?
+il-07-gloria-decatur-springfield	10	Gloria	Grandma (English (US))|Grandma|Victoria	Two years. My agent's a young man, I don't remember his name.
+il-07-gloria-decatur-springfield	11	Case manager	Kathy|Samantha	How old are you?
+il-07-gloria-decatur-springfield	12	Gloria	Grandma (English (US))|Grandma|Victoria	Sixty-four.
+il-07-gloria-decatur-springfield	13	Case manager	Kathy|Samantha	Tell me about your health.
+il-07-gloria-decatur-springfield	14	Gloria	Grandma (English (US))|Grandma|Victoria	Sugar. I take insulin, the Lantus, twenty units at night. And I'm in this wheelchair since my stroke. The chair is the prison's, they want it back.
+il-07-gloria-decatur-springfield	15	Case manager	Kathy|Samantha	How much insulin do you have?
+il-07-gloria-decatur-springfield	16	Gloria	Grandma (English (US))|Grandma|Victoria	Maybe a week.
+il-07-gloria-decatur-springfield	17	Daughter (speakerphone)	Sandy (English (US))|Kathy|Victoria	She has two pens left, it's less than that.
+il-07-gloria-decatur-springfield	18	Case manager	Kathy|Samantha	Where are you staying?
+il-07-gloria-decatur-springfield	19	Gloria	Grandma (English (US))|Grandma|Victoria	At my friend's on the east side, but there's three steps and no ramp.
+il-07-gloria-decatur-springfield	20	Case manager	Kathy|Samantha	Do you have Medicare?
+il-07-gloria-decatur-springfield	21	Gloria	Grandma (English (US))|Grandma|Victoria	I think so. I got a red white and blue card a long time ago.
+il-07-gloria-decatur-springfield	22	Case manager	Kathy|Samantha	Okay. Today I'll call SIU Medicine's clinic for an insulin refill this week, and I'll start a wheelchair request through Medicaid. Monique, can I call you if I can't reach your mom?
+il-07-gloria-decatur-springfield	23	Daughter (speakerphone)	Sandy (English (US))|Kathy|Victoria	Yes, three one four, five five five, zero one six two.
+il-08-ray-vienna-uptown-veteran	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Raymond Fitzgerald, November twenty-fourth. Okay if I record?
+il-08-ray-vienna-uptown-veteran	02	Ray	Rocko (English (US))|Ralph|Fred	Yeah. Call me Ray.
+il-08-ray-vienna-uptown-veteran	03	Case manager	Samantha|Kathy|Sandy (English (US))	When did you get out, Ray?
+il-08-ray-vienna-uptown-veteran	04	Ray	Rocko (English (US))|Ralph|Fred	Last Monday. From Vienna, way down south. I'm on MSR, eighteen months.
+il-08-ray-vienna-uptown-veteran	05	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you staying?
+il-08-ray-vienna-uptown-veteran	06	Ray	Rocko (English (US))|Ralph|Fred	A room on Wilson, in Uptown. It's thirty-five a night and I got four nights left of money.
+il-08-ray-vienna-uptown-veteran	07	Case manager	Samantha|Kathy|Sandy (English (US))	Are you a veteran?
+il-08-ray-vienna-uptown-veteran	08	Ray	Rocko (English (US))|Ralph|Fred	Marines, two thousand one to two thousand five. Iraq. I got PTSD, it's in my file.
+il-08-ray-vienna-uptown-veteran	09	Case manager	Samantha|Kathy|Sandy (English (US))	Have you been to the VA?
+il-08-ray-vienna-uptown-veteran	10	Ray	Rocko (English (US))|Ralph|Fred	Hines, years ago. I don't know if I'm still in the system.
+il-08-ray-vienna-uptown-veteran	11	Case manager	Samantha|Kathy|Sandy (English (US))	Any medications?
+il-08-ray-vienna-uptown-veteran	12	Ray	Rocko (English (US))|Ralph|Fred	Methadone, eighty milligrams. They had me on it at Vienna. I been going to a clinic on Lawrence every morning but they said they need my paperwork by Friday or they stop dosing me.
+il-08-ray-vienna-uptown-veteran	13	Case manager	Samantha|Kathy|Sandy (English (US))	Who has the paperwork?
+il-08-ray-vienna-uptown-veteran	14	Ray	Rocko (English (US))|Ralph|Fred	Vienna health care unit. I signed for them to send it but nothing came.
+il-08-ray-vienna-uptown-veteran	15	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. How old are you?
+il-08-ray-vienna-uptown-veteran	16	Ray	Rocko (English (US))|Ralph|Fred	Forty-seven.
+il-08-ray-vienna-uptown-veteran	17	Case manager	Samantha|Kathy|Sandy (English (US))	Phone?
+il-08-ray-vienna-uptown-veteran	18	Ray	Rocko (English (US))|Ralph|Fred	Seven seven three, five five five, zero one three... I gotta look. Zero one three eight.
+il-08-ray-vienna-uptown-veteran	19	Case manager	Samantha|Kathy|Sandy (English (US))	Right now I'll call the Vienna health care unit for your methadone records, and today I'll call the VA reentry specialist at Jesse Brown to check your enrollment. I'll also put you on our emergency housing list.
+il-08-ray-vienna-uptown-veteran	20	Ray	Rocko (English (US))|Ralph|Fred	Thank you. Seriously.
+il-09-dante-iyc-north-lawndale	01	Case manager	Samantha|Kathy|Sandy (English (US))	Okay, this is intake for Dante Moore, November twentieth. Grandma's with us. I'm recording, is that okay with both of you?
+il-09-dante-iyc-north-lawndale	02	Dante	Junior|Eddy (English (US))|Alex	Yeah.
+il-09-dante-iyc-north-lawndale	03	Grandmother	Grandma (English (US))|Grandma|Victoria	That's fine, baby.
+il-09-dante-iyc-north-lawndale	04	Case manager	Samantha|Kathy|Sandy (English (US))	Dante, when did you get out?
+il-09-dante-iyc-north-lawndale	05	Dante	Junior|Eddy (English (US))|Alex	Two weeks ago. Like the sixth.
+il-09-dante-iyc-north-lawndale	06	Grandmother	Grandma (English (US))|Grandma|Victoria	It was the fifth. A Thursday. I took off work.
+il-09-dante-iyc-north-lawndale	07	Case manager	Samantha|Kathy|Sandy (English (US))	And where were you?
+il-09-dante-iyc-north-lawndale	08	Dante	Junior|Eddy (English (US))|Alex	St. Charles. IYC.
+il-09-dante-iyc-north-lawndale	09	Case manager	Samantha|Kathy|Sandy (English (US))	Who's your aftercare specialist?
+il-09-dante-iyc-north-lawndale	10	Dante	Junior|Eddy (English (US))|Alex	Mister Abernathy. I see him every Tuesday.
+il-09-dante-iyc-north-lawndale	11	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you?
+il-09-dante-iyc-north-lawndale	12	Dante	Junior|Eddy (English (US))|Alex	Nineteen. My birthday was in there, October.
+il-09-dante-iyc-north-lawndale	13	Case manager	Samantha|Kathy|Sandy (English (US))	School?
+il-09-dante-iyc-north-lawndale	14	Dante	Junior|Eddy (English (US))|Alex	I got like eighteen credits. I want my real diploma, not a GED.
+il-09-dante-iyc-north-lawndale	15	Grandmother	Grandma (English (US))|Grandma|Victoria	He needs to go back to North Lawndale College Prep, they said they'd take him.
+il-09-dante-iyc-north-lawndale	16	Dante	Junior|Eddy (English (US))|Alex	I'm not going back there. Everybody know me there.
+il-09-dante-iyc-north-lawndale	17	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you living?
+il-09-dante-iyc-north-lawndale	18	Dante	Junior|Eddy (English (US))|Alex	With my grandma, on Ogden by Pulaski.
+il-09-dante-iyc-north-lawndale	19	Case manager	Samantha|Kathy|Sandy (English (US))	Is your grandmother your guardian?
+il-09-dante-iyc-north-lawndale	20	Grandmother	Grandma (English (US))|Grandma|Victoria	I was, till he turned eighteen.
+il-09-dante-iyc-north-lawndale	21	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Phone?
+il-09-dante-iyc-north-lawndale	22	Grandmother	Grandma (English (US))|Grandma|Victoria	Use mine, seven seven three, five five five, zero one five five. His phone gets cut off.
+il-09-dante-iyc-north-lawndale	23	Case manager	Samantha|Kathy|Sandy (English (US))	Here's what I'll do. I'll find you an alternative high school, like Youth Connection Charter, so you can finish your diploma without going back to your old school. And I'll talk to Mr. Abernathy before Tuesday.
+il-09-dante-iyc-north-lawndale	24	Dante	Junior|Eddy (English (US))|Alex	Okay. That's cool.
+il-10-kevin-kewanee-consent	01	Case manager	Kathy|Samantha	Okay, Kevin Novak, November twenty-third. Let's start with the address you're staying at.
+il-10-kevin-kewanee-consent	02	Kevin	Reed (English (US))|Ralph|Fred	Wait, are you recording this?
+il-10-kevin-kewanee-consent	03	Case manager	Kathy|Samantha	I am. Sorry, I should've asked first. Is that okay?
+il-10-kevin-kewanee-consent	04	Kevin	Reed (English (US))|Ralph|Fred	Yeah, it's okay. Just asking.
+il-10-kevin-kewanee-consent	05	Other client (background)	Albert|Reed (English (US))|Fred	Hey, is the bathroom code still four four one two?
+il-10-kevin-kewanee-consent	06	Case manager	Kathy|Samantha	Okay. Where are you staying?
+il-10-kevin-kewanee-consent	07	Kevin	Reed (English (US))|Ralph|Fred	My mom's house, on the east side of Joliet. Off Cass Street.
+il-10-kevin-kewanee-consent	08	Case manager	Kathy|Samantha	Who sent you to us?
+il-10-kevin-kewanee-consent	09	Kevin	Reed (English (US))|Ralph|Fred	The re-entry coordinator at Kewanee. I was at Kewanee the last eight months. Before that Pontiac.
+il-10-kevin-kewanee-consent	10	Case manager	Kathy|Samantha	When did you get out?
+il-10-kevin-kewanee-consent	11	Kevin	Reed (English (US))|Ralph|Fred	Fourteenth. Saturday the fourteenth.
+il-10-kevin-kewanee-consent	12	Case manager	Kathy|Samantha	MSR?
+il-10-kevin-kewanee-consent	13	Kevin	Reed (English (US))|Ralph|Fred	MSR, a year. Agent Patel.
+il-10-kevin-kewanee-consent	14	Case manager	Kathy|Samantha	Date of birth?
+il-10-kevin-kewanee-consent	15	Kevin	Reed (English (US))|Ralph|Fred	Eleven, two, ninety-five.
+il-10-kevin-kewanee-consent	16	Case manager	Kathy|Samantha	Okay. I have two forms. This one says you agree to work with us, and this one lets me talk to your agent. Can you sign both?
+il-10-kevin-kewanee-consent	17	Kevin	Reed (English (US))|Ralph|Fred	I'll sign the first one. The agent one, let me think about it.
+il-10-kevin-kewanee-consent	18	Case manager	Kathy|Samantha	That's fine. Emergency contact?
+il-10-kevin-kewanee-consent	19	Kevin	Reed (English (US))|Ralph|Fred	My mom, Linda Novak. Eight one five, five five five, zero one two... um, zero one two zero.
+il-10-kevin-kewanee-consent	20	Case manager	Kathy|Samantha	And what do you need most?
+il-10-kevin-kewanee-consent	21	Kevin	Reed (English (US))|Ralph|Fred	A CDL. I want to drive trucks. My license is suspended, I owe tickets from like twenty eighteen.
+il-10-kevin-kewanee-consent	22	Case manager	Kathy|Samantha	Okay. I'll look up what you owe with the Secretary of State this week, and we'll look at the CDL program at Joliet Junior College. Come back Monday the thirtieth.
+il-10-kevin-kewanee-consent	23	Kevin	Reed (English (US))|Ralph|Fred	Monday. Okay.

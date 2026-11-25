@@ -1,13 +1,18 @@
 """Build the scripts, the voice manifest and the test plan from cases.py.
 
     python3 build.py            writes scripts/, lines.tsv and TEST-PLAN.md
-    python3 build.py --mix DIR  mixes the per-line WAVs in DIR (made by render-lines.sh
+    python3 build.py --mix DIR [CASE_ID_PREFIX]
+                                mixes the per-line WAVs in DIR (made by render-lines.sh
                                 on a Mac) into audio/<case>.m4a with crosstalk, noise
-                                and phone effects. Needs numpy and ffmpeg.
+                                and phone effects. Needs numpy, plus ffmpeg or the Mac's afconvert.
 """
-import os, subprocess, sys, wave
+import os, shutil, subprocess, sys, tempfile, wave
 from pathlib import Path
-from cases import CASES, TYPED_UPDATES
+from cases import CASES as WORLD_CASES, TYPED_UPDATES as WORLD_TYPED
+from cases_illinois import IL_CASES, IL_TYPED_UPDATES
+
+CASES = WORLD_CASES + IL_CASES
+TYPED_UPDATES = {**WORLD_TYPED, **IL_TYPED_UPDATES}
 
 HERE = Path(__file__).parent
 RATE = 22050
@@ -31,6 +36,13 @@ FALLBACK = {
     "Aaron": ["Eddy (English (US))", "Rishi", "Alex"],
     "Shelley": ["Shelley (English (US))", "Grandma (English (US))", "Victoria"],
     "Amélie": ["Amélie", "Amelie", "Thomas", "Samantha"],
+    "Eddy": ["Eddy (English (US))", "Alex", "Fred"],
+    "Reed": ["Reed (English (US))", "Ralph", "Fred"],
+    "Rocko": ["Rocko (English (US))", "Ralph", "Fred"],
+    "Sandy": ["Sandy (English (US))", "Kathy", "Victoria"],
+    "Grandma": ["Grandma (English (US))", "Grandma", "Victoria"],
+    "Junior": ["Junior", "Eddy (English (US))", "Alex"],
+    "Kathy": ["Kathy", "Samantha"],
 }
 
 
@@ -79,13 +91,18 @@ def build():
 
 
 def write_plan():
-    p = ["# Test plan: 10 synthetic recordings", "",
+    p = ["# Test plan: 20 synthetic recordings", "",
+         "Cases 1-10 come from around the US, the UK and Canada. Cases IL-1 to IL-10 are Illinois residents coming home "
+         "from IDOC prisons, Cook County Jail and IDJJ, with the agency set to Chicago, Peoria, Rockford, Springfield or "
+         "Joliet. The Illinois set also covers the key fields the first set rarely touched: IDOC number, date of birth, "
+         "household, emergency contact, referral source, and the consent and release-of-information forms.", "",
          "These recordings are built to find where the pipeline (Whisper transcript, then Claude's draft note or typed update) "
          "goes wrong, not to show it working. Every person and phone number is made up; facilities and programs are real "
          "so place-name correction gets a real test.", "",
          "## How to run a case", "",
-         "1. In `backend/ai-config.json`, set `note.location` to the case's agency location (then repeat cases 1-4, 7 and 10 "
-         "with `Chicago, Illinois` to see whether out-of-area places get 'corrected' to Chicago).",
+         "1. In `backend/ai-config.json`, set `note.location` to the case's agency location (then repeat the cases outside "
+         "Chicago with `Chicago, Illinois` to see whether out-of-area places get 'corrected' to Chicago). "
+         "`python3 run_tests.py` does all of this for you.",
          "2. Upload `audio/<case>.m4a` in the app as a new intake (case 5: the existing-client update, and also paste "
          "`scripts/05-andre-followup-call-typed.txt` into the typed-update box).",
          "3. Check the transcript against `scripts/<case>.txt`, then check the note against the **Expected** list in "
@@ -99,7 +116,8 @@ def write_plan():
          "## Cases at a glance", "",
          "| # | Case | Location | Main things it tries to break |", "|---|---|---|---|"]
     for i, c in enumerate(CASES, 1):
-        p.append(f"| {i} | [{c['title']}](scripts/{c['id']}.md) | {c['location']} | " +
+        n = f"IL-{i - len(WORLD_CASES)}" if c in IL_CASES else str(i)
+        p.append(f"| {n} | [{c['title']}](scripts/{c['id']}.md) | {c['location']} | " +
                  "; ".join(x.split('.')[0].split(':')[0] for x in c["probes"][:3]) + " |")
     p += ["", "## Failure points to watch, by area", "",
           "| Area | Cases | Pass looks like |", "|---|---|---|",
@@ -115,7 +133,12 @@ def write_plan():
           "| Medication names and urgency | 2, 6, 8 | Correct drug names or flagged; buprenorphine gap Urgent |",
           "| Sensitive disclosures, privacy requests | 6, 7, 10 | DV detail kept out after 'please don't write that'; immigration and no-contact orders handled carefully |",
           "| Non-US systems | 3, 10 | No SNAP/Medicaid invented for UK or Ontario clients |",
-          "| TV and background speech | 5 | Nothing from the TV in the note |", "",
+          "| TV and background speech | 5 | Nothing from the TV in the note |",
+          "| Illinois supervision: MSR, EM movement hours, host sites, registration deadlines, IDJJ aftercare, Cook County probation | IL-1 to IL-10 | MSR mapped to Parole with a comment; aftercare flagged; jail + probation kept apart from prison + MSR |",
+          "| IDOC numbers, dates of birth, emergency contacts, referral source | IL-1, 3, 7, 10 | Y42017 captured; month-first DOB; emergency contact kept separate from the client's own phone |",
+          "| Consent and release-of-information forms | IL-3, IL-10 | ROI Yes only when signed; 'let me think about it' is not Yes; late recording consent noted |",
+          "| Downstate Illinois places with a downstate agency | IL-3, 4, 7, 10 | Peoria/Rockford/Springfield/Joliet places never moved to Chicago |",
+          "| Family members on speakerphone, partners, guardians | IL-2, 5, 7, 9 | Their claims and choices kept apart from the client's |", "",
           "## Known gaps these cases will likely expose", "",
           "- The note prompt has no rule for a client asking that something not be recorded (case 6), and the note has no confidentiality level yet (see notes/data-to-capture.md).",
           "- `supervision_type` only offers Probation / Parole / None, which does not fit 5 of the 10 cases.",
@@ -127,7 +150,8 @@ def write_plan():
           "low-passed and quiet, phone cases are band-limited to 300-3400 Hz at 8 kHz, and light noise is added. Synthetic "
           "voices are easier than real people, so a pass here is necessary but not sufficient: re-record the worst cases "
           "with two real voices.", "",
-          "To regenerate: on a Mac run `bash render-lines.sh` (writes `wav/`), then `python3 build.py --mix wav`.", ""]
+          "To regenerate: on a Mac run `bash render-lines.sh` (writes `wav/`), then `python3 build.py --mix wav` "
+          "(add a case id prefix such as `il-` to mix only those). Mixing needs numpy and either ffmpeg or the Mac's built-in afconvert.", ""]
     (HERE / "TEST-PLAN.md").write_text("\n".join(p), encoding="utf-8")
 
 
@@ -142,13 +166,45 @@ def read_wav(path):
     return data
 
 
-def ffilter(x, af):
-    """Run a mono float buffer through an ffmpeg audio filter."""
+def band(x, lo=0, hi=None):
+    """Keep only frequencies between lo and hi Hz (numpy only, so it runs on a stock Mac)."""
     import numpy as np
-    out = subprocess.run(["ffmpeg", "-loglevel", "error", "-f", "f32le", "-ar", str(RATE), "-ac", "1", "-i", "-",
-                          "-af", af, "-f", "f32le", "-ar", str(RATE), "-ac", "1", "-"],
-                         input=x.astype("float32").tobytes(), capture_output=True, check=True).stdout
-    return np.frombuffer(out, dtype="float32").copy()
+    X = np.fft.rfft(x)
+    f = np.fft.rfftfreq(len(x), 1 / RATE)
+    X[f < lo] = 0
+    if hi:
+        X[f > hi] = 0
+    return np.fft.irfft(X, len(x)).astype("float32")
+
+
+def db(x, d):
+    return x * (10 ** (d / 20))
+
+
+def echo(x, ms=40, gain=0.3):
+    import numpy as np
+    k = int(RATE * ms / 1000)
+    y = x.copy()
+    y[k:] += gain * x[:-k]
+    return y
+
+
+def encode(out, dest, phone):
+    """Write the mix to .m4a with ffmpeg, or with afconvert on a Mac."""
+    import numpy as np
+    pcm = (np.clip(out, -1, 1) * 32767).astype("<i2").tobytes()
+    with tempfile.TemporaryDirectory() as tmp:
+        wav = Path(tmp) / "mix.wav"
+        with wave.open(str(wav), "wb") as w:
+            w.setnchannels(1); w.setsampwidth(2); w.setframerate(RATE); w.writeframes(pcm)
+        if shutil.which("ffmpeg"):
+            cmd = ["ffmpeg", "-nostdin", "-y", "-loglevel", "error", "-i", str(wav)] + \
+                  (["-ar", "8000"] if phone else []) + ["-c:a", "aac", "-b:a", "64k", str(dest)]
+        elif shutil.which("afconvert"):
+            cmd = ["afconvert", "-f", "m4af", "-d", "aac@8000" if phone else "aac", str(wav), str(dest)]
+        else:
+            raise SystemExit("Needs ffmpeg or afconvert to write .m4a")
+        subprocess.run(cmd, check=True)
 
 
 def mix(wavdir):
@@ -156,16 +212,19 @@ def mix(wavdir):
     wavdir = Path(wavdir)
     (HERE / "audio").mkdir(exist_ok=True)
     rng = np.random.default_rng(7)
+    only = sys.argv[3] if len(sys.argv) > 3 else ""
     for c in CASES:
+        if only and not c["id"].startswith(only):
+            continue
         eff = c.get("effects", {})
         segs, t = [], 0.0
         for i, (who, text, o) in enumerate(c["lines"], 1):
             x = read_wav(wavdir / c["id"] / f"{i:02d}.wav")
             x = x[: max(1, len(x))]
             if o.get("mumble"):
-                x = ffilter(x, "lowpass=f=700,volume=-10dB")
+                x = db(band(x, 0, 700), -10)
             if o.get("bg"):
-                x = ffilter(x, "lowpass=f=2500,aecho=0.8:0.6:40:0.3,volume=-14dB")
+                x = db(echo(band(x, 0, 2500)), -14)
             if o.get("gain"):
                 x = x * (10 ** (o["gain"] / 20))
             start = t - o["overlap"] if o.get("overlap") else t + (GAP if segs else 0.3)
@@ -181,16 +240,16 @@ def mix(wavdir):
             out[s:s + len(x)] += x
         if eff.get("noise"):
             noise = np.cumsum(rng.standard_normal(n)).astype("float32")
-            noise = ffilter(noise - np.convolve(noise, np.ones(400) / 400, "same"), "highpass=f=80,lowpass=f=4000")
+            noise = band(noise - np.convolve(noise, np.ones(400) / 400, "same"), 80, 4000)
             noise = noise / (np.abs(noise).max() or 1)
             out += noise[:n] * eff["noise"] * 4
         peak = np.abs(out).max() or 1
         out = out / peak * 0.89
-        af = "highpass=f=300,lowpass=f=3400,aresample=8000" if eff.get("phone") else "anull"
+        if eff.get("phone"):
+            out = band(out, 300, 3400)
+            out = out / (np.abs(out).max() or 1) * 0.89
         dest = HERE / "audio" / f"{c['id']}.m4a"
-        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "f32le", "-ar", str(RATE), "-ac", "1", "-i", "-",
-                        "-af", af, "-c:a", "aac", "-b:a", "64k", str(dest)],
-                       input=out.tobytes(), check=True)
+        encode(out, dest, eff.get("phone"))
         print(f"{dest.name}: {n / RATE:.0f} s")
 
 

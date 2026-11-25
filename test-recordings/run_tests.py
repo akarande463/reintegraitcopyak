@@ -1,6 +1,6 @@
 """Run the 10 test recordings through the real pipeline (Whisper, then Claude) and save every output.
 
-    python3 run_tests.py [AUDIO_DIR] [RESULTS_FOLDER] [CASE_ID ...]
+    python3 run_tests.py [AUDIO_DIR] [RESULTS_FOLDER] [CASE_ID or prefix such as il- ...]
 
 Uses the app's own backend code and keys: app/step1-client-note/backend/.env and ai-config.json.
 Writes results/<case>.json (transcript lines, the drafted note, timings). Keys are never printed or saved.
@@ -16,10 +16,15 @@ sys.path.insert(0, str(BACKEND))
 sys.path.insert(0, str(HERE))
 import server                      # noqa: E402  (read_env, read_config)
 from ai_client import transcribe, draft_note, draft_update, AIError   # noqa: E402
-from cases import CASES, TYPED_UPDATES                                  # noqa: E402
+from build import CASES, TYPED_UPDATES                                  # noqa: E402  (all 20 cases)
+
+UPDATE_CLIENTS = {"05-andre-followup-call": ("Andre Williams", 34), "il-06-marcus-followup-agent": ("Marcus Bell", 42)}
 
 AUDIO = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "audio"
-OUT = HERE / (sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2][:2].isdigit() else "results")
+IDS = [c["id"] for c in CASES]
+_args = sys.argv[2:]
+_only = [a for a in _args if any(i.startswith(a) for i in IDS)]
+OUT = HERE / next((a for a in _args if a not in _only), "results")
 OUT.mkdir(exist_ok=True)
 SIM = json.loads((BACKEND.parent / "simulated_responses.json").read_text(encoding="utf-8"))
 T = SIM["templates"]
@@ -64,7 +69,8 @@ def run_case(c):
     locations = [c["location"]] + (["Chicago, Illinois"] if c["location"] != "Chicago, Illinois" else [])
     if c["mode"] == "update":
         model = env.get("ANTHROPIC_MODEL") or server.DEFAULT_DRAFT_MODEL
-        client = {"name": "Andre Williams", "age": 34, "needs": c.get("open_needs", []), "openNeeds": c.get("open_needs", [])}
+        name, age = UPDATE_CLIENTS.get(c["id"], ("Unknown", "unknown"))
+        client = {"name": name, "age": age, "needs": c.get("open_needs", []), "openNeeds": c.get("open_needs", [])}
         for label, text in [("from_transcript", res["transcript"]["text"]), ("from_typed", TYPED_UPDATES.get(c["id"], ""))]:
             try:
                 r = draft_update(text, client, c["meeting"], AK, model, case_date(c))
@@ -93,7 +99,7 @@ def save(c):
     print(f"✓ {c['id']} saved ({len(r.get('errors', []))} errors)", flush=True)
 
 
-only = {a for a in sys.argv[2:] if a[:2].isdigit()}
+only = _only
 with ThreadPoolExecutor(max_workers=4) as pool:
-    list(pool.map(save, [c for c in CASES if not only or c["id"] in only]))
+    list(pool.map(save, [c for c in CASES if not only or any(c["id"].startswith(a) for a in only)]))
 print("Done. Results are in", OUT)

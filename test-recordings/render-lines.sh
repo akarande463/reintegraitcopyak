@@ -1,14 +1,16 @@
 #!/bin/bash
 # Speak every line in lines.tsv with macOS `say` and save one WAV per line in wav/<case>/NN.wav.
 # Then mix them (crosstalk, noise, phone quality) with: python3 build.py --mix wav
-# Run on a Mac from this folder:  bash render-lines.sh
+# Run on a Mac from this folder:  bash render-lines.sh [CASE_ID_PREFIX]   (for example: bash render-lines.sh il-)
 set -euo pipefail
 cd "$(dirname "$0")"
+only="${1:-}"
 installed="$(say -v '?' | sed -E 's/ +[a-z]{2,3}_[A-Za-z0-9]+ +#.*$//')"
 mkdir -p wav
-printf 'case\tline\tspeaker\tvoice\n' > wav/voices-used.tsv
+[ -f wav/voices-used.tsv ] || printf 'case\tline\tspeaker\tvoice\n' > wav/voices-used.tsv
 tmp="$(mktemp)"
 tail -n +2 lines.tsv | while IFS=$'\t' read -r case line speaker voices text; do
+  [[ -n "$only" && "$case" != "$only"* ]] && continue
   voice=""
   IFS='|' read -ra options <<< "$voices"
   for v in "${options[@]}"; do

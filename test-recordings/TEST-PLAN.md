@@ -1,10 +1,12 @@
-# Test plan: 10 synthetic recordings
+# Test plan: 20 synthetic recordings
+
+Cases 1-10 come from around the US, the UK and Canada. Cases IL-1 to IL-10 are Illinois residents coming home from IDOC prisons, Cook County Jail and IDJJ, with the agency set to Chicago, Peoria, Rockford, Springfield or Joliet. The Illinois set also covers the key fields the first set rarely touched: IDOC number, date of birth, household, emergency contact, referral source, and the consent and release-of-information forms.
 
 These recordings are built to find where the pipeline (Whisper transcript, then Claude's draft note or typed update) goes wrong, not to show it working. Every person and phone number is made up; facilities and programs are real so place-name correction gets a real test.
 
 ## How to run a case
 
-1. In `backend/ai-config.json`, set `note.location` to the case's agency location (then repeat cases 1-4, 7 and 10 with `Chicago, Illinois` to see whether out-of-area places get 'corrected' to Chicago).
+1. In `backend/ai-config.json`, set `note.location` to the case's agency location (then repeat the cases outside Chicago with `Chicago, Illinois` to see whether out-of-area places get 'corrected' to Chicago). `python3 run_tests.py` does all of this for you.
 2. Upload `audio/<case>.m4a` in the app as a new intake (case 5: the existing-client update, and also paste `scripts/05-andre-followup-call-typed.txt` into the typed-update box).
 3. Check the transcript against `scripts/<case>.txt`, then check the note against the **Expected** list in `scripts/<case>.md`. Log each check as a row in `test-log.md` (same columns as the Andre rows).
 4. Each case run costs one Whisper call and one Claude call. The AI log (`backend/logs/`) keeps the raw outputs.
@@ -27,6 +29,16 @@ Claude and Whisper-large-v3 are not fine-tuned here. The practical loop is: run 
 | 8 | [Robert, Pittsburgh: 28 years inside, a list of medications and buprenorphine](scripts/08-robert-pittsburgh-meds.md) | Pittsburgh, Pennsylvania | Drug names and doses that Whisper may mishear (lisinopril, metformin, atorvastatin, Suboxone, Narcan); Urgency; Hearing-impaired client |
 | 9 | [Deshawn, Atlanta: 19, fast talk, his mom contradicts him, spelled-out name](scripts/09-deshawn-atlanta-mother.md) | Atlanta, Georgia | Name spelled letter by letter; Age contradiction between client (19) and mother (18 till February); Release date |
 | 10 | [Nadia, Toronto: Canadian terms, French words, and corrections that should win](scripts/10-nadia-toronto-corrections.md) | Toronto, Ontario | The case manager states a wrong age and place; the client corrects both; Canadian programs and IDs; French filler and words (oui, euh, parfait) |
+| IL-1 | [Marcus, Chatham: Stateville, MSR, an IDOC number spelled out, and a state ID with the wrong address](scripts/il-01-marcus-stateville-chatham.md) | Chicago, Illinois | IDOC number spelled with a phonetic letter ('Y as in yellow') and repeated; MSR is Illinois' word for parole-style supervision; the agent is a 'parole agent'; Two facilities |
+| IL-2 | [Luis, Little Village: Dixon, ankle monitor on MSR, and his mother in Spanish](scripts/il-02-luis-dixon-little-village.md) | Chicago, Illinois | A Spanish-speaking parent interjects twice; once the client translates, once he only denies; Mother claims he has not been taking his medicine; Luis denies it (hearsay in Spanish); EM 'movement' hours are a condition that blocks a specific job |
+| IL-3 | [Tanya, Peoria: Logan Correctional, kids in DCFS care, and a list of psych meds](scripts/il-03-tanya-logan-peoria.md) | Peoria, Illinois | Agency is downstate (Peoria), not Chicago; Three psychiatric meds with doses; supply about two days left (Urgent); Referral source named twice (Logan counselor and DCFS caseworker) |
+| IL-4 | [Terrence, Rockford: 22 years at Menard, registration deadline and host-site rules](scripts/il-04-terrence-menard-rockford.md) | Rockford, Illinois | A legal deadline within days (registration by Monday Nov 23) that must be an Urgent need or agreed step; Conditions are sensitive; the note must state them accurately and neutrally, not add the offense; 'Three years to life' MSR and 'sat past my out date' (violated at the door) |
+| IL-5 | [Jamal, Roseland: Cook County Jail, probation, and his girlfriend answers for him](scripts/il-05-jamal-cook-county-roseland.md) | Chicago, Illinois | Jail, not prison; Release date contested; Girlfriend volunteers sensitive third-party claims |
+| IL-6 | [Marcus follow-up call: the agent's visit, a lease problem and a threatened violation](scripts/il-06-marcus-followup-agent.md) | Chicago, Illinois | All three open needs are resolved; the update must close or change them, not add new ones for them; A new phone number for the client (a change to contact); Housing threat with a deadline ('end of the month' = Nov 30) and a violation risk |
+| IL-7 | [Gloria, Springfield: 64, insulin, a wheelchair, and her daughter on speakerphone](scripts/il-07-gloria-decatur-springfield.md) | Springfield, Illinois | Vague date ('around Halloween, a day or two before') corrected by the daughter; client agrees; Medication supply disagreement; Durable medical equipment that will be taken back (wheelchair belongs to IDOC) |
+| IL-8 | [Ray, Uptown: Vienna, a Marine veteran with PTSD, methadone and Hines VA](scripts/il-08-ray-vienna-uptown-veteran.md) | Chicago, Illinois | Methadone continuity with a deadline (paperwork by Friday Nov 27, the day after Thanksgiving) = overdose risk; Money for housing runs out in four nights; VA names |
+| IL-9 | [Dante, North Lawndale: 19, out of IYC St. Charles on aftercare, with his grandmother](scripts/il-09-dante-iyc-north-lawndale.md) | Chicago, Illinois | Juvenile 'aftercare' is not adult parole or probation; Release date contested; Grandmother pushes a school the client refuses; the agreed step follows the client |
+| IL-10 | [Kevin, Joliet: Kewanee re-entry center, forms, a late consent question and a busy drop-in room](scripts/il-10-kevin-kewanee-consent.md) | Joliet, Illinois | Recording consent is asked late, after recording began; the client agrees; Consent form signed but release-of-information declined for now; A background stranger says a bathroom code (a number that must not become data) |
 
 ## Failure points to watch, by area
 
@@ -45,6 +57,11 @@ Claude and Whisper-large-v3 are not fine-tuned here. The practical loop is: run 
 | Sensitive disclosures, privacy requests | 6, 7, 10 | DV detail kept out after 'please don't write that'; immigration and no-contact orders handled carefully |
 | Non-US systems | 3, 10 | No SNAP/Medicaid invented for UK or Ontario clients |
 | TV and background speech | 5 | Nothing from the TV in the note |
+| Illinois supervision: MSR, EM movement hours, host sites, registration deadlines, IDJJ aftercare, Cook County probation | IL-1 to IL-10 | MSR mapped to Parole with a comment; aftercare flagged; jail + probation kept apart from prison + MSR |
+| IDOC numbers, dates of birth, emergency contacts, referral source | IL-1, 3, 7, 10 | Y42017 captured; month-first DOB; emergency contact kept separate from the client's own phone |
+| Consent and release-of-information forms | IL-3, IL-10 | ROI Yes only when signed; 'let me think about it' is not Yes; late recording consent noted |
+| Downstate Illinois places with a downstate agency | IL-3, 4, 7, 10 | Peoria/Rockford/Springfield/Joliet places never moved to Chicago |
+| Family members on speakerphone, partners, guardians | IL-2, 5, 7, 9 | Their claims and choices kept apart from the client's |
 
 ## Known gaps these cases will likely expose
 
@@ -57,4 +74,4 @@ Claude and Whisper-large-v3 are not fine-tuned here. The practical loop is: run 
 
 Each line was spoken by a macOS `say` voice (rate 165, like andre-intake.m4a), then mixed: turns marked 'talks over' start before the previous one ends, background voices are about 14 dB quieter, muffled lines are low-passed and quiet, phone cases are band-limited to 300-3400 Hz at 8 kHz, and light noise is added. Synthetic voices are easier than real people, so a pass here is necessary but not sufficient: re-record the worst cases with two real voices.
 
-To regenerate: on a Mac run `bash render-lines.sh` (writes `wav/`), then `python3 build.py --mix wav`.
+To regenerate: on a Mac run `bash render-lines.sh` (writes `wav/`), then `python3 build.py --mix wav` (add a case id prefix such as `il-` to mix only those). Mixing needs numpy and either ffmpeg or the Mac's built-in afconvert.
