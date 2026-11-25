@@ -18,7 +18,9 @@ from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from ai_client import AIError, draft_update, transcribe
+import importlib.util
+
+from ai_client import AIError, draft_note, draft_update, read_document, transcribe
 
 HERE = Path(__file__).resolve().parent          # backend/
 SITE = HERE.parent                              # step1-client-note/ (the prototype)
@@ -27,6 +29,7 @@ ENV = HERE / ".env"
 LOG = HERE / "logs" / "ai-log.jsonl"
 PORT = int(os.environ.get("PORT", "8000"))
 MAX_UPLOAD = 100 * 1024 * 1024                  # 100 MB
+DEFAULT_DRAFT_MODEL = "claude-sonnet-5-5"       # typed updates, when ANTHROPIC_MODEL is blank
 _log_lock = threading.Lock()
 
 
@@ -99,7 +102,9 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, {"helper": True, "mode": cfg.get("mode", "simulated"),
                                     "provider": cfg.get("provider"), "model": cfg.get("model"),
                                     "key_found": bool(read_env().get("HF_TOKEN")),
-                                    "draft_key_found": bool(read_env().get("ANTHROPIC_API_KEY"))})
+                                    "draft_key_found": bool(read_env().get("ANTHROPIC_API_KEY")),
+                                    "draft_model": read_env().get("ANTHROPIC_MODEL") or DEFAULT_DRAFT_MODEL,
+                                    "note": note_status(cfg), "document": document_status(cfg)})
         return super().do_GET()
 
     def do_POST(self):
@@ -111,6 +116,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self._transcribe(body)
         if self.path.startswith("/api/draft-update"):
             return self._draft_update(body)
+        if self.path.startswith("/api/draft-note"):
+            return self._draft_note(body)
+        if self.path.startswith("/api/read-document"):
+            return _read_document_handler(self, body)
         if self.path.startswith("/api/log"):
             try:
                 ev = json.loads(body or b"{}")
@@ -175,7 +184,7 @@ class Handler(SimpleHTTPRequestHandler):
             entry.update(mode="simulated", output="Simulated mode: no model was called.")
             write_log(entry)
             return self._json(200, {"ok": False, "mode": "simulated", "error": "Simulated mode is on in ai-config.json."})
-        model = read_env().get("ANTHROPIC_MODEL") or "claude-sonnet-5-5"
+        model = read_env().get("ANTHROPIC_MODEL") or DEFAULT_DRAFT_MODEL
         try:
             r = draft_update(text, client, update_type, read_env().get("ANTHROPIC_API_KEY", ""), model)
         except AIError as e:
