@@ -15,6 +15,7 @@ import json
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 FRIENDLY_HTTP_ERRORS = {
     400: "The model could not read this request. The audio format may not be supported. Try MP3 or WAV.",

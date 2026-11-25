@@ -54,6 +54,14 @@ def write_log(entry):
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def _run(v):
+    """Run number sent by the prototype: one per upload, so its log lines group together."""
+    try:
+        return int(v) or None
+    except (TypeError, ValueError):
+        return None
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(SITE), **kwargs)
@@ -108,16 +116,19 @@ class Handler(SimpleHTTPRequestHandler):
                 ev = json.loads(body or b"{}")
             except json.JSONDecodeError:
                 return self._json(400, {"ok": False})
-            write_log({"type": "activity", "client": ev.get("client", ""),
+            write_log({"run": _run(ev.get("run")), "type": "activity", "client": ev.get("client", ""),
                        "event": ev.get("event", ""), "detail": ev.get("detail", "")})
             return self._json(200, {"ok": True})
         self.send_error(404)
+
+    def _draft_note(self, body):
+        return _draft_note_handler(self, body)
 
     def _transcribe(self, audio):
         cfg = read_config()
         name = self.headers.get("X-File-Name", "recording")
         ctype = self.headers.get("Content-Type") or mimetypes.guess_type(name)[0] or "application/octet-stream"
-        entry = {"type": "ai_request", "step": "voice to text",
+        entry = {"run": _run(self.headers.get("X-Run")), "type": "ai_request", "step": "voice to text",
                  "input": {"file_name": name, "content_type": ctype, "size_bytes": len(audio),
                            "duration": self.headers.get("X-Audio-Duration", ""),
                            "note": "The audio itself is not stored in this log."}}
@@ -128,7 +139,8 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             r = transcribe(audio, ctype, cfg, read_env().get("HF_TOKEN", ""))
         except AIError as e:
-            entry.update(mode="real", request={"provider": cfg.get("provider"), "model": cfg.get("model"),
+            entry.update(mode="real", request={"endpoint": cfg.get("endpoint", "").format(provider=cfg.get("provider"), model=cfg.get("model")),
+                                               "provider": cfg.get("provider"), "model": cfg.get("model"),
                                                "instructions": cfg.get("instructions", {})},
                          error={"message": str(e), "status": e.status, "detail": e.detail})
             write_log(entry)
@@ -180,6 +192,94 @@ class Handler(SimpleHTTPRequestHandler):
                                 "summary": r["summary"], "changes": r["changes"], "seconds": r["seconds"]})
 
 
+def note_status(cfg):
+    n = cfg.get("note") or {}
+    return {"enabled": bool(n.get("enabled")) and cfg.get("mode") == "real", "model": n.get("model"),
+            "key_found": bool(read_env().get("ANTHROPIC_API_KEY")),
+            "sdk_installed": importlib.util.find_spec("anthropic") is not None}
+
+
+def _draft_note_handler(handler, body):
+    cfg = read_config()
+    ncfg = cfg.get("note") or {}
+    try:
+        req = json.loads(body or b"{}")
+    except json.JSONDecodeError:
+        return handler._json(400, {"ok": False, "error": "Bad request."})
+    lines, lists = req.get("lines") or [], req.get("lists") or {}
+    entry = {"run": _run(req.get("run")), "type": "ai_request", "step": "draft note",
+             "input": {"transcript_lines": len(lines), "note": "The full transcript sent is under request.input."}}
+    if not note_status(cfg)["enabled"]:
+        entry.update(mode="simulated", output="Note drafting is off in ai-config.json. The sample note was used.")
+        write_log(entry)
+        return handler._json(200, {"ok": False, "mode": "simulated", "error": "Note drafting is off in ai-config.json."})
+    try:
+        r = draft_note(lines, lists, ncfg, read_env().get("ANTHROPIC_API_KEY", ""))
+    except AIError as e:
+        entry.update(mode="real", request={"provider": ncfg.get("provider"), "model": ncfg.get("model"),
+                                           "effort": ncfg.get("effort")},
+                     error={"message": str(e), "status": e.status, "detail": e.detail})
+        write_log(entry)
+        print(f"  ✗ Note draft error: {e}", flush=True)
+        return handler._json(200, {"ok": False, "mode": "real", "error": str(e)})
+    certainty = {k: v.get("status") for k, v in (r["note"].get("key_info") or {}).items()}
+    entry.update(mode="real", request=r["request"], output=r["note"],
+                 confidence={"note": "No probability score. This is the model's own label for each key field.",
+                             "fields": certainty},
+                 stop_reason=r["stop_reason"], usage=r["usage"], request_id=r["request_id"],
+                 seconds=r["seconds"], error=None)
+    write_log(entry)
+    print(f"  ✓ {r['request']['model']} drafted the note in {r['seconds']} s "
+          f"({len(r['note'].get('immediate_needs') or [])} needs, {len(r['note'].get('next_steps') or [])} steps)", flush=True)
+    return handler._json(200, {"ok": True, "model": r["request"]["model"], "note": r["note"], "seconds": r["seconds"]})
+
+
+def document_config(cfg):
+    """The document reader uses the "document" part of ai-config.json, or the note settings if it is missing."""
+    return {**(cfg.get("note") or {}), "effort": "low", "max_tokens": 4000, **(cfg.get("document") or {})}
+
+
+def document_status(cfg):
+    d = document_config(cfg)
+    return {"enabled": bool(d.get("enabled")) and cfg.get("mode") == "real", "model": d.get("model"),
+            "key_found": bool(read_env().get("ANTHROPIC_API_KEY")),
+            "sdk_installed": importlib.util.find_spec("anthropic") is not None}
+
+
+def _read_document_handler(handler, body):
+    cfg = read_config()
+    dcfg = document_config(cfg)
+    try:
+        req = json.loads(body or b"{}")
+    except json.JSONDecodeError:
+        return handler._json(400, {"ok": False, "error": "Bad request."})
+    data, media_type = req.get("data") or "", req.get("media_type") or ""
+    entry = {"run": _run(req.get("run")), "type": "ai_request", "step": "read document",
+             "input": {"file_name": req.get("file_name", ""), "content_type": media_type,
+                       "size_bytes": len(data) * 3 // 4, "client": req.get("client", ""),
+                       "note": "The document itself is not stored in this log."}}
+    if not document_status(cfg)["enabled"]:
+        entry.update(mode="simulated", output="Document reading is off in ai-config.json.")
+        write_log(entry)
+        return handler._json(200, {"ok": False, "mode": "simulated", "error": "Document reading is off in ai-config.json."})
+    try:
+        r = read_document(data, media_type, req.get("fields") or [], dcfg, read_env().get("ANTHROPIC_API_KEY", ""))
+    except AIError as e:
+        entry.update(mode="real", request={"provider": "anthropic", "model": dcfg.get("model"), "effort": dcfg.get("effort")},
+                     error={"message": str(e), "status": e.status, "detail": e.detail})
+        write_log(entry)
+        print(f"  ✗ Document read error: {e}", flush=True)
+        return handler._json(200, {"ok": False, "mode": "real", "error": str(e)})
+    doc = r["document"]
+    entry.update(mode="real", request=r["request"], output=doc,
+                 confidence={"note": "No probability score. readable is the model's own judgment.", "readable": doc.get("readable")},
+                 stop_reason=r["stop_reason"], usage=r["usage"], request_id=r["request_id"], seconds=r["seconds"], error=None)
+    write_log(entry)
+    print(f"  ✓ {r['request']['model']} read {req.get('file_name', 'a document')} in {r['seconds']} s "
+          f"({doc.get('document_type')}, {len(doc.get('fields') or [])} fields)", flush=True)
+    return handler._json(200, {"ok": True, "model": r["request"]["model"], "document": doc, "seconds": r["seconds"]})
+
+
 def main():
     cfg = read_config()
     key = bool(read_env().get("HF_TOKEN"))
@@ -187,6 +287,20 @@ def main():
     print(f"  Open:     http://localhost:{PORT}")
     print(f"  AI mode:  {cfg.get('mode')}  ({cfg.get('provider')} · {cfg.get('model')})")
     print(f"  Key:      {'found in backend/.env' if key else 'NOT FOUND. Copy backend/.env.example to backend/.env and paste your key.'}")
+    ns = note_status(cfg)
+    if ns["enabled"]:
+        problems = [m for ok, m in ((ns["key_found"], "add ANTHROPIC_API_KEY to backend/.env"),
+                                    (ns["sdk_installed"], "run: python3 -m pip install anthropic")) if not ok]
+        print(f"  Note:     {ns['model']} drafts the note" + (f" (to turn on: {'; '.join(problems)})" if problems else ""))
+    else:
+        print("  Note:     sample note (note drafting is off)")
+    ds = document_status(cfg)
+    if ds["enabled"]:
+        problems = [m for ok, m in ((ds["key_found"], "add ANTHROPIC_API_KEY to backend/.env"),
+                                    (ds["sdk_installed"], "run: python3 -m pip install anthropic")) if not ok]
+        print(f"  Document: {ds['model']} reads documents" + (f" (to turn on: {'; '.join(problems)})" if problems else ""))
+    else:
+        print("  Document: sample documents only (document reading is off)")
     print(f"  Log file: {LOG.relative_to(SITE)}")
     print("  Stop:     press Control + C\n", flush=True)
     try:

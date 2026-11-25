@@ -1,5 +1,5 @@
 {
-  "_help": "Change these during class to switch models. The helper rereads this file on every request, so no restart is needed. mode: 'real' calls the model below, 'simulated' uses simulated_responses.json.",
+  "_help": "Change these during class to switch models. The helper rereads this file on every request, so no restart is needed. mode: 'real' calls the models below, 'simulated' uses simulated_responses.json. The top part is voice to text; 'note' is the second AI step that drafts the note from the transcript.",
   "mode": "real",
   "provider": "hf-inference",
   "model": "openai/whisper-large-v3",
@@ -7,5 +7,24 @@
   "instructions": {
     "return_timestamps": true
   },
-  "timeout_seconds": 180
+  "timeout_seconds": 180,
+  "note": {
+    "_help": "Drafts the note from the real transcript. Needs ANTHROPIC_API_KEY in .env and: python3 -m pip install anthropic. Set enabled to false to keep the sample note. location: where the agency works, so misheard place names can be corrected to real places there.",
+    "enabled": true,
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "location": "Chicago, Illinois",
+    "max_tokens": 16000,
+    "timeout_seconds": 180
+  },
+  "document": {
+    "_help": "Reads a photo or PDF of release papers, an ID or a letter so the note can be checked against it. Uses the same ANTHROPIC_API_KEY as the note. Set enabled to false to use the sample documents only.",
+    "enabled": true,
+    "provider": "anthropic",
+    "model": "claude-opus-5-5",
+    "effort": "low",
+    "max_tokens": 4000,
+    "timeout_seconds": 120
+  }
 }

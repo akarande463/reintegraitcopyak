@@ -12,6 +12,8 @@
 .ms-bucket.sel{box-shadow:0 0 0 2px var(--accent)}
 .ms-bucket.st-pending{border-left-color:var(--warn)}
 .ms-bucket.st-done{border-left-color:var(--ok);background:var(--ok-soft)}
+.ms-bucket.urgent-open{border-left-color:var(--bad)}
+.ms-urgent{font-size:13px;font-weight:600;color:var(--bad)}
 .ms-bucket.st-handled{border-left-color:var(--line);opacity:.7}
 .ms-bopen{font:inherit;color:var(--ink);text-align:left;background:none;border:0;width:100%;padding:10px 12px 6px;cursor:pointer;display:flex;flex-direction:column;gap:3px}
 .ms-bopen .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}

@@ -175,11 +175,13 @@ function msBucket(c, n, i, all) {
     : n.status === "pending" ? `<span aria-hidden="true">◷</span> Pending: ${esc(ref.Partner)}`
     : `<span aria-hidden="true">○</span> ${m.ranked.length} matching service${m.ranked.length === 1 ? "" : "s"} found`;
   const movable = n.status !== "handled";
-  return `<li class="ms-bucket st-${n.status} ${n.rec.Id === B.open ? "sel" : ""}" data-need="${n.rec.Id}">
+  const urgentOpen = n.status === "open" && n.rec.Priority === "Urgent";
+  return `<li class="ms-bucket st-${n.status} ${urgentOpen ? "urgent-open" : ""} ${n.rec.Id === B.open ? "sel" : ""}" data-need="${n.rec.Id}">
    <button type="button" class="ms-bopen" data-ms="open" data-need="${n.rec.Id}" aria-current="${n.rec.Id === B.open}">
     <span class="top"><span class="pri ${pc[n.rec.Priority] || "l"}">${esc(n.rec.Priority || "Soon")}</span><b>${esc(n.cat)}</b>${n.rec.AddedBy ? `<span class="tag warn">Added by ${esc(n.rec.AddedBy)}</span>` : ""}</span>
     <span class="line">${esc(n.line)}</span>
     <span class="ms-bstat">${stat}</span>
+    ${urgentOpen ? `<span class="ms-urgent"><span aria-hidden="true">⚠</span> Urgent, no referral yet${n.rec.DeclineReason ? ` · step declined at intake: ${esc(n.rec.DeclineReason)}` : ""}</span>` : ""}
    </button>
    <div class="ms-bctl">
     ${n.src ? `<button type="button" class="src" data-ms="quote" data-need="${n.rec.Id}" aria-expanded="${B.quote === n.rec.Id}" title="Show the note line">From note ${esc(n.src.time)}</button>` : `<span class="small muted">${n.rec.AddedBy ? "Added by hand" : "From case file"}</span>`}
