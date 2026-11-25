@@ -1,0 +1,187 @@
+case	line	speaker	voices	text
+01-maria-los-angeles	01	Case manager	Samantha|Kathy|Sandy (English (US))	This is intake for Maria Elena Ruiz, November eighteenth. I'm recording so I can listen to you instead of writing. Is that okay with you?
+01-maria-los-angeles	02	Maria	Paulina|Mónica|Monica|Samantha	Sí, it's okay.
+01-maria-los-angeles	03	Case manager	Samantha|Kathy|Sandy (English (US))	And who is with you today?
+01-maria-los-angeles	04	Daughter (Jessica)	Sandy (English (US))|Kathy|Victoria	I'm her daughter, Jessica. I drove her.
+01-maria-los-angeles	05	Case manager	Samantha|Kathy|Sandy (English (US))	Maria, when did you get out?
+01-maria-los-angeles	06	Maria	Paulina|Mónica|Monica|Samantha	The ninth. From CIW, in Chino. Me dieron los doscientos dólares, the gate money, but it's almost gone already.
+01-maria-los-angeles	07	Case manager	Samantha|Kathy|Sandy (English (US))	Are you on parole?
+01-maria-los-angeles	08	Maria	Paulina|Mónica|Monica|Samantha	Sí, parole. My agent is Mister Okafor. I see him every two weeks.
+01-maria-los-angeles	09	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you staying?
+01-maria-los-angeles	10	Maria	Paulina|Mónica|Monica|Samantha	With my sister in Boyle Heights. Pero no puedo quedarme mucho, her landlord doesn't know I'm there.
+01-maria-los-angeles	11	Daughter (Jessica)	Sandy (English (US))|Kathy|Victoria	She's diabetic too, she needs insulin. They didn't give her enough.
+01-maria-los-angeles	12	Maria	Paulina|Mónica|Monica|Samantha	Mija, no. That was before. Now it's just the pills.
+01-maria-los-angeles	13	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Do you have your ID?
+01-maria-los-angeles	14	Maria	Paulina|Mónica|Monica|Samantha	They gave me the CalID before I left. But my Social Security card, no, that I don't have.
+01-maria-los-angeles	15	Case manager	Samantha|Kathy|Sandy (English (US))	And how old are you, Maria?
+01-maria-los-angeles	16	Maria	Paulina|Mónica|Monica|Samantha	Cuarenta y siete. Forty-seven.
+01-maria-los-angeles	17	Case manager	Samantha|Kathy|Sandy (English (US))	What's the best number for you?
+01-maria-los-angeles	18	Daughter (Jessica)	Sandy (English (US))|Kathy|Victoria	Use mine. Three two three, five five five, zero one eight eight.
+01-maria-los-angeles	19	Case manager	Samantha|Kathy|Sandy (English (US))	So this week we get your Social Security card started, and I'll check on Medi-Cal for your pills. I'll call Jessica's phone on Monday.
+01-maria-los-angeles	20	Maria	Paulina|Mónica|Monica|Samantha	Okay. Gracias.
+02-darnell-houston	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Darnell Hayes, today is the twentieth. Okay if I record?
+02-darnell-houston	02	Darnell	Fred|Reed (English (US))|Alex	Go ahead.
+02-darnell-houston	03	Case manager	Samantha|Kathy|Sandy (English (US))	When did you come home?
+02-darnell-houston	04	Darnell	Fred|Reed (English (US))|Alex	Uh, it was the Tuesday before last. Maybe the tenth? No, it was a Wednesday, 'cause my mama had church that night.
+02-darnell-houston	05	Case manager	Samantha|Kathy|Sandy (English (US))	From which unit?
+02-darnell-houston	06	Darnell	Fred|Reed (English (US))|Alex	They released me out the Walls, in Huntsville. I was at Ferguson most of the time though.
+02-darnell-houston	07	Case manager	Samantha|Kathy|Sandy (English (US))	And you're on parole?
+02-darnell-houston	08	Darnell	Fred|Reed (English (US))|Alex	Yeah, parole. Well, my PO says it's mandatory supervision, whatever, same thing to me. I got this monitor on my ankle, curfew at eight.
+02-darnell-houston	09	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you, Darnell?
+02-darnell-houston	10	Darnell	Fred|Reed (English (US))|Alex	Twenty-nine.
+02-darnell-houston	11	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you living?
+02-darnell-houston	12	Darnell	Fred|Reed (English (US))|Alex	Third Ward, with my mama. On Dowling. Well, they call it Emancipation now.
+02-darnell-houston	13	Case manager	Samantha|Kathy|Sandy (English (US))	Any health stuff I should know about?
+02-darnell-houston	14	Darnell	Fred|Reed (English (US))|Alex	I'm supposed to take something for my seizures. Keppra. I got a week left, maybe less.
+02-darnell-houston	15	Case manager	Samantha|Kathy|Sandy (English (US))	Work?
+02-darnell-houston	16	Darnell	Fred|Reed (English (US))|Alex	I did welding in there. I'm thirty, I need to get going with my life, you know?
+02-darnell-houston	17	Case manager	Samantha|Kathy|Sandy (English (US))	Wait, I thought you said twenty-nine.
+02-darnell-houston	18	Darnell	Fred|Reed (English (US))|Alex	I'm twenty-nine. Turn thirty in January. I just round up.
+02-darnell-houston	19	Case manager	Samantha|Kathy|Sandy (English (US))	Got it. Phone?
+02-darnell-houston	20	Darnell	Fred|Reed (English (US))|Alex	Seven one three, five five five, zero one two... seven. No, two four. Zero one two four.
+02-darnell-houston	21	Case manager	Samantha|Kathy|Sandy (English (US))	So I'll get you to the clinic for the Keppra this week, and we'll look at welding jobs that work around an eight o'clock curfew. Can you come back Thursday?
+02-darnell-houston	22	Darnell	Fred|Reed (English (US))|Alex	Thursday's cool.
+03-liam-manchester	01	Case manager	Flo (English (UK))|Moira|Karen	Right, this is Liam Doyle's first appointment, twenty-fifth of November. I'll record it if that's alright with you.
+03-liam-manchester	02	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Yeah, no bother.
+03-liam-manchester	03	Case manager	Flo (English (UK))|Moira|Karen	When were you released?
+03-liam-manchester	04	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Oh-four, eleven. The fourth. Out of Forest Bank.
+03-liam-manchester	05	Case manager	Flo (English (UK))|Moira|Karen	And you're on licence?
+03-liam-manchester	06	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	On licence till next August, yeah. I'm in the AP on Bury New Road for now, curfew eleven till seven, signing in every night.
+03-liam-manchester	07	Case manager	Flo (English (UK))|Moira|Karen	Who's your probation officer?
+03-liam-manchester	08	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Sian. Sian Pritchard. She's sound.
+03-liam-manchester	09	Case manager	Flo (English (UK))|Moira|Karen	Have you got Universal Credit sorted?
+03-liam-manchester	10	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	I've put the claim in, got the advance, but the first proper payment's not till the twelfth of December. Discharge grant's long gone.
+03-liam-manchester	11	Case manager	Flo (English (UK))|Moira|Karen	Any ID on you?
+03-liam-manchester	12	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Just the discharge papers and me old provisional. It's expired, mind.
+03-liam-manchester	13	Case manager	Flo (English (UK))|Moira|Karen	Date of birth?
+03-liam-manchester	14	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Twelve, three, ninety-one.
+03-liam-manchester	15	Case manager	Flo (English (UK))|Moira|Karen	And a number for you?
+03-liam-manchester	16	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Oh-seven-seven-hundred, nine hundred, two-one-six.
+03-liam-manchester	17	Case manager	Flo (English (UK))|Moira|Karen	Lovely. So I'll ring the council housing options team about move-on from the AP, and you'll bring your bank details Thursday so we can sort a food bank voucher in the meantime.
+03-liam-manchester	18	Liam	Daniel|Rocko (English (UK))|Reed (English (UK))	Sound, cheers.
+04-joseph-gallup	01	Case manager	Samantha|Kathy|Sandy (English (US))	Hi Joseph, this is the intake call, the nineteenth. I'm going to record it so I get things right. Is that okay?
+04-joseph-gallup	02	Joseph	Alex|Eddy (English (US))|Fred	That's fine.
+04-joseph-gallup	03	Case manager	Samantha|Kathy|Sandy (English (US))	When did you get out?
+04-joseph-gallup	04	Joseph	Alex|Eddy (English (US))|Fred	Last Friday. From the federal place in Arizona, Phoenix. They put me on a bus to Gallup.
+04-joseph-gallup	05	Case manager	Samantha|Kathy|Sandy (English (US))	Are you on probation or parole?
+04-joseph-gallup	06	Joseph	Alex|Eddy (English (US))|Fred	Supervised release. Three years. My probation officer is in Albuquerque. I have to call him every Monday and do the drug testing.
+04-joseph-gallup	07	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you staying?
+04-joseph-gallup	08	Joseph	Alex|Eddy (English (US))|Fred	With my grandma, out past Tohatchi. There's no address really. Mail goes to the chapter house.
+04-joseph-gallup	09	Joseph	Alex|Eddy (English (US))|Fred	The signal is bad out there, I'm in town now at the laundromat.
+04-joseph-gallup	10	Case manager	Samantha|Kathy|Sandy (English (US))	What's the best way to reach you?
+04-joseph-gallup	11	Joseph	Alex|Eddy (English (US))|Fred	I don't have a phone. You can leave a message with my auntie. Her number is five oh five, five five five...
+04-joseph-gallup	12	Case manager	Samantha|Kathy|Sandy (English (US))	Sorry, you cut out. Five oh five, five five five, what?
+04-joseph-gallup	13	Joseph	Alex|Eddy (English (US))|Fred	I'll text it to you when I get the phone. My auntie's getting me one.
+04-joseph-gallup	14	Case manager	Samantha|Kathy|Sandy (English (US))	Do you have ID?
+04-joseph-gallup	15	Joseph	Alex|Eddy (English (US))|Fred	My tribal ID, yeah. And the CIB. No driver's license, it got suspended before I went in.
+04-joseph-gallup	16	Case manager	Samantha|Kathy|Sandy (English (US))	Anything for your health?
+04-joseph-gallup	17	Joseph	Alex|Eddy (English (US))|Fred	Not really. I go to IHS if I need to.
+04-joseph-gallup	18	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. I'll mail the release form to the chapter house, and you call me back next Monday after you check in with your PO.
+04-joseph-gallup	19	Joseph	Alex|Eddy (English (US))|Fred	Okay. Monday.
+05-andre-followup-call	01	Case manager	Samantha|Kathy|Sandy (English (US))	Hi Andre, it's Denise, quick check-in, Tuesday the twenty-fourth. I'm recording like last time, okay?
+05-andre-followup-call	02	Andre	Fred|Reed (English (US))|Alex	Yeah, okay.
+05-andre-followup-call	03	TV	Albert|Reed (English (US))|Fred	And in sports tonight, the Bulls fall to Milwaukee one-twelve to ninety-eight.
+05-andre-followup-call	04	Case manager	Samantha|Kathy|Sandy (English (US))	Did you get your blood pressure pills?
+05-andre-followup-call	05	Andre	Fred|Reed (English (US))|Alex	Yeah, I got them Thursday at the clinic on Sixty-third.
+05-andre-followup-call	06	Case manager	Samantha|Kathy|Sandy (English (US))	Great. And the state ID?
+05-andre-followup-call	07	Andre	Fred|Reed (English (US))|Alex	I went to the Secretary of State, they said I need a birth certificate first.
+05-andre-followup-call	08	Cousin (background)	Ralph|Rocko (English (US))|Fred	He been drinking again, tell her that.
+05-andre-followup-call	09	Andre	Fred|Reed (English (US))|Alex	Man, be quiet. That's not true.
+05-andre-followup-call	10	Case manager	Samantha|Kathy|Sandy (English (US))	Sorry, I didn't catch that.
+05-andre-followup-call	11	Andre	Fred|Reed (English (US))|Alex	Nothing. My cousin. He wants me out by Sunday now.
+05-andre-followup-call	12	Case manager	Samantha|Kathy|Sandy (English (US))	This Sunday?
+05-andre-followup-call	13	Andre	Fred|Reed (English (US))|Alex	Yeah, the thirtieth.
+05-andre-followup-call	14	Case manager	Samantha|Kathy|Sandy (English (US))	Okay, that moves housing up. I'll call the shelter line today and I'll request your birth certificate from Cook County. Call me Wednesday.
+05-andre-followup-call	15	Andre	Fred|Reed (English (US))|Alex	Alright.
+06-keisha-chicago-confidential	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Keisha Monroe, November twentieth. Is it alright if I record so I don't have to write?
+06-keisha-chicago-confidential	02	Keisha	Kathy|Shelley (English (US))|Samantha	Yeah.
+06-keisha-chicago-confidential	03	Case manager	Samantha|Kathy|Sandy (English (US))	When did you get out?
+06-keisha-chicago-confidential	04	Keisha	Kathy|Shelley (English (US))|Samantha	Monday. From Cook County. I'm on the bracelet, pretrial, I got court December third at Twenty-sixth and Cal.
+06-keisha-chicago-confidential	05	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you staying?
+06-keisha-chicago-confidential	06	Keisha	Kathy|Shelley (English (US))|Samantha	In Humbolt Park with my auntie. I can't go back to my apartment.
+06-keisha-chicago-confidential	07	Case manager	Samantha|Kathy|Sandy (English (US))	Can I ask why?
+06-keisha-chicago-confidential	08	Keisha	Kathy|Shelley (English (US))|Samantha	My ex is there. He's the reason I... he put hands on me. Please don't write that part down. If it gets back to him...
+06-keisha-chicago-confidential	09	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Let me pause the recording for a second.
+06-keisha-chicago-confidential	10	Case manager	Samantha|Kathy|Sandy (English (US))	Okay, we're back on. Tell me about your kids.
+06-keisha-chicago-confidential	11	Keisha	Kathy|Shelley (English (US))|Samantha	Two. Jaylen's six and Amaya's three. They're with my mom in Austin, the West Side Austin, not Texas. DCFS has a case open.
+06-keisha-chicago-confidential	12	Case manager	Samantha|Kathy|Sandy (English (US))	Any medication?
+06-keisha-chicago-confidential	13	Keisha	Kathy|Shelley (English (US))|Samantha	Sertraline. I still got about ten days.
+06-keisha-chicago-confidential	14	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you, Keisha?
+06-keisha-chicago-confidential	15	Keisha	Kathy|Shelley (English (US))|Samantha	Thirty-one.
+06-keisha-chicago-confidential	16	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. So I'll connect you with our DV advocate this week, privately, and we'll get you a psych appointment before the sertraline runs out. Your court date is the third. I'll see you Tuesday.
+06-keisha-chicago-confidential	17	Keisha	Kathy|Shelley (English (US))|Samantha	Okay. Thank you.
+07-minh-seattle-interpreter	01	Case manager	Samantha|Kathy|Sandy (English (US))	This is intake for Tran Van Minh, November seventeenth. We have an interpreter with us. Please ask him if it's okay to record.
+07-minh-seattle-interpreter	02	Interpreter	Karen|Tessa|Moira	Anh có đồng ý cho ghi âm không?
+07-minh-seattle-interpreter	03	Minh	Linh|Samantha	Dạ, được.
+07-minh-seattle-interpreter	04	Interpreter	Karen|Tessa|Moira	He says yes.
+07-minh-seattle-interpreter	05	Case manager	Samantha|Kathy|Sandy (English (US))	When was he released, and from where?
+07-minh-seattle-interpreter	06	Minh	Linh|Samantha	Tôi ra tù ngày mười hai, ở Monroe.
+07-minh-seattle-interpreter	07	Interpreter	Karen|Tessa|Moira	He got out on the twelfth, from Monroe.
+07-minh-seattle-interpreter	08	Case manager	Samantha|Kathy|Sandy (English (US))	Is he on community custody?
+07-minh-seattle-interpreter	09	Interpreter	Karen|Tessa|Moira	Yes, community custody, twelve months. He's worried, he has a green card but he's afraid immigration will come for him.
+07-minh-seattle-interpreter	10	Minh	Linh|Samantha	Tôi sợ lắm. Tôi không muốn bị trục xuất.
+07-minh-seattle-interpreter	11	Case manager	Samantha|Kathy|Sandy (English (US))	Where is he staying?
+07-minh-seattle-interpreter	12	Minh	Linh|Samantha	Ở với em gái ở Rainier Beach.
+07-minh-seattle-interpreter	13	Interpreter	Karen|Tessa|Moira	With his younger sister in Rainier Beach.
+07-minh-seattle-interpreter	14	Case manager	Samantha|Kathy|Sandy (English (US))	How old is he?
+07-minh-seattle-interpreter	15	Minh	Linh|Samantha	Năm mươi hai.
+07-minh-seattle-interpreter	16	Interpreter	Karen|Tessa|Moira	Fifty-two.
+07-minh-seattle-interpreter	17	Case manager	Samantha|Kathy|Sandy (English (US))	We'll get him to an immigration attorney this week, a free one, and I'll ask about his work permit. Next meeting Friday with the interpreter again.
+07-minh-seattle-interpreter	18	Interpreter	Karen|Tessa|Moira	Thứ sáu gặp lại, có thông dịch viên.
+07-minh-seattle-interpreter	19	Minh	Linh|Samantha	Cảm ơn chị.
+08-robert-pittsburgh-meds	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Robert Kowalski, Monday the twenty-third. Okay to record?
+08-robert-pittsburgh-meds	02	Robert	Grandpa (English (US))|Grandpa|Ralph	What?
+08-robert-pittsburgh-meds	03	Case manager	Samantha|Kathy|Sandy (English (US))	Is it okay if I record this?
+08-robert-pittsburgh-meds	04	Robert	Grandpa (English (US))|Grandpa|Ralph	Oh. Sure, sure. My hearing's not good.
+08-robert-pittsburgh-meds	05	Case manager	Samantha|Kathy|Sandy (English (US))	How long were you in?
+08-robert-pittsburgh-meds	06	Robert	Grandpa (English (US))|Grandpa|Ralph	Twenty-eight years. Came out of SCI Laurel Highlands on the sixth. I'm sixty-one.
+08-robert-pittsburgh-meds	07	Case manager	Samantha|Kathy|Sandy (English (US))	Are you on parole?
+08-robert-pittsburgh-meds	08	Robert	Grandpa (English (US))|Grandpa|Ralph	Parole, yes. Agent's name is Ms. Brennan. I report to the office on the North Side.
+08-robert-pittsburgh-meds	09	Case manager	Samantha|Kathy|Sandy (English (US))	Tell me about your medications.
+08-robert-pittsburgh-meds	10	Robert	Grandpa (English (US))|Grandpa|Ralph	Lisinopril, twenty milligrams. Metformin, five hundred, twice a day. Atorvastatin. And the Suboxone, the strip, eight milligrams. They gave me a week of that. That runs out tomorrow, Tuesday.
+08-robert-pittsburgh-meds	11	Case manager	Samantha|Kathy|Sandy (English (US))	Do you have Narcan?
+08-robert-pittsburgh-meds	12	Robert	Grandpa (English (US))|Grandpa|Ralph	They gave me a box at the gate. I don't use no more, though.
+08-robert-pittsburgh-meds	13	Case manager	Samantha|Kathy|Sandy (English (US))	Where are you living?
+08-robert-pittsburgh-meds	14	Robert	Grandpa (English (US))|Grandpa|Ralph	A recovery house in Carrick. Ninety days, then I don't know.
+08-robert-pittsburgh-meds	15	Case manager	Samantha|Kathy|Sandy (English (US))	Are you a veteran?
+08-robert-pittsburgh-meds	16	Robert	Grandpa (English (US))|Grandpa|Ralph	Army. Seventy-nine to eighty-three. Honorable.
+08-robert-pittsburgh-meds	17	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Tomorrow morning I'll get you a bridge appointment for the Suboxone, and I'll start your VA health enrollment. Come back Wednesday.
+08-robert-pittsburgh-meds	18	Robert	Grandpa (English (US))|Grandpa|Ralph	Tomorrow. Okay.
+09-deshawn-atlanta-mother	01	Case manager	Samantha|Kathy|Sandy (English (US))	This is intake for, can you spell your name for me?
+09-deshawn-atlanta-mother	02	Deshawn	Eddy (English (US))|Rishi|Alex	D, E, S, H, A, W, N. Deshawn. Last name Pryor, P, R, Y, O, R.
+09-deshawn-atlanta-mother	03	Case manager	Samantha|Kathy|Sandy (English (US))	And today's the twenty-fourth. I'm going to record, cool?
+09-deshawn-atlanta-mother	04	Deshawn	Eddy (English (US))|Rishi|Alex	Bet.
+09-deshawn-atlanta-mother	05	Case manager	Samantha|Kathy|Sandy (English (US))	How old are you?
+09-deshawn-atlanta-mother	06	Deshawn	Eddy (English (US))|Rishi|Alex	Nineteen.
+09-deshawn-atlanta-mother	07	Mother	Shelley (English (US))|Grandma (English (US))|Victoria	Eighteen. He's eighteen till February.
+09-deshawn-atlanta-mother	08	Deshawn	Eddy (English (US))|Rishi|Alex	Ma, I'm finna be nineteen, it's the same thing.
+09-deshawn-atlanta-mother	09	Case manager	Samantha|Kathy|Sandy (English (US))	Where'd you come home from?
+09-deshawn-atlanta-mother	10	Deshawn	Eddy (English (US))|Rishi|Alex	Rice Street. Fulton County jail. Like a week ago.
+09-deshawn-atlanta-mother	11	Mother	Shelley (English (US))|Grandma (English (US))|Victoria	Last Saturday. The fifteenth.
+09-deshawn-atlanta-mother	12	Case manager	Samantha|Kathy|Sandy (English (US))	Are you on probation?
+09-deshawn-atlanta-mother	13	Deshawn	Eddy (English (US))|Rishi|Alex	Yeah, first offender probation, two years. I got community service, eighty hours.
+09-deshawn-atlanta-mother	14	Case manager	Samantha|Kathy|Sandy (English (US))	Do you have a job?
+09-deshawn-atlanta-mother	15	Deshawn	Eddy (English (US))|Rishi|Alex	Just put that I got a job, my PO gonna see this. I'm starting at the warehouse in like two weeks.
+09-deshawn-atlanta-mother	16	Mother	Shelley (English (US))|Grandma (English (US))|Victoria	He applied. He doesn't have it yet.
+09-deshawn-atlanta-mother	17	Case manager	Samantha|Kathy|Sandy (English (US))	Phone number?
+09-deshawn-atlanta-mother	18	Deshawn	Eddy (English (US))|Rishi|Alex	Four oh four, five five five, oh one six one.
+09-deshawn-atlanta-mother	19	Mother	Shelley (English (US))|Grandma (English (US))|Victoria	That phone is off. Use the house, four oh four, five five five, oh one nine three.
+09-deshawn-atlanta-mother	20	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. I'll help you with the warehouse application follow-up and find a place to do the community service hours. See you next Monday.
+10-nadia-toronto-corrections	01	Case manager	Samantha|Kathy|Sandy (English (US))	Intake for Nadia Haddad, November twenty-fifth. I'm recording, is that okay?
+10-nadia-toronto-corrections	02	Nadia	Amélie|Amelie|Thomas|Samantha	Oui, yes, it's fine.
+10-nadia-toronto-corrections	03	Case manager	Samantha|Kathy|Sandy (English (US))	When were you released?
+10-nadia-toronto-corrections	04	Nadia	Amélie|Amelie|Thomas|Samantha	The thirteenth. From Vanier, in Milton.
+10-nadia-toronto-corrections	05	Case manager	Samantha|Kathy|Sandy (English (US))	And you're on probation?
+10-nadia-toronto-corrections	06	Nadia	Amélie|Amelie|Thomas|Samantha	Probation, eighteen months. No contact with the complainant, and I have to do the anger management program.
+10-nadia-toronto-corrections	07	Case manager	Samantha|Kathy|Sandy (English (US))	You're thirty-eight?
+10-nadia-toronto-corrections	08	Nadia	Amélie|Amelie|Thomas|Samantha	No, thirty-six. Thirty-eight is my sister.
+10-nadia-toronto-corrections	09	Case manager	Samantha|Kathy|Sandy (English (US))	Sorry. And you're living in Scarborough Town Centre?
+10-nadia-toronto-corrections	10	Nadia	Amélie|Amelie|Thomas|Samantha	No, no. Scarborough, near Kennedy station. Not the mall.
+10-nadia-toronto-corrections	11	Case manager	Samantha|Kathy|Sandy (English (US))	Do you have your health card?
+10-nadia-toronto-corrections	12	Nadia	Amélie|Amelie|Thomas|Samantha	My OHIP card is lost. And my SIN card, also lost. I have only my birth certificate, from Montréal.
+10-nadia-toronto-corrections	13	Case manager	Samantha|Kathy|Sandy (English (US))	Income?
+10-nadia-toronto-corrections	14	Nadia	Amélie|Amelie|Thomas|Samantha	Nothing. I need Ontario Works. Euh, I have rent due on the first, six hundred fifty dollars, for the room.
+10-nadia-toronto-corrections	15	Case manager	Samantha|Kathy|Sandy (English (US))	Phone?
+10-nadia-toronto-corrections	16	Nadia	Amélie|Amelie|Thomas|Samantha	Four one six, five five five, zero one three nine.
+10-nadia-toronto-corrections	17	Case manager	Samantha|Kathy|Sandy (English (US))	Okay. Today we'll start your Ontario Works application online, and Friday we go to ServiceOntario for the health card.
+10-nadia-toronto-corrections	18	Nadia	Amélie|Amelie|Thomas|Samantha	Parfait. Merci.
