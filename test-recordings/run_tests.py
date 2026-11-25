@@ -1,12 +1,12 @@
 """Run the 10 test recordings through the real pipeline (Whisper, then Claude) and save every output.
 
-    python3 run_tests.py [AUDIO_DIR]
+    python3 run_tests.py [AUDIO_DIR] [RESULTS_FOLDER] [CASE_ID ...]
 
 Uses the app's own backend code and keys: app/step1-client-note/backend/.env and ai-config.json.
 Writes results/<case>.json (transcript lines, the drafted note, timings). Keys are never printed or saved.
 Cases set outside Chicago are drafted twice: with their own location and with Chicago, Illinois.
 """
-import json, sys, time, traceback
+import datetime, json, sys, time, traceback
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -19,7 +19,7 @@ from ai_client import transcribe, draft_note, draft_update, AIError   # noqa: E4
 from cases import CASES, TYPED_UPDATES                                  # noqa: E402
 
 AUDIO = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "audio"
-OUT = HERE / "results"
+OUT = HERE / (sys.argv[2] if len(sys.argv) > 2 and not sys.argv[2][:2].isdigit() else "results")
 OUT.mkdir(exist_ok=True)
 SIM = json.loads((BACKEND.parent / "simulated_responses.json").read_text(encoding="utf-8"))
 T = SIM["templates"]
@@ -40,11 +40,20 @@ def mmss(t):
     return "–" if t is None else f"{int(t // 60)}:{round(t % 60):02d}"
 
 
+def case_date(c):
+    for fmt in ("%B %d, %Y", "%d %B %Y"):
+        try:
+            return datetime.datetime.strptime(c["date"], fmt).date().isoformat()
+        except ValueError:
+            pass
+    return ""
+
+
 def run_case(c):
     res = {"case": c["id"], "location": c["location"], "transcript": None, "notes": {}, "updates": {}, "errors": []}
     try:
         audio = (AUDIO / f"{c['id']}.m4a").read_bytes()
-        t = transcribe(audio, "audio/mp4", cfg, HF)
+        t = transcribe(audio, "audio/mp4", cfg, HF, f"{c['id']}.m4a")   # the app converts m4a to WAV itself
         segs = t["segments"] or [{"start": 0, "text": t["text"]}]
         lines = [{"id": f"rt{i+1}", "time": mmss(g["start"]), "text": g["text"]} for i, g in enumerate(segs)]
         res["transcript"] = {"text": t["text"], "lines": lines, "seconds": t["seconds"], "model": t["request"]["model"]}
@@ -58,12 +67,12 @@ def run_case(c):
         client = {"name": "Andre Williams", "age": 34, "needs": c.get("open_needs", []), "openNeeds": c.get("open_needs", [])}
         for label, text in [("from_transcript", res["transcript"]["text"]), ("from_typed", TYPED_UPDATES.get(c["id"], ""))]:
             try:
-                r = draft_update(text, client, c["meeting"], AK, model)
+                r = draft_update(text, client, c["meeting"], AK, model, case_date(c))
                 res["updates"][label] = {"model": r["model"], "summary": r["summary"], "changes": r["changes"], "seconds": r["seconds"]}
             except Exception as e:
                 res["errors"].append(f"update {label}: {e} {getattr(e, 'detail', '')}"[:600])
     for loc in locations:
-        ncfg = dict(cfg.get("note") or {}, location=loc)
+        ncfg = dict(cfg.get("note") or {}, location=loc, meeting_date=case_date(c))
         try:
             r = draft_note(lines, LISTS, ncfg, AK)
             res["notes"][loc] = {"note": r["note"], "seconds": r["seconds"], "model": r["request"]["model"], "usage": r["usage"]}
@@ -84,7 +93,7 @@ def save(c):
     print(f"✓ {c['id']} saved ({len(r.get('errors', []))} errors)", flush=True)
 
 
-only = set(sys.argv[2:])
+only = {a for a in sys.argv[2:] if a[:2].isdigit()}
 with ThreadPoolExecutor(max_workers=4) as pool:
     list(pool.map(save, [c for c in CASES if not only or c["id"] in only]))
 print("Done. Results are in", OUT)
