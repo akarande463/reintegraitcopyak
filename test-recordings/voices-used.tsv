@@ -1,0 +1,187 @@
+case	line	speaker	voice
+01-maria-los-angeles	01	Case manager	Samantha
+01-maria-los-angeles	02	Maria	Paulina
+01-maria-los-angeles	03	Case manager	Samantha
+01-maria-los-angeles	04	Daughter (Jessica)	Sandy (English (US))
+01-maria-los-angeles	05	Case manager	Samantha
+01-maria-los-angeles	06	Maria	Paulina
+01-maria-los-angeles	07	Case manager	Samantha
+01-maria-los-angeles	08	Maria	Paulina
+01-maria-los-angeles	09	Case manager	Samantha
+01-maria-los-angeles	10	Maria	Paulina
+01-maria-los-angeles	11	Daughter (Jessica)	Sandy (English (US))
+01-maria-los-angeles	12	Maria	Paulina
+01-maria-los-angeles	13	Case manager	Samantha
+01-maria-los-angeles	14	Maria	Paulina
+01-maria-los-angeles	15	Case manager	Samantha
+01-maria-los-angeles	16	Maria	Paulina
+01-maria-los-angeles	17	Case manager	Samantha
+01-maria-los-angeles	18	Daughter (Jessica)	Sandy (English (US))
+01-maria-los-angeles	19	Case manager	Samantha
+01-maria-los-angeles	20	Maria	Paulina
+02-darnell-houston	01	Case manager	Samantha
+02-darnell-houston	02	Darnell	Fred
+02-darnell-houston	03	Case manager	Samantha
+02-darnell-houston	04	Darnell	Fred
+02-darnell-houston	05	Case manager	Samantha
+02-darnell-houston	06	Darnell	Fred
+02-darnell-houston	07	Case manager	Samantha
+02-darnell-houston	08	Darnell	Fred
+02-darnell-houston	09	Case manager	Samantha
+02-darnell-houston	10	Darnell	Fred
+02-darnell-houston	11	Case manager	Samantha
+02-darnell-houston	12	Darnell	Fred
+02-darnell-houston	13	Case manager	Samantha
+02-darnell-houston	14	Darnell	Fred
+02-darnell-houston	15	Case manager	Samantha
+02-darnell-houston	16	Darnell	Fred
+02-darnell-houston	17	Case manager	Samantha
+02-darnell-houston	18	Darnell	Fred
+02-darnell-houston	19	Case manager	Samantha
+02-darnell-houston	20	Darnell	Fred
+02-darnell-houston	21	Case manager	Samantha
+02-darnell-houston	22	Darnell	Fred
+03-liam-manchester	01	Case manager	Flo (English (UK))
+03-liam-manchester	02	Liam	Daniel
+03-liam-manchester	03	Case manager	Flo (English (UK))
+03-liam-manchester	04	Liam	Daniel
+03-liam-manchester	05	Case manager	Flo (English (UK))
+03-liam-manchester	06	Liam	Daniel
+03-liam-manchester	07	Case manager	Flo (English (UK))
+03-liam-manchester	08	Liam	Daniel
+03-liam-manchester	09	Case manager	Flo (English (UK))
+03-liam-manchester	10	Liam	Daniel
+03-liam-manchester	11	Case manager	Flo (English (UK))
+03-liam-manchester	12	Liam	Daniel
+03-liam-manchester	13	Case manager	Flo (English (UK))
+03-liam-manchester	14	Liam	Daniel
+03-liam-manchester	15	Case manager	Flo (English (UK))
+03-liam-manchester	16	Liam	Daniel
+03-liam-manchester	17	Case manager	Flo (English (UK))
+03-liam-manchester	18	Liam	Daniel
+04-joseph-gallup	01	Case manager	Samantha
+04-joseph-gallup	02	Joseph	Eddy (English (US))
+04-joseph-gallup	03	Case manager	Samantha
+04-joseph-gallup	04	Joseph	Eddy (English (US))
+04-joseph-gallup	05	Case manager	Samantha
+04-joseph-gallup	06	Joseph	Eddy (English (US))
+04-joseph-gallup	07	Case manager	Samantha
+04-joseph-gallup	08	Joseph	Eddy (English (US))
+04-joseph-gallup	09	Joseph	Eddy (English (US))
+04-joseph-gallup	10	Case manager	Samantha
+04-joseph-gallup	11	Joseph	Eddy (English (US))
+04-joseph-gallup	12	Case manager	Samantha
+04-joseph-gallup	13	Joseph	Eddy (English (US))
+04-joseph-gallup	14	Case manager	Samantha
+04-joseph-gallup	15	Joseph	Eddy (English (US))
+04-joseph-gallup	16	Case manager	Samantha
+04-joseph-gallup	17	Joseph	Eddy (English (US))
+04-joseph-gallup	18	Case manager	Samantha
+04-joseph-gallup	19	Joseph	Eddy (English (US))
+05-andre-followup-call	01	Case manager	Samantha
+05-andre-followup-call	02	Andre	Fred
+05-andre-followup-call	03	TV	Albert
+05-andre-followup-call	04	Case manager	Samantha
+05-andre-followup-call	05	Andre	Fred
+05-andre-followup-call	06	Case manager	Samantha
+05-andre-followup-call	07	Andre	Fred
+05-andre-followup-call	08	Cousin (background)	Ralph
+05-andre-followup-call	09	Andre	Fred
+05-andre-followup-call	10	Case manager	Samantha
+05-andre-followup-call	11	Andre	Fred
+05-andre-followup-call	12	Case manager	Samantha
+05-andre-followup-call	13	Andre	Fred
+05-andre-followup-call	14	Case manager	Samantha
+05-andre-followup-call	15	Andre	Fred
+06-keisha-chicago-confidential	01	Case manager	Samantha
+06-keisha-chicago-confidential	02	Keisha	Kathy
+06-keisha-chicago-confidential	03	Case manager	Samantha
+06-keisha-chicago-confidential	04	Keisha	Kathy
+06-keisha-chicago-confidential	05	Case manager	Samantha
+06-keisha-chicago-confidential	06	Keisha	Kathy
+06-keisha-chicago-confidential	07	Case manager	Samantha
+06-keisha-chicago-confidential	08	Keisha	Kathy
+06-keisha-chicago-confidential	09	Case manager	Samantha
+06-keisha-chicago-confidential	10	Case manager	Samantha
+06-keisha-chicago-confidential	11	Keisha	Kathy
+06-keisha-chicago-confidential	12	Case manager	Samantha
+06-keisha-chicago-confidential	13	Keisha	Kathy
+06-keisha-chicago-confidential	14	Case manager	Samantha
+06-keisha-chicago-confidential	15	Keisha	Kathy
+06-keisha-chicago-confidential	16	Case manager	Samantha
+06-keisha-chicago-confidential	17	Keisha	Kathy
+07-minh-seattle-interpreter	01	Case manager	Samantha
+07-minh-seattle-interpreter	02	Interpreter	Karen
+07-minh-seattle-interpreter	03	Minh	Linh
+07-minh-seattle-interpreter	04	Interpreter	Karen
+07-minh-seattle-interpreter	05	Case manager	Samantha
+07-minh-seattle-interpreter	06	Minh	Linh
+07-minh-seattle-interpreter	07	Interpreter	Karen
+07-minh-seattle-interpreter	08	Case manager	Samantha
+07-minh-seattle-interpreter	09	Interpreter	Karen
+07-minh-seattle-interpreter	10	Minh	Linh
+07-minh-seattle-interpreter	11	Case manager	Samantha
+07-minh-seattle-interpreter	12	Minh	Linh
+07-minh-seattle-interpreter	13	Interpreter	Karen
+07-minh-seattle-interpreter	14	Case manager	Samantha
+07-minh-seattle-interpreter	15	Minh	Linh
+07-minh-seattle-interpreter	16	Interpreter	Karen
+07-minh-seattle-interpreter	17	Case manager	Samantha
+07-minh-seattle-interpreter	18	Interpreter	Karen
+07-minh-seattle-interpreter	19	Minh	Linh
+08-robert-pittsburgh-meds	01	Case manager	Samantha
+08-robert-pittsburgh-meds	02	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	03	Case manager	Samantha
+08-robert-pittsburgh-meds	04	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	05	Case manager	Samantha
+08-robert-pittsburgh-meds	06	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	07	Case manager	Samantha
+08-robert-pittsburgh-meds	08	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	09	Case manager	Samantha
+08-robert-pittsburgh-meds	10	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	11	Case manager	Samantha
+08-robert-pittsburgh-meds	12	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	13	Case manager	Samantha
+08-robert-pittsburgh-meds	14	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	15	Case manager	Samantha
+08-robert-pittsburgh-meds	16	Robert	Grandpa (English (US))
+08-robert-pittsburgh-meds	17	Case manager	Samantha
+08-robert-pittsburgh-meds	18	Robert	Grandpa (English (US))
+09-deshawn-atlanta-mother	01	Case manager	Samantha
+09-deshawn-atlanta-mother	02	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	03	Case manager	Samantha
+09-deshawn-atlanta-mother	04	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	05	Case manager	Samantha
+09-deshawn-atlanta-mother	06	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	07	Mother	Shelley (English (US))
+09-deshawn-atlanta-mother	08	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	09	Case manager	Samantha
+09-deshawn-atlanta-mother	10	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	11	Mother	Shelley (English (US))
+09-deshawn-atlanta-mother	12	Case manager	Samantha
+09-deshawn-atlanta-mother	13	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	14	Case manager	Samantha
+09-deshawn-atlanta-mother	15	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	16	Mother	Shelley (English (US))
+09-deshawn-atlanta-mother	17	Case manager	Samantha
+09-deshawn-atlanta-mother	18	Deshawn	Eddy (English (US))
+09-deshawn-atlanta-mother	19	Mother	Shelley (English (US))
+09-deshawn-atlanta-mother	20	Case manager	Samantha
+10-nadia-toronto-corrections	01	Case manager	Samantha
+10-nadia-toronto-corrections	02	Nadia	Amélie
+10-nadia-toronto-corrections	03	Case manager	Samantha
+10-nadia-toronto-corrections	04	Nadia	Amélie
+10-nadia-toronto-corrections	05	Case manager	Samantha
+10-nadia-toronto-corrections	06	Nadia	Amélie
+10-nadia-toronto-corrections	07	Case manager	Samantha
+10-nadia-toronto-corrections	08	Nadia	Amélie
+10-nadia-toronto-corrections	09	Case manager	Samantha
+10-nadia-toronto-corrections	10	Nadia	Amélie
+10-nadia-toronto-corrections	11	Case manager	Samantha
+10-nadia-toronto-corrections	12	Nadia	Amélie
+10-nadia-toronto-corrections	13	Case manager	Samantha
+10-nadia-toronto-corrections	14	Nadia	Amélie
+10-nadia-toronto-corrections	15	Case manager	Samantha
+10-nadia-toronto-corrections	16	Nadia	Amélie
+10-nadia-toronto-corrections	17	Case manager	Samantha
+10-nadia-toronto-corrections	18	Nadia	Amélie
