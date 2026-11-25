@@ -18,9 +18,7 @@ from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-import importlib.util
-
-from ai_client import AIError, draft_note, read_document, transcribe
+from ai_client import AIError, draft_update, transcribe
 
 HERE = Path(__file__).resolve().parent          # backend/
 SITE = HERE.parent                              # step1-client-note/ (the prototype)
@@ -101,7 +99,7 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(200, {"helper": True, "mode": cfg.get("mode", "simulated"),
                                     "provider": cfg.get("provider"), "model": cfg.get("model"),
                                     "key_found": bool(read_env().get("HF_TOKEN")),
-                                    "note": note_status(cfg), "document": document_status(cfg)})
+                                    "draft_key_found": bool(read_env().get("ANTHROPIC_API_KEY"))})
         return super().do_GET()
 
     def do_POST(self):
@@ -111,10 +109,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json(413, {"ok": False, "error": "File is over 100 MB."})
         if self.path.startswith("/api/transcribe"):
             return self._transcribe(body)
-        if self.path.startswith("/api/draft-note"):
-            return self._draft_note(body)
-        if self.path.startswith("/api/read-document"):
-            return _read_document_handler(self, body)
+        if self.path.startswith("/api/draft-update"):
+            return self._draft_update(body)
         if self.path.startswith("/api/log"):
             try:
                 ev = json.loads(body or b"{}")
@@ -160,6 +156,40 @@ class Handler(SimpleHTTPRequestHandler):
         return self._json(200, {"ok": True, "mode": "real", "model": r["request"]["model"],
                                 "provider": r["request"]["provider"], "text": r["text"],
                                 "segments": r["segments"], "seconds": r["seconds"]})
+
+    def _draft_update(self, body):
+        cfg = read_config()
+        try:
+            payload = json.loads(body or b"{}")
+        except json.JSONDecodeError:
+            return self._json(400, {"ok": False, "error": "Invalid request body."})
+        text = (payload.get("text") or "").strip()
+        client = payload.get("client") or {}
+        update_type = payload.get("type") or ""
+        if not text:
+            return self._json(400, {"ok": False, "error": "text is required."})
+        entry = {"type": "ai_request", "step": "draft update",
+                 "input": {"client": client.get("name", ""), "update_type": update_type,
+                           "typed_notes": text}}
+        if cfg.get("mode") != "real":
+            entry.update(mode="simulated", output="Simulated mode: no model was called.")
+            write_log(entry)
+            return self._json(200, {"ok": False, "mode": "simulated", "error": "Simulated mode is on in ai-config.json."})
+        model = read_env().get("ANTHROPIC_MODEL") or "claude-sonnet-5-5"
+        try:
+            r = draft_update(text, client, update_type, read_env().get("ANTHROPIC_API_KEY", ""), model)
+        except AIError as e:
+            entry.update(mode="real", error={"message": str(e), "status": e.status, "detail": e.detail})
+            write_log(entry)
+            print(f"  ✗ AI error (draft update): {e}", flush=True)
+            return self._json(200, {"ok": False, "mode": "real", "error": str(e)})
+        entry.update(mode="real", output={"summary": r["summary"], "changes": r["changes"]},
+                     model=r["model"], seconds=r["seconds"], error=None)
+        write_log(entry)
+        print(f"  ✓ {r['model']} drafted update for {client.get('name', '?')} in {r['seconds']} s "
+              f"({len(r['changes'])} changes)", flush=True)
+        return self._json(200, {"ok": True, "mode": "real", "model": r["model"],
+                                "summary": r["summary"], "changes": r["changes"], "seconds": r["seconds"]})
 
 
 def note_status(cfg):
