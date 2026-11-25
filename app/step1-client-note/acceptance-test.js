@@ -3,6 +3,9 @@
 // 2. In another terminal: node acceptance-test.js   (needs Playwright: npm i -D playwright && npx playwright install chromium)
 // Screenshots of each screen are saved to ./screenshots.
 const { chromium } = require('playwright');
+// Review safeguards: pick a reason for any declined urgent suggestion; confirm a fast approval if asked.
+const pickWhy = async p => { for (const sel of await p.$$('[data-why]')) { if (!(await sel.inputValue())) await sel.selectOption({ index: 1 }); } };
+const approveNote = async p => { await p.click('#btn-save'); const ok = await p.waitForSelector('#fast-ok', { timeout: 800 }).catch(() => null); if (ok) await ok.click(); };
 const fs = require('fs');
 const URL = process.env.PROTO_URL || 'http://localhost:8000/';
 const SHOTS = __dirname + '/screenshots';
@@ -69,12 +72,12 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   await p.click('#btn-edit');
   check('5. The note can be edited',
     (await p.inputValue('#k-locality')).includes('63rd') && (await p.textContent('#steps')).includes('winter coat'));
-  await p.selectOption('#fx-f1', 'Male'); await p.click('[data-fix="f1"]');
-  await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix="f2"]');
+  await p.selectOption('#fx-f1', 'Male'); await p.selectOption('#fxs-f1', 'Asked client'); await p.click('[data-fix=\"f1\"]');
+  await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix=\"f2\"]'); await pickWhy(p);
   await p.fill('#lg-min', '50');
   await p.check('#rv1');
   check('5. Saving is allowed once flags are resolved and the review box is ticked', !(await p.isDisabled('#btn-save')));
-  await p.click('#btn-save'); await p.click('#tab-casefile'); await p.waitForSelector('#detail-name');
+  await approveNote(p); await p.click('#tab-casefile'); await p.waitForSelector('#detail-name');
   check('5. The approved note is saved to the new client\'s case file',
     (await p.textContent('#detail-name')) === 'Andre Williams' &&
     (await p.textContent('#timeline')).includes('winter coat') &&
@@ -168,11 +171,11 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   await s.selectOption('[data-pri="4"]', 'Soon');
   check('10. A need\'s priority can be changed', (await s.$$eval('#needs li', ls => ls[4].querySelector('select').value)) === 'Soon');
   await s.fill('#k-age', '35'); await s.click('#btn-edit');
-  check('10. Review box says "I reviewed this note against the conversation"',
-    (await s.textContent('#review')).includes('I reviewed this note against the conversation'));
-  await s.selectOption('#fx-f1', 'Male'); await s.click('[data-fix="f1"]');
-  await s.fill('#fx-f2', '773-555-0186'); await s.click('[data-fix="f2"]');
-  await s.check('#rv1'); await s.click('#btn-save'); await s.click('#tab-casefile'); await s.waitForSelector('#detail-name');
+  check('10. Review box says "I checked this note against the recording myself"',
+    (await s.textContent('#review')).includes('I checked this note against the recording myself'));
+  await s.selectOption('#fx-f1', 'Male'); await s.selectOption('#fxs-f1', 'Asked client'); await s.click('[data-fix=\"f1\"]');
+  await s.fill('#fx-f2', '773-555-0186'); await s.click('[data-fix=\"f2\"]'); await pickWhy(s);
+  await s.check('#rv1'); await approveNote(s); await s.click('#tab-casefile'); await s.waitForSelector('#detail-name');
   check('10. A new client gets status "New intake" and a follow-up reminder',
     (await s.textContent('#detail')).includes('New intake') && (await s.textContent('#remcard')).includes('Nov 13'));
   await s.click('#nav-activity');
@@ -208,9 +211,9 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   await ns.check('#steps-suggested li:first-child [data-tick]');
   await ns.uncheck('#steps-agreed li:nth-child(3) [data-tick]');
   check('11. Unticking the follow-up call removes its reminder badge', !(await ns.textContent('#steps-agreed')).includes('Creates reminder'));
-  await ns.selectOption('#fx-f1', 'Male'); await ns.click('[data-fix="f1"]');
-  await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix="f2"]');
-  await ns.check('#rv1'); await ns.click('#btn-save'); await ns.click('#tab-casefile'); await ns.waitForSelector('#detail-name');
+  await ns.selectOption('#fx-f1', 'Male'); await ns.selectOption('#fxs-f1', 'Asked client'); await ns.click('[data-fix=\"f1\"]');
+  await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix=\"f2\"]'); await pickWhy(ns);
+  await ns.check('#rv1'); await approveNote(ns); await ns.click('#tab-casefile'); await ns.waitForSelector('#detail-name');
   const R11 = await ns.evaluate(() => JSON.parse(localStorage.getItem('reintegrait.records.v2')));
   const cid = R11.Client.find(c => c.Name === 'Andre Williams').Id;
   const goals = R11.Goal.filter(g => g.ClientId === cid);
@@ -225,8 +228,8 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   await ns.click('#btn-edit');
   for (let i = 0; i < 3; i++) await ns.click('#steps-agreed li:first-child [data-del]');
   await ns.click('#btn-edit');
-  await ns.selectOption('#fx-f1', 'Male'); await ns.click('[data-fix="f1"]');
-  await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix="f2"]'); await ns.check('#rv1');
+  await ns.selectOption('#fx-f1', 'Male'); await ns.selectOption('#fxs-f1', 'Asked client'); await ns.click('[data-fix=\"f1\"]');
+  await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix=\"f2\"]'); await pickWhy(ns); await ns.check('#rv1');
   const blocked = (await ns.textContent('#nosteps')).includes('No next steps agreed') && await ns.isDisabled('#btn-save');
   await ns.check('#rv-none');
   check('11. With no agreed steps, approval needs the "no next steps agreed" confirmation', blocked && !(await ns.isDisabled('#btn-save')));
@@ -240,8 +243,8 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   const needTypes = await p4.$$eval('[data-stype]', s => s.map(x => x.value));
   check('12. Each need in the drafted note has a service type', needTypes.length === 5 && needTypes.every(Boolean));
   check('12. Minutes are filled from the recording length (46:58 is 47 min)', (await p4.inputValue('#lg-min')) === '47');
-  await p4.selectOption('#fx-f1', 'Male'); await p4.click('[data-fix="f1"]');
-  await p4.fill('#fx-f2', '773-555-0186'); await p4.click('[data-fix="f2"]');
+  await p4.selectOption('#fx-f1', 'Male'); await p4.selectOption('#fxs-f1', 'Asked client'); await p4.click('[data-fix=\"f1\"]');
+  await p4.fill('#fx-f2', '773-555-0186'); await p4.click('[data-fix=\"f2\"]'); await pickWhy(p4);
   await p4.click('#btn-edit'); await p4.click('[data-add="immediate_needs"]'); await p4.keyboard.type('Winter coat'); await p4.click('#btn-edit');
   await p4.check('#rv1');
   const blockedType = await p4.isDisabled('#btn-save') && (await p4.textContent('#chk-types')).includes('1 need without');

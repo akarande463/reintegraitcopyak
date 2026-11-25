@@ -3,6 +3,9 @@
 // 2. In another terminal: node acceptance-test-step2.js   (needs Playwright: npm i -D playwright && npx playwright install chromium)
 // Screenshots are saved to ./screenshots (step2-*.png).
 const { chromium } = require('playwright');
+// Review safeguards: pick a reason for any declined urgent suggestion; confirm a fast approval if asked.
+const pickWhy = async p => { for (const sel of await p.$$('[data-why]')) { if (!(await sel.inputValue())) await sel.selectOption({ index: 1 }); } };
+const approveNote = async p => { await p.click('#btn-save'); const ok = await p.waitForSelector('#fast-ok', { timeout: 800 }).catch(() => null); if (ok) await ok.click(); };
 const fs = require('fs');
 const URL = process.env.PROTO_URL || 'http://localhost:8000/';
 const SHOTS = __dirname + '/screenshots';
@@ -21,9 +24,9 @@ async function approveAndre(p) {
   await p.click('#btn-new'); await p.click('#sample');
   await p.waitForSelector('#mgo:not([disabled])', { timeout: 5000 }); await p.click('#mgo');
   await p.waitForSelector('#seenote:not([hidden])', { timeout: 10000 }); await p.click('#seenote');
-  await p.selectOption('#fx-f1', 'Male'); await p.click('[data-fix="f1"]');
-  await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix="f2"]');
-  await p.check('#rv1'); await p.click('#btn-save');
+  await p.selectOption('#fx-f1', 'Male'); await p.selectOption('#fxs-f1', 'Asked client'); await p.click('[data-fix=\"f1\"]');
+  await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix=\"f2\"]'); await pickWhy(p);
+  await p.check('#rv1'); await approveNote(p);
   await p.waitForSelector('#ms-board');
 }
 const bucket = cat => `.ms-bucket:has(.ms-bopen b:text-is("${cat}"))`;
