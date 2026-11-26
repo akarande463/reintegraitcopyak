@@ -1,0 +1,252 @@
+FLAGS
+⚠ Missing: Gender Gender was not stated in the recording. Choose… Male Female Non-binary Prefers not to say Where did this come from? Asked client From ID or documents Not known Save
+⚠ Unclear: Contact phone This is his sister's phone; he does not have his own yet. Heard at ~1:06. Heard in recording: 773-555-0148 1:06 Save
+⚠ Unclear: Date of birth Only the month was given: he turns 42 in March, so likely born March 1985, day not said. Heard at ~0:17. Heard in recording: I'll be forty two in March 0:17 Save
+⚠ Unclear: Supervision Client said two years MSR (mandatory supervised release), Illinois's form of parole. Heard at ~0:53. Heard in recording: Parole 0:53 Save
+
+SCREEN
+PROTOTYPE
+Sample clients, saved in this browser. Voice to text uses the real model
+openai/whisper-large-v3
+. The new-client note is drafted by
+claude-opus-5-5
+. Typed updates are drafted by
+claude-sonnet-5-5
+. Everything else comes from simulated_responses.json.
+AI: Real · switch
+Reset sample data
+New client · Standard intake note
+Client note: Darius Johnson
+Edit note
+Drafted by claude-opus-5-5 from your recording. Check every line against the transcript before you approve.
+⚠ Missing: Gender Gender was not stated in the recording.
+Choose…
+Male
+Female
+Non-binary
+Prefers not to say
+Where did this come from?
+Asked client
+From ID or documents
+Not known
+Save
+⚠ Unclear: Contact phone This is his sister's phone; he does not have his own yet. Heard at ~1:06.
+Heard in recording: 773-555-0148 1:06
+Save
+⚠ Unclear: Date of birth Only the month was given: he turns 42 in March, so likely born March 1985, day not said. Heard at ~0:17.
+Heard in recording: I'll be forty two in March 0:17
+Save
+⚠ Unclear: Supervision Client said two years MSR (mandatory supervised release), Illinois's form of parole. Heard at ~0:53.
+Heard in recording: Parole 0:53
+Save
+TRANSCRIPT
+0:45
+REAL AI
+Written by the real speech-to-text model. Split into speakers by the note model. Times marked ~ are estimated. Time stamps in the note point to these lines.
+0:00
+Denise:Okay so we're recording, you good with that?
+~0:05
+Darius:Yeah that's fine.
+~0:07
+Denise:Alright, so tell me your name for the file.
+~0:11
+Darius:Darius Johnson. D-A-R-I-U-S.
+0:14
+Denise:And how old are you Darius?
+~0:17
+Darius:Forty one. I'll be forty two in March.
+0:21
+Denise:Where are you staying right now?
+~0:25
+Darius:I'm at my sister's in Inglewood, off 63rd and Halsted, on her couch. She said I can stay till the end of the month but after that I don't know.
+0:40
+Denise:Okay. When did you come home?
+~0:44
+Darius:Last Thursday. I came out of Stateville, did six years.
+~0:51
+Denise:And you're on MSR?
+~0:53
+Darius:Yeah, two years MSR, my parole agent is a Miss Ortiz, I see her the 19th.
+1:02
+Denise:What's the best number for you?
+~1:06
+Darius:773 555 0148. That's my sister's phone though, I ain't got one yet.
+1:15
+Denise:What about ID, you got your state ID?
+~1:19
+Darius:No, they gave me the release papers and that's it, I lost my old ID before I went in.
+~1:27
+Denise:Okay, I'm going to take you to the Secretary of State on King Drive Friday morning, we'll get that started.
+1:38
+Denise:And medical?
+~1:40
+Darius:I'm on blood pressure pills, they gave me like ten days worth.
+~1:47
+Denise:You got a doctor?
+~1:49
+Darius:No.
+~1:50
+Denise:Okay we need to get you on Medicaid then.
+1:55
+Denise:Work?
+~1:56
+Darius:I got my forklift certificate inside, I want to get on at a warehouse.
+~2:04
+Denise:Okay, we'll talk about that once the ID's done.
+~2:10
+Darius:Alright.
+~2:11
+Denise:Anything else?
+~2:13
+Darius:Nah that's it for now.
+Tap a time stamp in the note to see where it came from.
+Key information
+4 TO CONFIRM
+Verify with a document
+Name 0:11
+Age 0:17
+⚠ Gender (to confirm)
+Not stated
+Male
+Female
+Non-binary
+Prefers not to say
+Neighborhood 0:25
+Heard as “Inglewood”
+⚠ Contact phone (to confirm) 1:06
+⚠ Date of birth (to confirm) 0:17
+Household 0:25
+Not mentioned: Client ID, Emergency contact. Add by hand
+JUSTICE
+Release date 0:44
+Facility 0:44
+Heard as “Stateville”
+⚠ Supervision (to confirm) 0:53
+Not said
+Probation
+Parole
+None
+Probation or parole officer 0:53
+Not mentioned: Conditions. Add by hand
+INTAKE
+Not mentioned: Referral source, Consent form signed, Release of information signed. Add by hand
+Immediate needs
+URGENT
+Medication: About ten days of blood pressure pills from release, running out soon; no doctor
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+1:40
+SOON
+Other: Needs Medicaid
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+1:50
+SOON
+ID: No state ID; only release papers
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+1:19
+SOON
+Housing: On sister's couch until end of month, nothing after
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+0:25
+LATER
+Work: Wants warehouse work; has forklift certificate
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+1:56
+LATER
+Other: No phone of his own
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+1:06
+Next steps
+Only ticked steps are saved
+AGREED IN MEETING
+Take client to Secretary of State on King Drive to start state ID
+Owner: Case manager
+Due: 2026-11-13
+Addresses: ID
+Agreed at 1:27
+Get client enrolled in Medicaid
+Owner: Both
+Due: not said
+Addresses: Medication, Other
+Agreed at 1:50
+Talk about warehouse job search once ID is done
+Owner: Both
+Due: not said
+Addresses: Work
+Agreed at 2:04
+Report to parole agent Miss Ortiz
+Owner: Client
+Due: 2026-11-19
+Agreed at 0:53
+AI SUGGESTED
+YOU DECIDE
+Start looking for housing for after the end of the month
+Owner: Both
+Due: 2026-11-30
+Addresses: Housing
+Evidence: need 0:25
+REVIEW CHECK
+⚠
+4 flags to resolve (see top)
+✓
+Every need has a service type
+✓
+Minutes logged
+SERVICE LOG
+Meeting
+In-person visit
+Phone call
+Text message
+Minutes
+Services covered: Health, Benefits, ID and documents, Housing, Jobs. These come from the needs' service types.
+✓
+Every urgent need has a step or a reason
+I checked this note against the recording myself
+Approve and save to case file
