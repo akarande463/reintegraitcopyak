@@ -1,0 +1,74 @@
+/* Matched services tab (home screen). Reuses the Step 1 tokens and components (pane, btn, tag, field, chk, metrics). */
+:root{--seq0:#cce3fd;--seq1:#84b9f3;--seq2:#338ced;--seq3:#1b64be;--seq4:#0e3d7e;--seq-line:#ffffff;--dot:#a63d3d}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--seq0:#1d2b3a;--seq1:#0f4a96;--seq2:#1b64be;--seq3:#519ced;--seq4:#b6d5f8;--seq-line:#19212a;--dot:#e58f8f}}
+:root[data-theme="dark"]{--seq0:#1d2b3a;--seq1:#0f4a96;--seq2:#1b64be;--seq3:#519ced;--seq4:#b6d5f8;--seq-line:#19212a;--dot:#e58f8f}
+
+.net-tabs{flex-wrap:wrap}
+.net-areas{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;align-items:start}
+@media (max-width:900px){.net-areas{grid-template-columns:1fr}}
+.net-maphead{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+@media (max-width:420px){.net-maphead{grid-template-columns:1fr}}
+.net-mapwrap{display:flex;flex-direction:column;align-items:center}
+.net-map{width:100%;max-width:420px;height:auto;display:block}
+.net-map path{stroke:var(--seq-line);stroke-width:.8;cursor:pointer;transition:opacity .1s}
+.net-map path:hover{opacity:.8}
+.net-map path.sel{stroke:var(--ink);stroke-width:2.2}
+.net-map .q0,.net-legend .q0{fill:var(--seq0);background:var(--seq0)}
+.net-map .q1,.net-legend .q1{fill:var(--seq1);background:var(--seq1)}
+.net-map .q2,.net-legend .q2{fill:var(--seq2);background:var(--seq2)}
+.net-map .q3,.net-legend .q3{fill:var(--seq3);background:var(--seq3)}
+.net-map .q4,.net-legend .q4{fill:var(--seq4);background:var(--seq4)}
+.net-dot{fill:var(--dot);stroke:var(--seq-line);stroke-width:1.5;pointer-events:none}
+.net-legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:8px;justify-content:center}
+.net-legend span{display:inline-flex;align-items:center;gap:5px}
+.net-legend i{width:12px;height:12px;border-radius:2px;display:inline-block}
+.net-legend i.dot{border-radius:50%;background:var(--dot);width:9px;height:9px}
+#net-hover{text-align:center;min-height:1.5em;margin-top:4px}
+.net-profile h3{font-size:15px;margin-bottom:6px}
+.net-ind{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.net-cov td,.net-cov th{font-size:13px;padding:6px 8px}
+.net-cov tr.gap td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+.net-cov tr.thin td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+.net-cov .btn{font-size:12px;padding:2px 6px;white-space:nowrap}
+.net-worked{margin:0 0 4px;padding-left:20px;display:flex;flex-direction:column;gap:4px;font-size:14px}
+.net-sources{margin-top:16px}
+.net-sources summary{cursor:pointer}
+.net-sources table{margin-top:10px}
+.net-sources td,.net-sources th{padding:6px 8px;vertical-align:top}
+
+.net-filters{margin-bottom:12px}
+.net-row{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.net-row>.field{flex:1 1 160px;min-width:0}
+.net-row>.net-q{flex:2 1 220px}
+.net-row2{margin-top:8px;justify-content:space-between;align-items:center}
+.net-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+@media (max-width:400px){.net-list{grid-template-columns:1fr}}
+.net-card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:6px;padding:12px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.net-card.partner{border-left-color:var(--ok)}
+.net-cardhead{display:flex;flex-direction:column;gap:5px}
+.net-cardhead h3{font-size:16px;margin:0;overflow-wrap:anywhere}
+.net-tags{display:flex;flex-wrap:wrap;gap:4px}
+.net-tags .tag:not(.ok):not(.info){color:var(--muted);background:var(--bg)}
+.net-card p{margin:0;overflow-wrap:anywhere}
+.net-stat{padding:5px 8px;background:var(--bg);border-radius:4px}
+.net-src a{color:var(--accent)}
+.net-card .btns{margin-top:4px}
+.net-refer,.net-add{border-top:1px dashed var(--line);margin-top:6px;padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.net-add{border:1px solid var(--line);margin:0 0 12px;padding:14px 16px}
+.net-refer h4{margin:0;font-size:14px}
+#net-sentnote{margin-bottom:12px}
+
+.net-pipe td,.net-pipe th,.net-board td,.net-board th{font-size:13px;padding:7px 8px;vertical-align:top}
+.net-pipe tr.net-group th{background:var(--bg);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.net-pipe tr.net-edit td{background:var(--accent-soft)}
+.net-pipe .btn{font-size:12px;padding:3px 9px}
+.net-pipe .sub.due.over{color:var(--bad);font-weight:600}
+.net-funnel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:6px 0 8px}
+@media (max-width:640px){.net-funnel{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.net-funnel div{background:var(--bg);border-radius:5px;padding:8px 10px;border-top:3px solid var(--seq2)}
+.net-funnel b{display:block;font-size:22px;font-variant-numeric:tabular-nums}
+.net-funnel span{display:block;font-size:13px;font-weight:600}
+.net-funnel small{display:block;font-size:12px;color:var(--muted);min-height:1.3em}
+.choices.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media (max-width:860px){.choices.three{grid-template-columns:1fr}}
+.net-pipe .linkbtn,.net-board .linkbtn,.net-worked .linkbtn{text-align:left}

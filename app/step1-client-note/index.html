@@ -270,6 +270,7 @@ li.skip .dot{border-style:dashed}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:10px 16px;border-radius:6px;font-size:14px;z-index:30;max-width:calc(100% - 32px)}
 </style>
 <link rel="stylesheet" href="matched-services.css">
+<link rel="stylesheet" href="matched-network.css">
 
 <header>
   <div class="wrap top">
@@ -277,6 +278,7 @@ li.skip .dot{border-style:dashed}
     <nav class="main" aria-label="Main">
       <button type="button" data-go="home" id="nav-home">Home</button>
       <button type="button" data-go="clients" id="nav-clients">Clients</button>
+      <button type="button" data-go="network" id="nav-network">Matched services</button>
       <button type="button" data-go="activity" id="nav-activity">Activity log</button>
     </nav>
     <div class="who"><b>Denise</b> · Case manager</div>
@@ -313,9 +315,10 @@ const fill=(o,vars)=>JSON.parse(JSON.stringify(o).replace(/\{(first|duration)\}/
    Document     a document on a client's file (Salesforce: DocumentChecklistItem): type, number, date added, and,
                 when it was checked against a note, which fields matched or differed. The file itself, if kept,
                 is in this browser's IndexedDB under FileKey (see Files below), never in the record store.
+   Provider     a service Denise added by hand, or a mark that a directory service is on her partner list (Matched services tab)
    Everything is saved to localStorage under STORE_KEY. "Reset sample data" puts the five sample clients back. */
 const STORE_KEY="reintegrait.records.v2";
-const RECORD_TYPES=["Client","Interaction","Need","Service","Goal","Referral","Approval","Document"];
+const RECORD_TYPES=["Client","Interaction","Need","Service","Goal","Referral","Approval","Document","Provider"];
 const uid=t=>t.slice(0,3).toLowerCase()+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 const SAMPLE_CLIENTS=[
@@ -578,8 +581,8 @@ document.getElementById("brand").onclick=()=>go("home");
 function toast(msg){const t=document.createElement("div");t.className="toast";t.setAttribute("role","status");t.textContent=msg;document.body.append(t);setTimeout(()=>t.remove(),3200)}
 
 function render(){
- ["home","clients","activity"].forEach(v=>{const b=document.getElementById("nav-"+v);if(state.view===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
- ({home:renderHome,clients:renderClients,process:renderProcess,note:renderNote,update:renderUpdate,activity:renderActivity,services:renderServices})[state.view]();
+ ["home","clients","network","activity"].forEach(v=>{const b=document.getElementById("nav-"+v);if(state.view===v)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+ ({home:renderHome,clients:renderClients,process:renderProcess,note:renderNote,update:renderUpdate,activity:renderActivity,services:renderServices,network:renderNetwork})[state.view]();
  app.querySelectorAll("[data-aimode]").forEach(b=>b.onclick=()=>{if(!AI.on&&!AI.key_found&&!AI.draft_key_found){toast("No key found. Add a key to backend/.env, then restart the helper.");return}AI.on=!AI.on;logEvent("","AI switch",AI.on?"Real ("+AI.model+")":"Simulated");render();toast(AI.on?"Real AI on.":"Simulated responses on.")});
  app.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{Store.reset();Files.clear();state.sel="c1";state.newIds.clear();state.note=null;state.update=null;go(state.view==="clients"?"clients":"home");toast("Sample data restored.")});
 }
@@ -590,15 +593,17 @@ function renderHome(){
  const due=clients().filter(c=>c.reminder&&dayDiff(c.reminder.date)<=6).sort((a,b)=>a.reminder.date-b.reminder.date);
  app.innerHTML=mockbar()+`
  <div class="hello"><h1>Welcome back, Denise</h1><p class="muted">Wednesday, November 11. Who are you working with?</p></div>
- <div class="choices">
+ <div class="choices three">
   <button class="choice" id="btn-new" type="button"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="8" r="4"/><path d="M2 21c0-4 4-6 8-6s8 2 8 6"/><path d="M19 8v6M16 11h6"/></svg></span><b>New client</b><span>Upload the voice note from your first meeting. AI drafts the client note.</span></button>
   <button class="choice" id="btn-existing" type="button"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/></svg></span><b>Existing client</b><span>Open a case file to add a referral response, visit or check-in.</span></button>
+  <button class="choice" id="btn-network" type="button"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><b>Matched services</b><span>Find services block by block across Chicago and track every referral to its outcome.</span></button>
  </div>
  <div class="pane"><h2>Reminders due today and this week <span class="tag warn">${due.length}</span></h2><div class="rem" id="reminders">
    ${due.map(c=>{const dd=dayDiff(c.reminder.date);return`<div class="row"><span class="rd ${dd<0?"due over":dd===0?"due today":""}">${dd<0?"Overdue · ":dd===0?"Today · ":""}${fmt(c.reminder.date)}</span><span><button class="rn" type="button" data-open="${c.id}">${esc(c.name)}</button><span class="rt">${esc(c.reminder.type)}: ${esc(c.reminder.text)}</span></span><button class="btn" type="button" data-logresp="${c.id}">Log response</button></div>`}).join("")||`<p class="muted small">Nothing due this week.</p>`}
  </div></div>`;
  document.getElementById("btn-new").onclick=()=>openUpload({mode:"new"});
  document.getElementById("btn-existing").onclick=()=>go("clients");
+ document.getElementById("btn-network").onclick=()=>go("network");
  app.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{state.sel=b.dataset.open;go("clients")});
  app.querySelectorAll("[data-logresp]").forEach(b=>b.onclick=()=>{const c=clients().find(x=>x.id===b.dataset.logresp);openUpload({mode:"update",client:c,type:c.reminder.type})});
 }
@@ -1309,3 +1314,4 @@ fetch("simulated_responses.json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new
  .catch(()=>{app.innerHTML=`<div class="pane"><h3>Couldn't load simulated_responses.json</h3><p class="small" style="margin-top:6px">Browsers block this file when the page is opened by double-click. From this folder run <code>python3 -m http.server 8000</code> and open <code>http://localhost:8000</code>. If the JSON was edited, check it for a missing comma or quote.</p></div>`});
 </script>
 <script src="matched-services.js"></script>
+<script src="matched-network.js"></script>
