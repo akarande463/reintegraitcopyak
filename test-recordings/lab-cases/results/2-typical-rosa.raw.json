@@ -1,0 +1,53 @@
+{
+ "turns": [
+  {"id": "rt1-1", "line_id": "rt1", "speaker": "Case manager", "text": "Hi Rosa, I'm going to record this so I don't miss anything, okay?"},
+  {"id": "rt1-2", "line_id": "rt1", "speaker": "Client", "text": "Sí, okay."},
+  {"id": "rt1-3", "line_id": "rt1", "speaker": "Case manager", "text": "Good."},
+  {"id": "rt2-1", "line_id": "rt2", "speaker": "Case manager", "text": "So you got out of Cook County when?"},
+  {"id": "rt2-2", "line_id": "rt2", "speaker": "Client", "text": "Sunday. Three days ago."},
+  {"id": "rt2-3", "line_id": "rt2", "speaker": "Case manager", "text": "Okay and they put you on probation?"},
+  {"id": "rt2-4", "line_id": "rt2", "speaker": "Client", "text": "Yeah eighteen months probation, I gotta report to 26th and Cal next week, Tuesday I think."},
+  {"id": "rt3-1", "line_id": "rt3", "speaker": "Case manager", "text": "Where are you living?"},
+  {"id": "rt3-2", "line_id": "rt3", "speaker": "Client", "text": "With my mom in La Villita, on 26th street. My two kids are with her too, my mom had them while I was in."},
+  {"id": "rt4-1", "line_id": "rt4", "speaker": "Case manager", "text": "How old are you?"},
+  {"id": "rt4-2", "line_id": "rt4", "speaker": "Client", "text": "Twenty nine."},
+  {"id": "rt4-3", "line_id": "rt4", "speaker": "Case manager", "text": "And a phone number?"},
+  {"id": "rt4-4", "line_id": "rt4", "speaker": "Client", "text": "Seven seven three, five five five, oh two... oh nine one. Wait let me check. Yeah oh two nine one."},
+  {"id": "rt5-1", "line_id": "rt5", "speaker": "Case manager", "text": "Okay. What do you need most right now?"},
+  {"id": "rt5-2", "line_id": "rt5", "speaker": "Client", "text": "Honestly food, my mom's on a fixed income and now it's four of us. And I need a job, I used to do hair."},
+  {"id": "rt5-3", "line_id": "rt5", "speaker": "Case manager", "text": "Okay I'm going to start your SNAP application on ABE with you today before you leave."},
+  {"id": "rt5-4", "line_id": "rt5", "speaker": "Client", "text": "Okay gracias."},
+  {"id": "rt6-1", "line_id": "rt6", "speaker": "Case manager", "text": "And you'll call your probation officer to confirm the Tuesday?"},
+  {"id": "rt6-2", "line_id": "rt6", "speaker": "Client", "text": "Yeah I'll call her tomorrow."}
+ ],
+ "key_info": [
+  {"key": "name", "value": "Rosa", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt1-1"},
+  {"key": "age", "value": "29", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt4-2"},
+  {"key": "gender", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "locality", "value": "La Villita", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt3-2"},
+  {"key": "contact", "value": "773-555-0291", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt4-4"},
+  {"key": "client_number", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "birth_date", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "household", "value": "Mother and two children", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt3-2"},
+  {"key": "emergency_contact", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "release_date", "value": "2026-11-08", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt2-2"},
+  {"key": "facility", "value": "Cook County Jail", "status": "heard", "heard_as": "Cook County", "comment": "", "source_line": "rt2-1"},
+  {"key": "supervision_type", "value": "Probation", "status": "heard", "heard_as": "", "comment": "", "source_line": "rt2-4"},
+  {"key": "supervision_officer", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "conditions", "value": "18 months probation; report to 26th and California", "status": "heard", "heard_as": "26th and Cal", "comment": "", "source_line": "rt2-4"},
+  {"key": "referral_source", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "consent_signed", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""},
+  {"key": "roi_signed", "value": "", "status": "not said", "heard_as": "", "comment": "", "source_line": ""}
+ ],
+ "meeting_type": "In-person visit",
+ "immediate_needs": [
+  {"category": "Food", "detail": "Food for household of four on mother's fixed income", "priority": "Soon", "service_type": "Benefits", "source_line": "rt5-2"},
+  {"category": "Work", "detail": "Needs a job; past work in hair", "priority": "Soon", "service_type": "Jobs", "source_line": "rt5-2"}
+ ],
+ "next_steps": [
+  {"kind": "agreed", "action": "Start SNAP application on ABE with client", "owner": "Case manager", "due": "2026-11-11", "addresses": ["Food"], "source_line": "rt5-3"},
+  {"kind": "agreed", "action": "Call probation officer to confirm Tuesday report date", "owner": "Client", "due": "2026-11-12", "addresses": ["Other"], "source_line": "rt6-2"},
+  {"kind": "agreed", "action": "Report to probation at 26th and California", "owner": "Client", "due": "2026-11-17", "addresses": ["Other"], "source_line": "rt2-4"},
+  {"kind": "suggested", "action": "Refer to job or cosmetology licensing services for hair work", "owner": "Case manager", "due": "", "addresses": ["Work"], "source_line": "rt5-2"}
+ ]
+}
