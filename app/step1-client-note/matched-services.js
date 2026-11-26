@@ -50,9 +50,26 @@ function msNeeds(c) {
 const msClientHasOpenNeed = (c, cat) => msNeeds(c).some(n => n.cat === cat && n.status !== "handled");
 
 /* ---------- Facts and eligibility rules ---------- */
+/* The Client record as saved at approval, including the optional note fields (ReleaseDate, Facility…). */
+const msRecord = c => Store.where("Client", x => x.Id === c.id)[0] || {};
+/* Facts for any client from their own approved note: neighborhood, facility and an open ID need.
+   A fact the note does not give stays unknown, so its rule shows ? (ask). */
+function msNoteFacts(c) {
+  const R = msRecord(c), f = {}, loc = String(c.locality || "").trim(), fac = String(R.Facility || "");
+  if (loc) {
+    const known = typeof NET !== "undefined" && NET.data && typeof netAreaOf === "function" ? netAreaOf(loc) != null : true;
+    if (known) f.chicago_resident = { value: true, source: `Note (neighborhood: ${loc})` };
+  }
+  if (/correctional|idoc|\bprison\b/i.test(fac)) {
+    f.released_from_idoc = { value: true, source: `Note (facility: ${fac})` };
+    f.prior_conviction = { value: true, source: `Note (released from ${fac})` };
+  }
+  if (msClientHasOpenNeed(c, "ID")) f.has_state_id = { value: false, source: "Note (open ID need)" };
+  return f;
+}
 function msFacts(c) {
   const base = { age: { value: Number(c.age), source: "Client record" }, gender: { value: c.gender, source: "Client record" }, enrolled: { value: true, source: "Client record" } };
-  const extra = (msCfg().client_facts || {})[c.name] || {};
+  const extra = (msCfg().client_facts || {})[c.name] || msNoteFacts(c);
   const f = { ...extra, ...base };
   if (extra.age) f.age = extra.age;
   if (!c.gender || c.gender === "Not stated") delete f.gender;
@@ -125,10 +142,29 @@ function msMatches(c, need) {
 /* ---------- Small formatters ---------- */
 const msWhen = (dateIso, time) => { const d = parseDate(dateIso); return `${MS_DAYS[d.getDay()]} ${fmt(d)}, ${time}`; };
 const msFill = (t, v) => String(t || "").replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m);
+/* Everything client-specific in a draft comes from this client's own note, never from the sample client. */
+const MS_REQUESTED = { Urgent: "this week", Soon: "in the next two weeks", Later: "in the next few weeks" };
+function msReleased(c) {
+  const R = msRecord(c), fac = String(R.Facility || ""), rd = R.ReleaseDate ? parseDate(R.ReleaseDate) : null;
+  const from = /correctional|idoc/i.test(fac) ? "IDOC" : fac || "";
+  const when = rd && !isNaN(rd) ? (rd.getMonth() === TODAY.getMonth() && rd.getFullYear() === TODAY.getFullYear() ? " this month" : ` on ${fmt(rd)}`) : "";
+  return from ? `released from ${from}${when}` : "recently released";
+}
 function msVars(c, need, s, extra) {
-  const o = msCfg().org, block = msCfg().needs[need.cat] || {};
-  return { first: c.name.split(" ")[0], age: c.age, provider: s.name, address: s.address + (s.appt_note ? "" : ""), phone: s.phone,
-    cm: o.case_manager, org: o.name, org_phone: o.phone, requested: block.requested || "soon", bring: s.bring || "your release papers", ...extra };
+  const o = msCfg().org;
+  const line = String(need.line || "");
+  return { first: c.name.split(" ")[0], age: c.age, provider: s.name, address: s.address, phone: s.phone,
+    locality: c.locality || "Chicago", released: msReleased(c), category: String(need.cat || "").toLowerCase(),
+    need: line.charAt(0).toLowerCase() + line.slice(1), requested: MS_REQUESTED[need.rec && need.rec.Priority] || "soon",
+    cm: o.case_manager, org: o.name, org_phone: o.phone, bring: s.bring || "your release papers", ...extra };
+}
+/* The sample service listings sit around the agency's Englewood office. For a client who lives elsewhere,
+   distances are from the office, and the card says so. */
+const MS_HOME_AREA = 68;
+function msNearOffice(c) {
+  const loc = String(c.locality || "");
+  if (typeof NET !== "undefined" && NET.data && typeof netAreaOf === "function") return netAreaOf(loc) === MS_HOME_AREA;
+  return /^\s*englewood\s*$/i.test(loc);
 }
 const msCheckIcon = { y: ["✓", "Meets"], n: ["✗", "Doesn't meet"], q: ["?", "Unknown, ask"] };
 const msKindTag = s => `<span class="tag ${s.type === "Internal" ? "ok" : "info"}">${esc(s.type)}</span>`;
@@ -204,6 +240,7 @@ function msNeedDetail(c, n) {
   return `<div class="pane">${head}
    ${P ? msReferPanel(c, n, P) : ""}
    <h2>Matched services <span class="tag info">${M.cards.length}</span> <span class="small muted" style="text-transform:none;letter-spacing:0;font-weight:400">Ranked by availability, credibility and distance</span></h2>
+   ${block && !msNearOffice(c) ? `<p class="small ms-faroff" id="ms-faroff">These sample listings are around the Englewood office, and distances are from there. ${esc(c.name.split(" ")[0])} lives in ${esc(c.locality || "a neighborhood not recorded")}: use the link below the cards for real services near ${esc(c.locality || "them")}.</p>` : ""}
    ${!block ? `<p class="small muted">The directory has no services for “${esc(n.cat)}”. Search below or add one by hand.</p>` : ""}
    ${M.cards.length ? `<div class="ms-cards" id="ms-cards">${M.cards.map((e, i) => msCard(c, n, e, i, M)).join("")}</div>` : block ? `<p class="small muted" style="margin-block:8px">No matching services left. Check “Not a match” or search for one.</p>` : ""}
    <p class="small" style="margin:8px 0 4px"><button class="linkbtn" type="button" data-net-goarea="${esc(c.locality)}" data-net-gocat="${esc(n.cat)}" id="ms-netlink">See every ${esc(n.cat.toLowerCase())} service near ${esc(c.locality)}, with outcomes from the network</button></p>
@@ -227,7 +264,7 @@ function msCard(c, n, e, i, M) {
   const rank = M.ranked.indexOf(e) + 1;
   return `<article class="ms-card ${i === 0 ? "top1" : ""}" data-svc="${s.id}" aria-label="${esc(s.name)}">
    <header><span class="ms-rank">#${rank}</span>${msKindTag(s)}${msRealTag(s)}<h3>${esc(s.name)}</h3></header>
-   <p class="meta">${esc(s.address)}${s.distance_mi ? ` · ${s.distance_mi} mi from ${esc(c.locality)}` : ""}<br>${esc(s.phone)} · ${esc(s.hours)}</p>
+   <p class="meta">${esc(s.address)}${s.distance_mi ? ` · ${s.distance_mi} mi from ${msNearOffice(c) ? esc(c.locality) : "the Englewood office"}` : ""}<br>${esc(s.phone)} · ${esc(s.hours)}</p>
    <div class="blk"><b>Availability</b>${esc(a.text)}<br><span class="small muted">Updated ${a.updated ? fmt(parseDate(a.updated)) : "unknown"}${a.simulated ? " (simulated)" : ""}</span>${stale ? ` <span class="ms-stale small">· may be stale</span>` : ""}</div>
    <div class="blk"><b>Eligibility check</b><ul class="ms-checks">${e.checks.length ? e.checks.map(x => { const f = F[x.r.fact]; return `<li class="${x.v}"><i aria-hidden="true">${msCheckIcon[x.v][0]}</i><span><span class="ms-sr">${msCheckIcon[x.v][1]}: </span>${esc(x.r.label)}${x.v === "n" && x.r.document ? ` (${esc(c.name.split(" ")[0])} is getting it)` : ""}${x.v === "q" ? " (ask)" : ""}<span class="src">Rule: ${esc(x.r.source)}${f && !x.r.always ? ` · ${esc(c.name.split(" ")[0])}: ${esc(f.source)}` : ""}</span></span></li>`; }).join("") : `<li class="q"><i aria-hidden="true">?</i><span>No rules on file. Ask the provider.</span></li>`}</ul></div>
    ${s.type === "External" ? `<div class="blk"><b>Credibility</b>${esc(msCredText(e.hist)) || "No referral history yet"}${e.hist && e.hist.last ? `<br><span class="small">Last answer: ${esc(e.hist.last)}</span>` : ""}<br><span class="small muted">${s.addedBy ? "" : "From pooled referral history (simulated)"}</span></div>` : ""}
@@ -421,8 +458,9 @@ app.addEventListener("click", e => {
     }
     case "sim": {
       const r = n.ref, rep = ((msCfg().needs[n.cat] || {}).provider_reply || {})[b.dataset.kind] || { message: b.dataset.kind === "yes" ? "Yes, we can see them." : "Sorry, we can't take this referral.", reason: "Other" };
-      B.reply[r.Id] = { kind: b.dataset.kind, message: rep.message }; B.answerKind[r.Id] = b.dataset.kind;
-      logEvent(c.name, "Provider reply simulated", `${n.cat} · "${r.Partner}" · ${b.dataset.kind === "yes" ? "Yes" : "No"}: ${rep.message}`);
+      const msg = msFill(rep.message, msVars(c, n, msFindSvc(c, n, r.ServiceId) || { name: r.Partner }));
+      B.reply[r.Id] = { kind: b.dataset.kind, message: msg }; B.answerKind[r.Id] = b.dataset.kind;
+      logEvent(c.name, "Provider reply simulated", `${n.cat} · "${r.Partner}" · ${b.dataset.kind === "yes" ? "Yes" : "No"}: ${msg}`);
       break;
     }
     case "send-text": {

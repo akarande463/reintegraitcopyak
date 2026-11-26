@@ -1,0 +1,168 @@
+FLAGS
+⚠ Missing: Gender Gender was not stated in the recording. Choose… Male Female Non-binary Prefers not to say Where did this come from? Asked client From ID or documents Not known Save
+⚠ Missing: Contact phone Contact phone was not stated in the recording. Where did this come from? Asked client From ID or documents Not known Save
+⚠ Unclear: Release date Client said May 3rd but also said he has been home about eight days, which points to November 3rd; confirm the date. Heard at ~0:12. Heard in recording: 2026-11-03 0:12 Save
+⚠ Unclear: Supervision Case manager said MSR (mandatory supervised release), which is the closest choice to parole. Heard at 0:40. Heard in recording: Parole 0:40 Save
+
+SCREEN
+PROTOTYPE
+Sample clients, saved in this browser. Voice to text uses the real model
+openai/whisper-large-v3
+. The new-client note is drafted by
+claude-opus-5-5
+. Typed updates are drafted by
+claude-sonnet-5-5
+. Everything else comes from simulated_responses.json.
+AI: Real · switch
+Reset sample data
+New client · Standard intake note
+Client note: Terrell
+Edit note
+Drafted by claude-opus-5-5 from your recording. Check every line against the transcript before you approve.
+⚠ Missing: Gender Gender was not stated in the recording.
+Choose…
+Male
+Female
+Non-binary
+Prefers not to say
+Where did this come from?
+Asked client
+From ID or documents
+Not known
+Save
+⚠ Missing: Contact phone Contact phone was not stated in the recording.
+Where did this come from?
+Asked client
+From ID or documents
+Not known
+Save
+⚠ Unclear: Release date Client said May 3rd but also said he has been home about eight days, which points to November 3rd; confirm the date. Heard at ~0:12.
+Heard in recording: 2026-11-03 0:12
+Save
+⚠ Unclear: Supervision Case manager said MSR (mandatory supervised release), which is the closest choice to parole. Heard at 0:40.
+Heard in recording: Parole 0:40
+Save
+TRANSCRIPT
+0:45
+REAL AI
+Written by the real speech-to-text model. Split into speakers by the note model. Times marked ~ are estimated. Time stamps in the note point to these lines.
+0:00
+Denise:Alright Terrell, recording's on. So you came home from Sheraton?
+~0:06
+Terrell:Yeah Sheraton Correctional.
+~0:09
+Denise:Okay.
+0:09
+Denise:And what day did you get out?
+~0:12
+Terrell:I got out May 3rd.
+~0:13
+Denise:Okay so you been home about a week?
+~0:17
+Terrell:Yeah like eight days, it still feel weird.
+0:21
+Denise:How old are you?
+~0:23
+Terrell:Fourteen. Forty, I said forty. Four oh.
+~0:28
+Denise:Okay.
+0:29
+Denise:Lot of guys coming home need housing first, you good on that?
+~0:35
+Terrell:Nah I'm good, I got my own place with my lady over in Chatham.
+0:40
+Denise:Okay. And you're on MSR, who's your agent?
+~0:44
+Terrell:Mr. Bell. I see him every other Wednesday.
+0:49
+Denise:What do you need help with?
+~0:51
+Terrell:Mainly a job. I did the culinary program inside, I want to cook. And my Social Security card, I don't have it.
+~1:01
+Denise:Okay, I'll print the SS-5 form for you today and we'll look at the culinary jobs Thursday.
+Tap a time stamp in the note to see where it came from.
+Key information
+4 TO CONFIRM
+Verify with a document
+Name 0:00
+Age 0:23
+⚠ Gender (to confirm)
+Not stated
+Male
+Female
+Non-binary
+Prefers not to say
+Neighborhood 0:35
+⚠ Contact phone (to confirm)
+Household 0:35
+Not mentioned: Client ID, Date of birth, Emergency contact. Add by hand
+JUSTICE
+⚠ Release date (to confirm) 0:12
+Heard as “I got out May 3rd”
+Facility 0:06
+Heard as “Sheraton Correctional”
+⚠ Supervision (to confirm) 0:40
+Not said
+Probation
+Parole
+None
+Probation or parole officer 0:44
+Conditions 0:44
+INTAKE
+Not mentioned: Referral source, Consent form signed, Release of information signed. Add by hand
+Immediate needs
+SOON
+Work: Wants a cooking job; did culinary program inside
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+0:51
+SOON
+ID: Needs Social Security card
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+0:51
+Next steps
+Only ticked steps are saved
+AGREED IN MEETING
+Print SS-5 form for Social Security card
+Owner: Case manager
+Due: 2026-11-11
+Addresses: ID
+Agreed at 1:01
+Look at culinary jobs together
+Owner: Both
+Due: 2026-11-12
+Addresses: Work
+Agreed at 1:01
+REVIEW CHECK
+⚠
+4 flags to resolve (see top)
+✓
+Every need has a service type
+✓
+Minutes logged
+SERVICE LOG
+Meeting
+In-person visit
+Phone call
+Text message
+Minutes
+Services covered: Jobs, ID and documents. These come from the needs' service types.
+✓
+Every urgent need has a step or a reason
+I checked this note against the recording myself
+Approve and save to case file

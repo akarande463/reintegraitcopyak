@@ -1,0 +1,169 @@
+FLAGS
+⚠ Missing: Gender Gender was not stated in the recording. Choose… Male Female Non-binary Prefers not to say Where did this come from? Asked client From ID or documents Not known Save
+
+SCREEN
+PROTOTYPE
+Sample clients, saved in this browser. Voice to text uses the real model
+openai/whisper-large-v3
+. The new-client note is drafted by
+claude-opus-5-5
+. Typed updates are drafted by
+claude-sonnet-5-5
+. Everything else comes from simulated_responses.json.
+AI: Real · switch
+Reset sample data
+New client · Standard intake note
+Client note: Rosa
+Edit note
+Drafted by claude-opus-5-5 from your recording. Check every line against the transcript before you approve.
+⚠ Missing: Gender Gender was not stated in the recording.
+Choose…
+Male
+Female
+Non-binary
+Prefers not to say
+Where did this come from?
+Asked client
+From ID or documents
+Not known
+Save
+TRANSCRIPT
+0:45
+REAL AI
+Written by the real speech-to-text model. Split into speakers by the note model. Times marked ~ are estimated. Time stamps in the note point to these lines.
+0:00
+Denise:Hi Rosa, I'm going to record this so I don't miss anything, okay?
+~0:06
+Rosa:Sí, okay.
+~0:07
+Denise:Good.
+0:07
+Denise:So you got out of Cook County when?
+~0:10
+Rosa:Sunday. Three days ago.
+~0:13
+Denise:Okay and they put you on probation?
+~0:16
+Rosa:Yeah eighteen months probation, I gotta report to 26th and Cal next week, Tuesday I think.
+0:25
+Denise:Where are you living?
+~0:28
+Rosa:With my mom in La Villita, on 26th street. My two kids are with her too, my mom had them while I was in.
+0:39
+Denise:How old are you?
+~0:41
+Rosa:Twenty nine.
+~0:42
+Denise:And a phone number?
+~0:44
+Rosa:Seven seven three, five five five, oh two... oh nine one. Wait let me check. Yeah oh two nine one.
+0:55
+Denise:Okay. What do you need most right now?
+~0:59
+Rosa:Honestly food, my mom's on a fixed income and now it's four of us. And I need a job, I used to do hair.
+~1:09
+Denise:Okay I'm going to start your SNAP application on ABE with you today before you leave.
+~1:18
+Rosa:Okay gracias.
+1:20
+Denise:And you'll call your probation officer to confirm the Tuesday?
+~1:34
+Rosa:Yeah I'll call her tomorrow.
+Tap a time stamp in the note to see where it came from.
+Key information
+1 TO CONFIRM
+Verify with a document
+Name 0:00
+Age 0:41
+⚠ Gender (to confirm)
+Not stated
+Male
+Female
+Non-binary
+Prefers not to say
+Neighborhood 0:28
+Contact phone 0:44
+Household 0:28
+Not mentioned: Client ID, Date of birth, Emergency contact. Add by hand
+JUSTICE
+Release date 0:10
+Facility 0:07
+Heard as “Cook County”
+Supervision 0:16
+Not said
+Probation
+Parole
+None
+Conditions 0:16
+Heard as “26th and Cal”
+Not mentioned: Probation or parole officer. Add by hand
+INTAKE
+Not mentioned: Referral source, Consent form signed, Release of information signed. Add by hand
+Immediate needs
+SOON
+Food: Food for household of four on mother's fixed income
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+0:59
+SOON
+Work: Needs a job; past work in hair
+Service type…
+Housing
+ID and documents
+Jobs
+Benefits
+Health
+Family
+Legal
+Transport
+0:59
+Next steps
+Only ticked steps are saved
+AGREED IN MEETING
+Start SNAP application on ABE with client
+Owner: Case manager
+Due: 2026-11-11
+Addresses: Food
+Agreed at 1:09
+Call probation officer to confirm Tuesday report date
+Owner: Client
+Due: 2026-11-12
+Addresses: Other
+Agreed at 1:34
+Report to probation at 26th and California
+Owner: Client
+Due: 2026-11-17
+Addresses: Other
+Agreed at 0:16
+AI SUGGESTED
+YOU DECIDE
+Refer to job or cosmetology licensing services for hair work
+Owner: Case manager
+Due: not said
+Addresses: Work
+Evidence: need 0:59
+REVIEW CHECK
+⚠
+1 flag to resolve (see top)
+✓
+Every need has a service type
+✓
+Minutes logged
+SERVICE LOG
+Meeting
+In-person visit
+Phone call
+Text message
+Minutes
+Services covered: Benefits, Jobs. These come from the needs' service types.
+✓
+Every urgent need has a step or a reason
+I checked this note against the recording myself
+Approve and save to case file

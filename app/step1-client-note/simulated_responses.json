@@ -207,7 +207,7 @@
     },
 
     "client_facts": {
-      "_about": "Facts the AI pulled from the approved note, used for eligibility checks. A fact that isn't here shows as ? (ask). Other clients fall back to the age, gender and neighborhood on their record.",
+      "_about": "Facts pulled from the approved note, used for eligibility checks. Andre's are listed here. For any other client they come from the note itself: neighborhood (Chicago resident), facility (IDOC release), and an open ID need (no state ID). A fact that isn't known shows as ? (ask).",
       "Andre Williams": {
         "age": { "value": 34, "source": "Note, 00:01:07" },
         "gender": { "value": "Male", "source": "Note (confirmed by Denise)" },
@@ -231,20 +231,19 @@
       "Medication": {
         "keywords": ["medication", "pills", "prescription", "refill", "clinic", "diabetes", "health"],
         "summary": "Blood pressure refill this week",
-        "requested": "this week",
         "candidates": [
           { "id": "med-chc", "name": "Englewood Community Health Center", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "641 W. 63rd St.", "distance_mi": 0.6, "phone": "773-555-0131", "hours": "Mon–Fri 8:00–6:00",
             "availability": { "kind": "openings", "text": "Same-week appointments: 2", "updated": "2026-11-10", "simulated": true },
             "rules": [ { "label": "Any patient, sliding fee", "always": true, "source": "Clinic intake page (simulated)" } ],
             "history": { "accepted": 14, "total": 16, "reply_days": 1, "rating": 4.4, "raters": 9, "simulated": true },
-            "why": "Closest clinic with same-week appointments, and he ran out of pills on Saturday.",
+            "why": "Closest clinic with same-week appointments for refills.",
             "bring": "your release papers and the empty pill bottle", "appt_note": "front desk" },
           { "id": "med-nurse", "name": "In-house nurse navigator", "type": "Internal", "real": false, "listing_source": "Southside Reentry Services program list (simulated)",
             "address": "6255 S. Halsted St.", "distance_mi": 0.8, "phone": "773-555-0104", "hours": "Tue and Thu 9:00–1:00",
             "availability": { "kind": "ongoing", "text": "Drop-in Tue and Thu, no wait", "updated": "2026-11-11", "simulated": true },
             "rules": [ { "label": "Enrolled client", "fact": "enrolled", "equals": true, "source": "Program list (simulated)" } ],
-            "why": "Can call his prison doctor's office for a bridge prescription while the clinic visit is booked.",
+            "why": "Can call the prison or jail doctor's office for a bridge prescription while the clinic visit is booked.",
             "bring": "your release papers", "appt_note": "room 2" },
           { "id": "med-county", "name": "County health clinic, South Side", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "6337 S. Woodlawn Ave.", "distance_mi": 1.9, "phone": "773-555-0139", "hours": "Mon–Sat 7:30–4:00",
@@ -252,7 +251,7 @@
             "rules": [ { "label": "Cook County resident", "fact": "chicago_resident", "equals": true, "source": "Clinic eligibility page (simulated)" },
                        { "label": "Medicaid or county health plan", "fact": "insurance", "equals": "Medicaid", "source": "Clinic eligibility page (simulated)" } ],
             "history": { "accepted": 6, "total": 10, "reply_days": 4, "rating": 3.6, "raters": 5, "simulated": true },
-            "why": "Good for ongoing care once he has Medicaid, but the wait is too long for this refill.",
+            "why": "Good for ongoing care once Medicaid is active, but the wait is long for an urgent refill.",
             "bring": "your release papers and any insurance card", "appt_note": "" },
           { "id": "med-youth", "name": "Youth health center (ages 13–24)", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "5801 S. Halsted St.", "distance_mi": 0.9, "phone": "773-555-0150", "hours": "Mon–Fri 10:00–6:00",
@@ -261,10 +260,10 @@
             "history": { "accepted": 10, "total": 11, "reply_days": 1, "rating": 4.7, "raters": 3, "simulated": true },
             "why": "Has openings, but only serves young people.", "bring": "", "appt_note": "" }
         ],
-        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), released from IDOC this month. His blood pressure pills ran out on Saturday and he needs a same-week visit for a refill. He lives in Englewood and has consented to this referral. Is there an appointment {requested}? Reach me at {org_phone}.",
-        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: do you have a same-week appointment for a blood pressure refill? Does he need to bring anything? Who should he ask for?",
+        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), {released}, for {category}. From our intake: {need}. {first} lives in {locality} and has consented to this referral. Is there a same-week appointment for a refill? Reach me at {org_phone}.",
+        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: is there a same-week appointment for a medication refill? What should {first} bring? Who should {first} ask for?",
         "provider_reply": {
-          "yes": { "message": "Yes, we can see him Fri Nov 13 at 9:30 for a refill visit.", "date": "2026-11-13", "time": "09:30" },
+          "yes": { "message": "Yes, we can see {first} Fri Nov 13 at 9:30 for a refill visit.", "date": "2026-11-13", "time": "09:30" },
           "no": { "message": "Sorry, this week's same-day slots are gone.", "reason": "Full" }
         },
         "client_text": "Hi {first}, it's Denise. You're booked at {provider}, {address}, {when} for your blood pressure refill. Bring {bring}. Reply if you need a bus pass."
@@ -273,14 +272,13 @@
       "Housing": {
         "keywords": ["housing", "couch", "shelter", "rent", "apartment", "stay"],
         "summary": "Couch at cousin's place runs out in 2 to 3 weeks",
-        "requested": "within 2 to 3 weeks",
         "candidates": [
           { "id": "hou-teamwork", "name": "Teamwork Englewood CRSC", "type": "External", "real": true, "listing_source": "City of Chicago reentry resources page",
             "address": "815 W. 63rd St., 2nd floor", "distance_mi": 0.4, "phone": "(773) 488-6600", "hours": "Mon–Fri 9:00–5:00",
             "availability": { "kind": "openings", "text": "Housing navigation slots this week: 3", "updated": "2026-11-10", "simulated": true },
             "rules": [ { "label": "Chicago resident with a prior conviction", "fact": "prior_conviction", "equals": true, "also": "chicago_resident", "source": "City of Chicago reentry page" } ],
             "history": { "accepted": 9, "total": 11, "reply_days": 1, "rating": 4.6, "raters": 7, "simulated": true },
-            "why": "Closest option with confirmed openings, and it can start a housing search before his cousin's couch runs out.",
+            "why": "Closest option with openings this week. Housing navigation can start before the current place to stay runs out.",
             "bring": "your release papers", "appt_note": "2nd floor" },
           { "id": "hou-southside", "name": "Southside Men's Transitional House", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "7020 S. Racine Ave.", "distance_mi": 2.1, "phone": "773-555-0166", "hours": "Intake Mon, Wed 10:00–2:00",
@@ -289,7 +287,7 @@
                        { "label": "No sex-offense history", "fact": "sex_offense_history", "equals": false, "source": "House rules sheet (simulated)" },
                        { "label": "Needs state ID", "fact": "has_state_id", "equals": true, "document": true, "source": "House rules sheet (simulated)" } ],
             "history": { "accepted": 5, "total": 9, "reply_days": 3, "rating": 3.9, "raters": 4, "simulated": true },
-            "why": "Has a bed, but only once his ID comes through. Pair it with the ID need.",
+            "why": "Has a bed, but requires a state ID. Pair it with the ID need.",
             "bring": "your state ID and release papers", "appt_note": "" },
           { "id": "hou-workshop", "name": "In-house housing workshop", "type": "Internal", "real": false, "listing_source": "Southside Reentry Services program list (simulated)",
             "address": "6255 S. Halsted St.", "distance_mi": 0.8, "phone": "773-555-0102", "hours": "Thursdays 2:00",
@@ -302,7 +300,7 @@
             "availability": { "kind": "unknown", "text": "Unknown, call to check shelter beds", "updated": "2026-11-11", "simulated": true },
             "rules": [ { "label": "Anyone in Cook County", "always": true, "source": "Cook County 211 page" } ],
             "history": { "accepted": 3, "total": 6, "reply_days": 0, "rating": 3.4, "raters": 5, "simulated": true },
-            "why": "Fallback for emergency shelter if the couch ends early.",
+            "why": "Fallback for emergency shelter if the current place to stay ends early.",
             "bring": "your release papers", "appt_note": "" },
           { "id": "hou-women", "name": "Women's Reentry Residence", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "5530 S. Wentworth Ave.", "distance_mi": 1.4, "phone": "773-555-0171", "hours": "Intake Mon–Fri",
@@ -317,10 +315,10 @@
             "history": { "accepted": 3, "total": 5, "reply_days": 5, "rating": 4.0, "raters": 2, "simulated": true },
             "why": "Serves young adults only.", "bring": "", "appt_note": "" }
         ],
-        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), released from IDOC this month, who needs housing support within 2 to 3 weeks. He lives in Englewood and has consented to this referral. Is there a housing navigation slot this week? Reach me at {org_phone}.",
-        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: is there a housing navigation slot this week? What does he need to bring? Can he come in before his cousin's couch runs out in 2 to 3 weeks?",
+        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), {released}, for {category}. From our intake: {need}. {first} lives in {locality} and has consented to this referral. Is there a housing navigation slot this week? Reach me at {org_phone}.",
+        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: is there a housing navigation slot this week? What should {first} bring? Mention the timing from the intake: {need}.",
         "provider_reply": {
-          "yes": { "message": "Yes, we can see Andre Thu Nov 19 at 10:00 for housing navigation. Ask for Ms. Price on the 2nd floor.", "date": "2026-11-19", "time": "10:00" },
+          "yes": { "message": "Yes, we can see {first} Thu Nov 19 at 10:00 for housing navigation. Ask for Ms. Price on the 2nd floor.", "date": "2026-11-19", "time": "10:00" },
           "no": { "message": "Sorry, this week's housing slots just filled up.", "reason": "Full" }
         },
         "client_text": "Hi {first}, it's Denise. You're booked at {provider}, {address}, {when} for housing help. Bring {bring}. Reply if you need a bus pass."
@@ -329,13 +327,12 @@
       "ID": {
         "keywords": ["id", "identification", "birth certificate", "license", "documents"],
         "summary": "No state ID, only release papers",
-        "requested": "this week",
         "candidates": [
           { "id": "id-clinic", "name": "In-house ID clinic", "type": "Internal", "real": false, "listing_source": "Southside Reentry Services program list (simulated)",
             "address": "6255 S. Halsted St.", "distance_mi": 0.8, "phone": "773-555-0103", "hours": "Fridays 10:00–12:00",
             "availability": { "kind": "ongoing", "text": "Every Friday, no wait", "updated": "2026-11-11", "simulated": true },
             "rules": [ { "label": "Enrolled client", "fact": "enrolled", "equals": true, "source": "Program list (simulated)" } ],
-            "why": "Fills in the state ID and birth certificate forms with him this Friday, and pays the fees from the ID fund.",
+            "why": "Fills in the state ID and birth certificate forms with the client this Friday, and pays the fees from the ID fund.",
             "bring": "your release papers", "appt_note": "room 4" },
           { "id": "id-sos", "name": "Illinois Secretary of State, state ID", "type": "External", "real": true, "listing_source": "Illinois Secretary of State website",
             "address": "Nearest SOS facility (9901 S. King Dr.)", "distance_mi": 3.6, "phone": "(800) 252-8980", "hours": "Mon–Fri 8:00–5:00",
@@ -353,10 +350,10 @@
             "why": "Close by and helps with documents, if the Friday clinic is full.",
             "bring": "your release papers", "appt_note": "2nd floor" }
         ],
-        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), released from IDOC this month. He has no state ID, only his release papers, and needs help getting one {requested}. He has consented to this referral. Reach me at {org_phone}.",
-        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: can he get ID help this week? Are release papers enough as proof of identity? Is there a fee waiver?",
+        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), {released}, for {category}. From our intake: {need}. {first} lives in {locality} and has consented to this referral. Can you help {first} get a state ID {requested}? Reach me at {org_phone}.",
+        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: can {first} get ID help this week? Are release papers enough as proof of identity? Is there a fee waiver?",
         "provider_reply": {
-          "yes": { "message": "Yes, bring him Friday Nov 13 at 10:00.", "date": "2026-11-13", "time": "10:00" },
+          "yes": { "message": "Yes, bring {first} Friday Nov 13 at 10:00.", "date": "2026-11-13", "time": "10:00" },
           "no": { "message": "Friday is full. Try next week.", "reason": "Full" }
         },
         "client_text": "Hi {first}, it's Denise. You're booked at {provider}, {address}, {when} to start your state ID. Bring {bring}. Reply if you need a bus pass."
@@ -365,13 +362,12 @@
       "Food": {
         "keywords": ["food", "snap", "food stamps", "pantry", "meals", "groceries"],
         "summary": "Not enrolled in SNAP",
-        "requested": "this week",
         "candidates": [
           { "id": "food-snap", "name": "In-house SNAP application help", "type": "Internal", "real": false, "listing_source": "Southside Reentry Services program list (simulated)",
             "address": "6255 S. Halsted St.", "distance_mi": 0.8, "phone": "773-555-0105", "hours": "Wednesdays 1:00–4:00",
             "availability": { "kind": "ongoing", "text": "Every Wednesday, no wait", "updated": "2026-11-11", "simulated": true },
             "rules": [ { "label": "Enrolled client", "fact": "enrolled", "equals": true, "source": "Program list (simulated)" } ],
-            "why": "Staff file the SNAP application on Illinois ABE with him in one sitting.",
+            "why": "Staff file the SNAP application on Illinois ABE with the client in one sitting.",
             "bring": "your release papers and any pay stubs", "appt_note": "room 3" },
           { "id": "food-abe", "name": "Illinois ABE (SNAP application)", "type": "External", "real": true, "listing_source": "abe.illinois.gov",
             "address": "abe.illinois.gov (online)", "distance_mi": 0, "phone": "(800) 843-6154", "hours": "Online, any time",
@@ -379,7 +375,7 @@
             "rules": [ { "label": "Illinois resident", "fact": "chicago_resident", "equals": true, "source": "abe.illinois.gov" },
                        { "label": "Income under the SNAP limit", "fact": "income_under_limit", "equals": true, "source": "abe.illinois.gov" } ],
             "history": { "accepted": 18, "total": 20, "reply_days": 30, "rating": 3.5, "raters": 10, "simulated": true },
-            "why": "The state application itself. He can apply online, but most clients need help the first time.",
+            "why": "The state application itself. Clients can apply online, but most need help the first time.",
             "bring": "", "appt_note": "" },
           { "id": "food-pantry", "name": "Englewood community food pantry", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "6400 S. Normal Blvd.", "distance_mi": 1.6, "phone": "773-555-0184", "hours": "Saturdays 9:00–12:00",
@@ -395,8 +391,8 @@
             "history": { "accepted": 9, "total": 9, "reply_days": 1, "rating": 4.3, "raters": 2, "simulated": true },
             "why": "Serves older adults only.", "bring": "", "appt_note": "" }
         ],
-        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), released from IDOC this month. He isn't enrolled in SNAP and needs help applying {requested}. He has consented to this referral. Reach me at {org_phone}.",
-        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: when can he come in to apply for SNAP? What documents should he bring?",
+        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), {released}, for {category}. From our intake: {need}. {first} lives in {locality} and has consented to this referral. When can {first} come in to apply for SNAP? Reach me at {org_phone}.",
+        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: when can {first} come in to apply for SNAP? What documents should {first} bring?",
         "provider_reply": {
           "yes": { "message": "Yes, Wednesday Nov 18 at 1:00 works.", "date": "2026-11-18", "time": "13:00" },
           "no": { "message": "We can't take new clients this month.", "reason": "Full" }
@@ -407,7 +403,6 @@
       "Work": {
         "keywords": ["work", "job", "employment", "training", "forklift"],
         "summary": "Wants a job, has a forklift certificate",
-        "requested": "in the next few weeks",
         "candidates": [
           { "id": "work-teamwork", "name": "Teamwork Englewood CRSC", "type": "External", "real": true, "listing_source": "City of Chicago reentry resources page",
             "address": "815 W. 63rd St., 2nd floor", "distance_mi": 0.4, "phone": "(773) 488-6600", "hours": "Mon–Fri 9:00–5:00",
@@ -429,7 +424,7 @@
             "rules": [ { "label": "Forklift certificate", "fact": "forklift_certificate", "equals": true, "source": "Job posting (simulated)" },
                        { "label": "State ID for I-9", "fact": "has_state_id", "equals": true, "document": true, "source": "Job posting (simulated)" } ],
             "history": { "accepted": 4, "total": 7, "reply_days": 2, "rating": 4.1, "raters": 3, "simulated": true },
-            "why": "Uses his forklift certificate directly, once his ID is ready.",
+            "why": "Places people with a forklift certificate, once their ID is ready.",
             "bring": "your state ID and forklift certificate", "appt_note": "" },
           { "id": "work-youth", "name": "Youth jobs program (ages 16–24)", "type": "External", "real": false, "listing_source": "Demo listing (simulated)",
             "address": "6300 S. Halsted St.", "distance_mi": 0.8, "phone": "773-555-0197", "hours": "Mon–Fri",
@@ -438,8 +433,8 @@
             "history": { "accepted": 20, "total": 22, "reply_days": 1, "rating": 4.5, "raters": 5, "simulated": true },
             "why": "Serves young people only.", "bring": "", "appt_note": "" }
         ],
-        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), released from IDOC this month. He wants work and has a forklift certificate. He lives in Englewood and has consented to this referral. Is there a seat in your next job readiness cohort? Reach me at {org_phone}.",
-        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: when does the next job readiness cohort start? Does his forklift certificate count toward placement?",
+        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), {released}, for {category}. From our intake: {need}. {first} lives in {locality} and has consented to this referral. When does the next job readiness cohort start? Reach me at {org_phone}.",
+        "call_script": "Say who you are and that {first} has agreed to the referral. Ask: when does the next job readiness cohort start? Do certificates earned inside count toward placement?",
         "provider_reply": {
           "yes": { "message": "Yes, orientation is Mon Nov 23 at 9:00.", "date": "2026-11-23", "time": "09:00" },
           "no": { "message": "The next cohort is full.", "reason": "Full" }
@@ -450,26 +445,25 @@
       "Transportation": {
         "keywords": ["bus", "transit", "transportation", "ride", "cta", "ventra"],
         "summary": "Getting to appointments",
-        "requested": "this week",
         "candidates": [
           { "id": "tr-pass", "name": "In-house bus pass fund", "type": "Internal", "real": false, "listing_source": "Southside Reentry Services program list (simulated)",
             "address": "6255 S. Halsted St.", "distance_mi": 0.8, "phone": "773-555-0100", "hours": "Mon–Fri 9:00–5:00",
             "availability": { "kind": "openings", "text": "7-day passes left this month: 12", "updated": "2026-11-11", "simulated": true },
             "rules": [ { "label": "Enrolled client", "fact": "enrolled", "equals": true, "source": "Program list (simulated)" } ],
-            "why": "Hands him a 7-day pass today for this week's appointments.",
+            "why": "Hands out a 7-day pass today for this week's appointments.",
             "bring": "", "appt_note": "front desk" },
           { "id": "tr-211", "name": "211 Metro Chicago", "type": "External", "real": true, "listing_source": "Cook County 211 Metro Chicago page",
             "address": "Call 2-1-1 or text your ZIP to 898-211", "distance_mi": 0, "phone": "2-1-1", "hours": "24 hours",
             "availability": { "kind": "unknown", "text": "Unknown, call to check", "updated": "2026-11-11", "simulated": true },
             "rules": [ { "label": "Anyone in Cook County", "always": true, "source": "Cook County 211 page" } ],
             "history": { "accepted": 4, "total": 6, "reply_days": 0, "rating": 3.8, "raters": 5, "simulated": true },
-            "why": "Can find reduced-fare programs he may qualify for.",
+            "why": "Can find reduced-fare programs the client may qualify for.",
             "bring": "", "appt_note": "" }
         ],
-        "referral_draft": "Hi, this is {cm} at {org}. {first} ({age}) needs help getting to appointments {requested}. He has consented to this referral. Reach me at {org_phone}.",
-        "call_script": "Say who you are and that {first} has agreed to the referral. Ask what transit help he can get this week.",
+        "referral_draft": "Hi, this is {cm} at {org}. I'd like to refer {first} ({age}), {released}, for {category}. From our intake: {need}. {first} lives in {locality} and has consented to this referral. What transit help is available {requested}? Reach me at {org_phone}.",
+        "call_script": "Say who you are and that {first} has agreed to the referral. Ask what transit help {first} can get this week.",
         "provider_reply": {
-          "yes": { "message": "Yes, he can pick up a pass Thu Nov 12 at 11:00.", "date": "2026-11-12", "time": "11:00" },
+          "yes": { "message": "Yes, {first} can pick up a pass Thu Nov 12 at 11:00.", "date": "2026-11-12", "time": "11:00" },
           "no": { "message": "Out of passes this month.", "reason": "Program closed" }
         },
         "client_text": "Hi {first}, it's Denise. Pick up your bus pass at {provider}, {address}, {when}. Reply if anything changes."

@@ -1,0 +1,127 @@
+FLAGS
+⚠ Unclear: Age Age was relayed by his brother, who said thirty three then thirty four; confirm with Kenneth. Heard at ~0:04. Heard in recording: 34 0:04 Save
+⚠ Missing: Gender Gender was not stated in the recording. Choose… Male Female Non-binary Prefers not to say Where did this come from? Asked client From ID or documents Not known Save
+⚠ Unclear: Contact phone Rest of the number was inaudible; client said he will text it. Heard at ~0:34. Heard in recording: 312-555-____ 0:34 Save
+
+SCREEN
+PROTOTYPE
+Sample clients, saved in this browser. Voice to text uses the real model
+openai/whisper-large-v3
+. The new-client note is drafted by
+claude-opus-5-5
+. Typed updates are drafted by
+claude-sonnet-5-5
+. Everything else comes from simulated_responses.json.
+AI: Real · switch
+Reset sample data
+New client · Standard intake note
+Client note: Kenneth
+Edit note
+Drafted by claude-opus-5-5 from your recording. Check every line against the transcript before you approve.
+⚠ Unclear: Age Age was relayed by his brother, who said thirty three then thirty four; confirm with Kenneth. Heard at ~0:04.
+Heard in recording: 34 0:04
+Save
+⚠ Missing: Gender Gender was not stated in the recording.
+Choose…
+Male
+Female
+Non-binary
+Prefers not to say
+Where did this come from?
+Asked client
+From ID or documents
+Not known
+Save
+⚠ Unclear: Contact phone Rest of the number was inaudible; client said he will text it. Heard at ~0:34.
+Heard in recording: 312-555-____ 0:34
+Save
+TRANSCRIPT
+0:45
+REAL AI
+Written by the real speech-to-text model. Split into speakers by the note model. Times marked ~ are estimated. Time stamps in the note point to these lines.
+0:00
+Unclear:Hello?
+~0:01
+Denise:Yeah is this Kenneth?
+~0:04
+Other:This is his brother, he's right here, hold on. ⚠ [inaudible] He said he's thirty three, no thirty four.
+0:16
+Denise:Kenneth can you hear me?
+~0:18
+Kenneth:Yeah.
+~0:19
+Denise:Okay where are you staying?
+~0:22
+Kenneth:Austin. With my auntie.
+0:24
+Denise:Austin over here or?
+~0:27
+Kenneth:[noise] ...the west side.
+~0:30
+Denise:Okay.
+0:31
+Denise:And a number for you?
+~0:34
+Kenneth:It's 312 555... ⚠ [inaudible] ...I'll text it to you.
+~0:39
+Other:He's been out there drinking again, I'm just saying.
+~0:46
+Kenneth:Man shut up.
+0:47
+Denise:Okay Kenneth what do you need?
+~0:51
+Kenneth:I don't know man, everything. And don't put down nothing about the violation, I don't want that on there.
+~1:02
+Denise:Okay. Let's meet in person Monday.
+~1:06
+Kenneth:Alright.
+Tap a time stamp in the note to see where it came from.
+Key information
+3 TO CONFIRM
+Verify with a document
+Name 0:16
+⚠ Age (to confirm) 0:04
+⚠ Gender (to confirm)
+Not stated
+Male
+Female
+Non-binary
+Prefers not to say
+Neighborhood 0:22
+⚠ Contact phone (to confirm) 0:34
+Household 0:22
+Not mentioned: Client ID, Date of birth, Emergency contact. Add by hand
+JUSTICE
+Not mentioned: Release date, Facility, Supervision, Probation or parole officer, Conditions. Add by hand
+INTAKE
+Not mentioned: Referral source, Consent form signed, Release of information signed. Add by hand
+Immediate needs
+Next steps
+Only ticked steps are saved
+AGREED IN MEETING
+Text full phone number to case manager
+Owner: Client
+Due: not said
+Agreed at 0:34
+Meet in person to go over needs
+Owner: Both
+Due: 2026-11-16
+Agreed at 1:02
+REVIEW CHECK
+⚠
+3 flags to resolve (see top)
+✓
+Every need has a service type
+✓
+Minutes logged
+SERVICE LOG
+Meeting
+In-person visit
+Phone call
+Text message
+Minutes
+Services covered: none yet. These come from the needs' service types.
+✓
+Every urgent need has a step or a reason
+I checked this note against the recording myself
+Approve and save to case file
