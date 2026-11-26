@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="ReintegrAIt: an AI copilot for Chicago reentry case managers.">
+<title>ReintegrAIt</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: civic, Chicago-flag palette. Hero with a real referral card, then About, Product loop, Safeguards, Demo. One column of 1080px max, two-column rows that stack on phones. */
+:root{
+  --bg:#f6f8fa; --surface:#ffffff; --ink:#14212e; --muted:#566676; --line:#d9e1e8;
+  --sky:#1b8fc4; --sky-soft:#e3f2fa; --star:#d6283a; --good:#1f7a4d; --good-soft:#e2f3ea; --warn:#a15c00; --warn-soft:#fbefdc;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --body:"Public Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1620; --surface:#15212d; --ink:#e7eef4; --muted:#9aabba; --line:#28384a;
+  --sky:#5bbbe8; --sky-soft:#13314a; --star:#ff5d6c; --good:#5fcf95; --good-soft:#123826; --warn:#f0b35a; --warn-soft:#3a2a10; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1620; --surface:#15212d; --ink:#e7eef4; --muted:#9aabba; --line:#28384a;
+  --sky:#5bbbe8; --sky-soft:#13314a; --star:#ff5d6c; --good:#5fcf95; --good-soft:#123826; --warn:#f0b35a; --warn-soft:#3a2a10; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.6;margin:0}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+a{color:var(--sky)}
+a:focus-visible,.btn:focus-visible{outline:3px solid var(--sky);outline-offset:3px;border-radius:6px}
+h1,h2,h3{font-family:var(--display);line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.7rem,3.2vw,2.3rem);font-weight:800;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+.eyebrow{font-family:var(--mono);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lead{font-size:1.15rem;color:var(--muted);max-width:62ch}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.bar .wrap{display:flex;align-items:center;gap:20px;padding-block:12px;flex-wrap:wrap}
+.logo{font-family:var(--display);font-weight:800;font-size:1.25rem;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:8px;margin-right:auto}
+.logo b{color:var(--sky)}
+.star{width:14px;height:14px;flex:none}
+.bar nav{display:flex;gap:18px;font-size:.95rem}
+.bar nav a{color:var(--muted);text-decoration:none}
+.bar nav a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-weight:700;font-size:1rem;text-decoration:none;padding:12px 20px;border-radius:8px;border:2px solid var(--sky);transition:transform .15s}
+.btn.primary{background:var(--sky);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#06121c}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#06121c}}
+.btn.ghost{color:var(--sky);background:transparent}
+.btn:hover{transform:translateY(-1px)}
+.btn.small{padding:8px 14px;font-size:.9rem}
+@media (prefers-reduced-motion: reduce){.btn{transition:none}.btn:hover{transform:none}}
+
+/* hero */
+.hero{padding-block:64px 56px}
+.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(2.2rem,5vw,3.5rem);font-weight:800;letter-spacing:-.02em;margin-top:12px}
+.hero h1 em{font-style:normal;color:var(--sky);border-bottom:4px solid var(--star)}
+.hero .lead{margin-top:20px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.fine{font-size:.88rem;color:var(--muted);margin-top:14px}
+.hero > .wrap > *{min-width:0}
+
+/* mock referral card */
+.mock{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:0 18px 40px -24px rgba(20,33,46,.35);display:grid;gap:14px}
+.mock-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.mock-head span{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.svc{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:6px}
+.svc-top{display:flex;justify-content:space-between;gap:10px;align-items:center}
+.svc-top strong{font-family:var(--display);font-size:1.02rem}
+.rank{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.pill{font-family:var(--mono);font-size:.74rem;font-weight:500;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.pill.likely{background:var(--good-soft);color:var(--good)}
+.pill.call{background:var(--warn-soft);color:var(--warn)}
+.svc small{font-size:.85rem;color:var(--muted);line-height:1.45}
+.conf{font-family:var(--mono);font-size:.76rem}
+.conf.good{color:var(--good)} .conf.low{color:var(--warn)}
+.note-line{font-size:.9rem;background:var(--sky-soft);border-radius:8px;padding:10px 12px;line-height:1.45}
+.note-line code{font-family:var(--mono);font-size:.78rem;color:var(--sky)}
+
+/* sections */
+section.block{padding-block:64px;border-top:1px solid var(--line)}
+.head{display:grid;gap:12px;margin-bottom:36px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.two > *{min-width:0}
+.stack{display:grid;gap:32px}
+.prose{display:grid;gap:16px;max-width:62ch}
+.facts{align-self:start;display:grid;gap:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.fact{display:grid;grid-template-columns:7.5rem 1fr;gap:16px;padding:18px 20px;border-bottom:1px solid var(--line);align-items:baseline}
+.fact:last-child{border-bottom:0}
+.fact b{font-family:var(--display);font-size:1.9rem;font-weight:800;color:var(--sky);font-variant-numeric:tabular-nums;line-height:1}
+.fact p{font-size:.95rem;color:var(--muted)}
+.fact cite{display:block;font-style:normal;font-family:var(--mono);font-size:.72rem;margin-top:4px}
+
+/* loop */
+.loop{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;counter-reset:s}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:10px;align-content:start;position:relative}
+.step .n{font-family:var(--mono);font-size:.78rem;color:var(--sky)}
+.step p{font-size:.95rem;color:var(--muted)}
+.who{font-family:var(--mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;padding-top:10px;border-top:1px dashed var(--line);color:var(--muted)}
+.who b{color:var(--ink);font-weight:500}
+
+/* safeguards */
+.rules{display:grid;grid-template-columns:repeat(4,1fr);gap:0 28px}
+.rule{display:grid;grid-template-columns:28px 1fr;gap:12px;padding-block:16px;border-bottom:1px solid var(--line)}
+.rule svg{width:22px;height:22px;margin-top:3px}
+.rule p{font-size:.95rem;color:var(--muted)}
+.rule h3{margin-bottom:4px}
+
+/* demo */
+.demo{background:var(--ink);color:var(--bg);border-radius:18px;padding:40px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.demo > *{min-width:0}
+.demo .eyebrow{color:color-mix(in srgb,var(--bg) 70%,var(--ink))}
+.demo .lead{color:color-mix(in srgb,var(--bg) 78%,var(--ink))}
+.demo h2{color:var(--bg)}
+.cases{display:grid;gap:10px;list-style:none;margin:0;padding:0}
+.cases li{border:1px solid color-mix(in srgb,var(--bg) 22%,var(--ink));border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.cases li b{font-family:var(--display)}
+.cases li span{font-size:.9rem;color:color-mix(in srgb,var(--bg) 72%,var(--ink))}
+.demo .btn.primary{background:var(--sky);border-color:var(--sky)}
+.demo .btn.ghost{color:var(--bg);border-color:color-mix(in srgb,var(--bg) 40%,var(--ink))}
+.demo .fine{color:color-mix(in srgb,var(--bg) 65%,var(--ink))}
+.demo .fine a{color:var(--bg)}
+
+
+/* second chance band */
+.chance{padding-block:8px 64px}
+.chance .wrap{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center}
+.chance .wrap > *{min-width:0}
+.chance-fig{margin:0}
+.illo{display:block;width:100%;height:auto;max-width:100%;border-radius:18px;box-shadow:0 18px 40px -26px rgba(20,33,46,.45)}
+@media (max-width:900px){.chance .wrap{grid-template-columns:1fr;gap:28px}}
+footer{padding-block:36px;color:var(--muted);font-size:.88rem}
+footer .wrap{display:flex;gap:16px;justify-content:space-between;flex-wrap:wrap}
+
+@media (max-width:900px){
+  .hero .wrap,.two,.demo{grid-template-columns:1fr}
+  .loop{grid-template-columns:1fr 1fr}
+  .rules{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  .loop,.rules{grid-template-columns:1fr}
+  .bar nav{display:none}
+  .demo{padding:26px 20px}
+  .fact{grid-template-columns:1fr;gap:6px}
+  section.block{padding-block:48px}
+  .hero{padding-block:40px}
+}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <a class="logo" href="#top"><svg class="star" viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--star)" d="M12 0l2.6 7.5L22 4.5l-4.4 6.6L24 12l-6.4.9L22 19.5l-7.4-3L12 24l-2.6-7.5L2 19.5l4.4-6.6L0 12l6.4-.9L2 4.5l7.4 3z"/></svg><span>Reintegr<b>AI</b>t</span></a>
+    <nav aria-label="Sections"><a href="#about">About</a><a href="#product">Product</a><a href="#safeguards">Safeguards</a></nav>
+    <a class="btn primary small" href="app/step1-client-note/" data-demo>Try the demo</a>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="eyebrow">For Chicago reentry case managers</p>
+        <h1>Send each returning individual to a service that will <em>take them this week</em>.</h1>
+        <p class="lead">ReintegrAIt is an AI copilot for the case workers who help returning individuals after prison. It turns a short voice memo into a case note, then ranks services across Chicago by how likely each one is to accept the person. The case manager makes every decision.</p>
+        <div class="ctas">
+          <a class="btn primary" href="app/step1-client-note/" data-demo>Try the demo</a>
+          <a class="btn ghost" href="#product">See how it works</a>
+        </div>
+        <p class="fine">Runs in your browser with sample cases. No sign-up, no API key.</p>
+      </div>
+
+      <div class="mock" aria-label="Example of the Matched services screen">
+        <div class="mock-head"><h3>Housing for Andre</h3><span>Englewood · Nov 11</span></div>
+        <p class="note-line"><code>From the approved note</code><br>“Couch at cousin’s place runs out in 2 to 3 weeks.” Every line cites the recording it came from.</p>
+        <div class="svc">
+          <div class="svc-top"><strong>Teamwork Englewood CRSC</strong><span class="pill likely">Likely</span></div>
+          <small><span class="rank">#1 · 0.4 mi</span> · Housing navigation slots this week: 3</small>
+          <span class="conf good">Confidence: openings updated 1 day ago · based on 11 referrals</span>
+        </div>
+        <div class="svc">
+          <div class="svc-top"><strong>New to you: a nearby shelter</strong><span class="pill call">Call first</span></div>
+          <small><span class="rank">From the city directory</span> · Not a partner yet</small>
+          <span class="conf low">Low confidence: call before you send</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="chance">
+    <div class="wrap">
+      <figure class="chance-fig"><svg class="illo" viewBox="0 0 600 440" role="img" aria-labelledby="illo-t">
+  <title id="illo-t">A case worker shakes hands with a smiling man carrying a backpack, in front of a sunrise over the Chicago skyline.</title>
+  <defs>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd98a"/><stop offset="1" stop-color="#ffab5e"/></linearGradient>
+    <clipPath id="frame"><rect width="600" height="440" rx="18"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)">
+    <rect width="600" height="440" fill="#dff0f9"/>
+    <circle cx="300" cy="300" r="170" fill="url(#sun)"/>
+    <g fill="#1b8fc4" opacity=".28">
+      <rect x="20" y="250" width="40" height="110"/><rect x="66" y="215" width="34" height="145"/><rect x="106" y="262" width="46" height="98"/>
+      <rect x="150" y="150" width="30" height="210"/><rect x="158" y="128" width="14" height="24"/><rect x="164" y="104" width="2" height="26"/>
+      <rect x="430" y="120" width="44" height="240"/><rect x="438" y="98" width="6" height="24"/><rect x="460" y="98" width="6" height="24"/>
+      <rect x="480" y="210" width="36" height="150"/><rect x="522" y="240" width="48" height="120"/><rect x="574" y="200" width="30" height="160"/>
+    </g>
+    <rect y="356" width="600" height="84" fill="#b9dcc4"/>
+    <path d="M0 356 Q300 336 600 356" fill="#b9dcc4"/>
+    <ellipse cx="300" cy="404" rx="190" ry="14" fill="#14212e" opacity=".12"/>
+
+    <!-- case worker (left) -->
+    <g>
+      <rect x="187" y="296" width="17" height="104" rx="7" fill="#2f3e4e"/>
+      <rect x="211" y="296" width="17" height="104" rx="7" fill="#2f3e4e"/>
+      <ellipse cx="194" cy="402" rx="15" ry="7" fill="#14212e"/><ellipse cx="224" cy="402" rx="15" ry="7" fill="#14212e"/>
+      <path d="M176 222 Q178 196 207 194 Q238 196 240 222 L244 308 L172 308 Z" fill="#2a7f8f"/>
+      <path d="M198 196 L207 222 L216 196 Z" fill="#f4f1ea"/>
+      <path d="M207 222 L207 262" stroke="#d6283a" stroke-width="3"/>
+      <rect x="199" y="262" width="16" height="20" rx="3" fill="#ffffff" stroke="#d6283a" stroke-width="2"/>
+      <path d="M182 220 Q160 250 172 284" stroke="#2a7f8f" stroke-width="17" stroke-linecap="round" fill="none"/>
+      <rect x="150" y="258" width="34" height="44" rx="4" fill="#f4f1ea" stroke="#8a6a44" stroke-width="3"/>
+      <path d="M158 272h18M158 281h18M158 290h12" stroke="#9aabba" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="176" cy="288" r="8" fill="#8d5a3b"/>
+      <path d="M234 218 Q262 236 288 258" stroke="#2a7f8f" stroke-width="17" stroke-linecap="round" fill="none"/>
+      <rect x="200" y="176" width="16" height="22" rx="6" fill="#8d5a3b"/>
+      <circle cx="209" cy="160" r="27" fill="#8d5a3b"/>
+      <path d="M182 158 Q180 126 211 128 Q240 130 236 154 Q226 142 206 144 Q192 146 186 164 Z" fill="#1f1410"/>
+      <circle cx="187" cy="134" r="12" fill="#1f1410"/>
+      <circle cx="214" cy="160" r="2.6" fill="#1f1410"/><circle cx="228" cy="160" r="2.6" fill="#1f1410"/>
+      <path d="M214 172 Q222 179 231 171" stroke="#1f1410" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+      <circle cx="210" cy="168" r="4" fill="#c46a5a" opacity=".35"/>
+    </g>
+
+    <!-- returning individual (right) -->
+    <g>
+      <rect x="400" y="200" width="44" height="78" rx="12" fill="#3a5a40"/>
+      <rect x="372" y="298" width="18" height="102" rx="7" fill="#3c5a85"/>
+      <rect x="397" y="298" width="18" height="102" rx="7" fill="#3c5a85"/>
+      <ellipse cx="378" cy="402" rx="16" ry="7" fill="#14212e"/><ellipse cx="410" cy="402" rx="16" ry="7" fill="#14212e"/>
+      <path d="M356 224 Q358 194 392 192 Q426 194 430 224 L434 310 L352 310 Z" fill="#f0952f"/>
+      <path d="M372 196 Q392 214 412 196" stroke="#d27a1c" stroke-width="4" fill="none"/>
+      <path d="M382 210 L382 236 M402 210 L402 236" stroke="#d27a1c" stroke-width="3" stroke-linecap="round"/>
+      <path d="M420 202 Q432 232 424 300" stroke="#2c4732" stroke-width="7" fill="none"/>
+      <path d="M362 220 Q334 238 308 258" stroke="#f0952f" stroke-width="18" stroke-linecap="round" fill="none"/>
+      <path d="M424 222 Q446 250 436 282" stroke="#f0952f" stroke-width="18" stroke-linecap="round" fill="none"/>
+      <circle cx="436" cy="288" r="9" fill="#6b4226"/>
+      <g transform="translate(430 290)"><circle r="6" fill="none" stroke="#c9a227" stroke-width="3"/><path d="M4 4 L14 14 M10 10 L14 6 M12 12 L16 8" stroke="#c9a227" stroke-width="3" stroke-linecap="round"/></g>
+      <rect x="384" y="174" width="17" height="22" rx="6" fill="#6b4226"/>
+      <circle cx="392" cy="156" r="28" fill="#6b4226"/>
+      <path d="M364 152 Q362 124 392 124 Q422 124 420 150 Q410 136 392 136 Q374 136 364 152 Z" fill="#1a110c"/>
+      <path d="M368 166 Q372 188 392 190 Q412 188 416 166 Q410 178 392 178 Q374 178 368 166 Z" fill="#1a110c"/>
+      <circle cx="378" cy="156" r="2.8" fill="#1a110c"/><circle cx="394" cy="156" r="2.8" fill="#1a110c"/>
+      <path d="M375 147 Q379 144 383 147 M390 147 Q394 144 398 147" stroke="#1a110c" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <path d="M374 168 Q385 178 397 168" stroke="#ffffff" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    </g>
+
+    <!-- handshake -->
+    <circle cx="292" cy="260" r="10" fill="#8d5a3b"/>
+    <circle cx="304" cy="259" r="10" fill="#6b4226"/>
+    <path d="M286 254 Q298 248 310 254" stroke="#5a3820" stroke-width="2" fill="none" opacity=".6"/>
+
+    <g fill="#ffffff" opacity=".9">
+      <path d="M300 196 l3 8 8 3 -8 3 -3 8 -3 -8 -8 -3 8 -3z"/>
+      <path d="M262 214 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/>
+      <path d="M340 212 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/>
+    </g>
+  </g>
+</svg>
+</figure>
+      <div class="prose">
+        <p class="eyebrow">Why it matters</p>
+        <h2>A second chance starts in the first week</h2>
+        <p>Coming home from prison is a fresh start. Whether it holds often depends on the first few days: a bed, an ID, a refill, a first shift at work. When the referral lands, a returning individual walks in, is accepted and starts building again.</p>
+        <p>ReintegrAIt helps case workers make that first match the right one.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="about">
+    <div class="wrap two">
+      <div class="prose">
+        <p class="eyebrow">About the company</p>
+        <h2>Referrals fail on rules nobody writes down</h2>
+        <p>When someone comes home from prison, the first weeks decide a lot: a bed, an ID, medication, a job. Case managers make those referrals by phone and memory. A program can be full this week, close intake on Fridays, or quietly not take a certain offense. None of that is in a directory, so returning individuals make wasted trips and case managers spend hours calling.</p>
+        <p>ReintegrAIt learns which services actually accept which returning individuals, from the outcomes case managers already know, and keeps that knowledge current. It also gives back the time spent typing notes after every visit.</p>
+        <p>We are a student venture from the <strong>Building an AI Company</strong> course (43120), building and testing the product with Chicago case managers, provider intake staff and program directors.</p>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>~111</b><p>Chicago reentry organizations in our service directory, each rule with a source and a date it was checked.</p></div>
+        <div class="fact"><b>65%</b><p>of referrals connected when the service was funded, versus 38% when it was not.<cite>NCCARE360 study</cite></p></div>
+        <div class="fact"><b>0</b><p>of the public data sources we reviewed record whether a provider accepted a referral. That missing label is what we collect.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="product">
+    <div class="wrap">
+      <div class="head">
+        <p class="eyebrow">Product overview</p>
+        <h2>One loop, from visit to outcome</h2>
+        <p class="lead">The AI does the language and the ranking. The case manager approves, picks and records. Every outcome makes the next ranking better.</p>
+      </div>
+      <div class="loop">
+        <div class="step"><span class="n">Step 1</span><h3>Record a voice memo</h3><p>After the visit, the case manager dictates for a minute or two. Speech-to-text keeps a timestamp on every line.</p><span class="who"><b>Case manager</b> speaks</span></div>
+        <div class="step"><span class="n">Step 2</span><h3>Approve the case note</h3><p>The AI drafts a note where every fact cites the recording. Unsure facts are flagged. Nothing saves until it is approved.</p><span class="who"><b>AI</b> drafts · <b>you</b> approve</span></div>
+        <div class="step"><span class="n">Step 3</span><h3>See ranked matches</h3><p>For each need, the top services ranked by chance of acceptance, with reasons, distance and how fresh the data is.</p><span class="who"><b>AI</b> ranks · <b>you</b> pick</span></div>
+        <div class="step"><span class="n">Step 4</span><h3>Refer and close the loop</h3><p>Send with the returning individual’s consent. When the appointment passes, one tap records whether they showed up and were accepted.</p><span class="who"><b>You</b> send · <b>both</b> learn</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="safeguards">
+    <div class="wrap stack">
+      <div class="prose">
+        <p class="eyebrow">When the AI is unsure</p>
+        <h2>Built to say “check this”</h2>
+        <p>Speech recognition mishears, and listings go stale. The product shows its uncertainty instead of hiding it, and it keeps a few lines it never crosses.</p>
+      </div>
+      <div class="rules">
+        <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--warn-soft)"/><path d="M12 7v6m0 3.5v.5" stroke="var(--warn)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg><div><h3>Check flags</h3><p>A date said with “I think”, or a neighborhood that isn’t one of the 77 community areas, is flagged.</p></div></div>
+        <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--sky-soft)"/><path d="M7.5 12.5l3 3 6-7" stroke="var(--sky)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><div><h3>Confirm key facts</h3><p>Name, release date and top need are ticked before a note can be approved.</p></div></div>
+        <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--warn-soft)"/><path d="M8 8.5c0 4 3.5 7.5 7.5 7.5l1-2-2.5-1-1 1c-1.2-.5-2.5-1.8-3-3l1-1-1-2.5z" fill="var(--warn)"/></svg><div><h3>Call first</h3><p>Old or thin data means low confidence. Send stays off until the case manager calls or gives a reason.</p></div></div>
+        <div class="rule"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--good-soft)"/><path d="M8 12h8M12 8v8" stroke="var(--good)" stroke-width="2.2" stroke-linecap="round" fill="none"/></svg><div><h3>No risk scores</h3><p>It ranks services, never people. No parole contact, no sharing without their consent.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="demo">
+    <div class="wrap">
+      <div class="demo">
+        <div class="prose">
+          <p class="eyebrow">Live demo</p>
+          <h2>Try it as Denise, a case manager</h2>
+          <p class="lead">The demo runs the full product with sample cases and saved AI output, right in your browser. Use the <strong>Class demo</strong> menu in the top bar to pick a case.</p>
+          <div class="ctas">
+            <a class="btn primary" href="app/step1-client-note/" data-demo>Open the demo</a>
+            <a class="btn ghost" href="https://github.com/bhav17/reintegrait">View the code</a>
+          </div>
+          <p class="fine">Everyone in the demo is made up. Nothing you enter leaves your browser. Click <b>Reset sample data</b> in the demo to start over.</p>
+        </div>
+        <ul class="cases">
+          <li><b>Happy path · Andre</b><span>Voice memo to approved note to a housing referral.</span></li>
+          <li><b>Misheard intake · Rosa</b><span>A hedged date and a local neighborhood name get flagged.</span></li>
+          <li><b>Shaky Urgent · Darius</b><span>“About ten days of pills” asks before staying Urgent.</span></li>
+          <li><b>Stale match · Andre</b><span>A 41-day-old listing drops in rank and asks you to call first.</span></li>
+          <li><b>Close the loop · Marcus</b><span>“Did Marcus show up?” records the outcome and updates the rates.</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>ReintegrAIt · Chicago · 2026</span>
+    <span>Prototype with synthetic data only. Not for real client records.</span>
+  </div>
+</footer>
+</body>
+</html>
