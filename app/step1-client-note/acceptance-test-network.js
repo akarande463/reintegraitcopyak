@@ -103,7 +103,7 @@ const approveNote = async p => { await p.click('#btn-save'); const ok = await p.
   await p.waitForSelector('#seenote:not([hidden])', { timeout: 10000 }); await p.click('#seenote');
   await p.selectOption('#fx-f1', 'Male'); await p.selectOption('#fxs-f1', 'Asked client'); await p.click('[data-fix="f1"]');
   await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix="f2"]'); await pickWhy(p);
-  await p.check('#rv1'); await approveNote(p); await p.waitForSelector('#ms-board');
+  await p.check('#rv1'); for (const kf of await p.$$('[data-keyfact]:not(:checked)')) await kf.check(); await approveNote(p); await p.waitForSelector('#ms-board');
   await p.click('.ms-bucket:has(.ms-bopen b:text-is("Housing")) .ms-bopen');
   await p.click('#ms-netlink'); await p.waitForSelector('#net-list');
   check('8. From Andre\'s Housing matches, the link opens Housing near Englewood', (await p.inputValue('#net-near')) === '68' && (await p.inputValue('#net-cat')) === 'Housing');

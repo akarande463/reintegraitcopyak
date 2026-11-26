@@ -44,7 +44,7 @@ const verifiedText = (p, key) => p.$eval(`[data-verified="${key}"]`, e => e.text
   check('2. Age is checked from the date of birth', (await verifiedText(p, 'age')).includes('date of birth'));
   const flags = await p.textContent('#flags');
   check('2. A different release date becomes a flag with both values', flags.includes('Document differs: Release date') && flags.includes('2026-11-02') && flags.includes('2026-11-03'));
-  await p.check('#rv1');
+  await p.check('#rv1'); for (const kf of await p.$$('[data-keyfact]:not(:checked)')) await kf.check();
   check('2. The note cannot be approved while the difference is open', await p.isDisabled('#btn-save'));
   const offers = await p.$$eval('.doc .offer', ls => ls.map(l => l.textContent));
   check('2. Date of birth, supervision, officer and conditions are offered to add', offers.length === 4 && offers.some(t => t.includes('1992-04-17')) && offers.some(t => t.includes('Parole')));
@@ -70,7 +70,7 @@ const verifiedText = (p, key) => p.$eval(`[data-verified="${key}"]`, e => e.text
   await p.selectOption('#fx-f1', 'Male'); await p.selectOption('#fxs-f1', 'Asked client'); await p.click('[data-fix="f1"]');
   await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix="f2"]');
   for (const sel of await p.$$('[data-why]')) { if (!(await sel.inputValue())) await sel.selectOption({ index: 1 }); }
-  if (!(await p.isChecked('#rv1'))) await p.check('#rv1');
+  if (!(await p.isChecked('#rv1'))) await p.check('#rv1'); for (const kf of await p.$$('[data-keyfact]:not(:checked)')) await kf.check();
   await p.click('#btn-save'); const ok = await p.waitForSelector('#fast-ok', { timeout: 800 }).catch(() => null); if (ok) await ok.click();
   await p.waitForSelector('#ms-board');
   const rec = await p.evaluate(() => { const d = JSON.parse(localStorage.getItem('reintegrait.records.v2')); const c = d.Client.find(x => x.Name === 'Andre Williams'); return { c, docs: d.Document.filter(x => x.ClientId === c.Id), it: d.Interaction.find(x => x.ClientId === c.Id) }; });

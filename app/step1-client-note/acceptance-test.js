@@ -75,7 +75,7 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   await p.selectOption('#fx-f1', 'Male'); await p.selectOption('#fxs-f1', 'Asked client'); await p.click('[data-fix=\"f1\"]');
   await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix=\"f2\"]'); await pickWhy(p);
   await p.fill('#lg-min', '50');
-  await p.check('#rv1');
+  await p.check('#rv1'); for (const kf of await p.$$('[data-keyfact]:not(:checked)')) await kf.check();
   check('5. Saving is allowed once flags are resolved and the review box is ticked', !(await p.isDisabled('#btn-save')));
   await approveNote(p); await p.click('#tab-casefile'); await p.waitForSelector('#detail-name');
   check('5. The approved note is saved to the new client\'s case file',
@@ -175,7 +175,7 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
     (await s.textContent('#review')).includes('I checked this note against the recording myself'));
   await s.selectOption('#fx-f1', 'Male'); await s.selectOption('#fxs-f1', 'Asked client'); await s.click('[data-fix=\"f1\"]');
   await s.fill('#fx-f2', '773-555-0186'); await s.click('[data-fix=\"f2\"]'); await pickWhy(s);
-  await s.check('#rv1'); await approveNote(s); await s.click('#tab-casefile'); await s.waitForSelector('#detail-name');
+  await s.check('#rv1'); for (const kf of await s.$$('[data-keyfact]:not(:checked)')) await kf.check(); await approveNote(s); await s.click('#tab-casefile'); await s.waitForSelector('#detail-name');
   check('10. A new client gets status "New intake" and a follow-up reminder',
     (await s.textContent('#detail')).includes('New intake') && (await s.textContent('#remcard')).includes('Nov 13'));
   await s.click('#nav-activity');
@@ -213,7 +213,7 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   check('11. Unticking the follow-up call removes its reminder badge', !(await ns.textContent('#steps-agreed')).includes('Creates reminder'));
   await ns.selectOption('#fx-f1', 'Male'); await ns.selectOption('#fxs-f1', 'Asked client'); await ns.click('[data-fix=\"f1\"]');
   await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix=\"f2\"]'); await pickWhy(ns);
-  await ns.check('#rv1'); await approveNote(ns); await ns.click('#tab-casefile'); await ns.waitForSelector('#detail-name');
+  await ns.check('#rv1'); for (const kf of await ns.$$('[data-keyfact]:not(:checked)')) await kf.check(); await approveNote(ns); await ns.click('#tab-casefile'); await ns.waitForSelector('#detail-name');
   const R11 = await ns.evaluate(() => JSON.parse(localStorage.getItem('reintegrait.records.v2')));
   const cid = R11.Client.find(c => c.Name === 'Andre Williams').Id;
   const goals = R11.Goal.filter(g => g.ClientId === cid);
@@ -229,7 +229,7 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   for (let i = 0; i < 3; i++) await ns.click('#steps-agreed li:first-child [data-del]');
   await ns.click('#btn-edit');
   await ns.selectOption('#fx-f1', 'Male'); await ns.selectOption('#fxs-f1', 'Asked client'); await ns.click('[data-fix=\"f1\"]');
-  await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix=\"f2\"]'); await pickWhy(ns); await ns.check('#rv1');
+  await ns.fill('#fx-f2', '773-555-0186'); await ns.click('[data-fix=\"f2\"]'); await pickWhy(ns); await ns.check('#rv1'); for (const kf of await ns.$$('[data-keyfact]:not(:checked)')) await kf.check();
   const blocked = (await ns.textContent('#nosteps')).includes('No next steps agreed') && await ns.isDisabled('#btn-save');
   await ns.check('#rv-none');
   check('11. With no agreed steps, approval needs the "no next steps agreed" confirmation', blocked && !(await ns.isDisabled('#btn-save')));
@@ -246,9 +246,9 @@ const waitForAI = async p => { await p.waitForSelector('#seenote:not([hidden])',
   await p4.selectOption('#fx-f1', 'Male'); await p4.selectOption('#fxs-f1', 'Asked client'); await p4.click('[data-fix=\"f1\"]');
   await p4.fill('#fx-f2', '773-555-0186'); await p4.click('[data-fix=\"f2\"]'); await pickWhy(p4);
   await p4.click('#btn-edit'); await p4.click('[data-add="immediate_needs"]'); await p4.keyboard.type('Winter coat'); await p4.click('#btn-edit');
-  await p4.check('#rv1');
+  await p4.check('#rv1'); for (const kf of await p4.$$('[data-keyfact]:not(:checked)')) await kf.check();
   const blockedType = await p4.isDisabled('#btn-save') && (await p4.textContent('#chk-types')).includes('1 need without');
-  await p4.selectOption('[data-stype="5"]', 'Benefits'); await p4.check('#rv1');
+  await p4.selectOption('[data-stype="5"]', 'Benefits'); await p4.check('#rv1'); for (const kf of await p4.$$('[data-keyfact]:not(:checked)')) await kf.check();
   await p4.fill('#lg-min', '');
   const blockedMin = await p4.isDisabled('#btn-save');
   await p4.fill('#lg-min', '50');

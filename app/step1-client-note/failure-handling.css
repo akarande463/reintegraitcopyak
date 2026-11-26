@@ -1,0 +1,24 @@
+/* Class demo build: demo menu, note checks, confidence and call-first, outcomes, new to you. Uses the tokens on :root in index.html. */
+.fh-demo{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px;margin-left:auto}
+.fh-demo select{width:auto;max-width:100%;font:inherit;font-size:13px;padding:4px 8px;border:1px solid var(--accent);border-radius:6px;background:var(--accent-soft);color:var(--ink);font-weight:600}
+.fh-aistate{color:var(--warn)}
+.fh-tag{font-size:11px;padding:1px 6px}
+.flagitem.fh-check{border-left-color:var(--warn)}
+.flagitem.fh-check .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.flagitem.fh-check input{font:inherit;padding:4px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.fh-keyfacts{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-left:3px solid var(--warn);border-radius:6px;padding:8px 10px;background:var(--panel)}
+.fh-keyfacts.y{border-left-color:var(--ok)}
+.fh-keyfacts .chk{font-size:13px}
+.ms-conf{font-size:13px;margin:4px 0;padding:4px 8px;border-radius:4px}
+.ms-conf.low{color:var(--warn);background:var(--warn-soft)}
+.ms-conf.ok{color:var(--ok);background:var(--ok-soft)}
+.ms-aged{color:var(--warn)}
+.ms-gate{border:1px solid var(--warn);background:var(--warn-soft);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.ms-gate legend{font-weight:700;color:var(--warn);padding:0 4px}
+.ms-gate input[type=text],.ms-gate input:not([type]){font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink)}
+.fh-new{margin-top:14px}
+.fh-new h2{margin-bottom:8px}
+.fh-newcard{border-style:dashed;max-width:420px}
+.fh-attend{border-top:1px solid var(--line);padding:10px 0;display:flex;flex-direction:column;gap:6px}
+.fh-attend:first-of-type{border-top:0}
+.fh-text{max-width:360px}

@@ -18,6 +18,9 @@ The AI is simulated. Nothing is sent anywhere, and there is no server or login. 
 | `simulated_responses.json` | Note templates (intake key fields, update types, service types, meeting types) and every simulated AI response: processing results, transcripts, the drafted client note, flags, and the updates for existing clients. Edit it and reload |
 | `acceptance-test.js` | Optional automated check of the acceptance criteria below |
 | `acceptance-test-documents.js` | Automated check of Verify with a document |
+| `failure-handling.js`, `failure-handling.css` | Class demo build: the Demo menu, note checks, key facts, "Did they show up?" and the new-to-you card. See `DEMO.md` |
+| `acceptance-test-failures.js` | Automated check of every Demo menu case |
+| `DEMO.md` | Class demo script and how to trigger each failure case |
 | `sample-documents/` | Two made-up documents for the fictional client Andre: release papers and a state ID. Marked SAMPLE. Never put a real person's document here |
 
 ## Launch
@@ -42,6 +45,10 @@ Then open http://localhost:8000.
 7. **Existing client.** Select Marcus Reed, click **Upload new information** (or **Log response** on his reminder), pick the update type (referral check, second visit, weekly phone check or weekly message check), use the sample, process it, review the changes, tick the box, and **Add to case file**. His status, needs, case file and next reminder update.
 
 Changes are saved in your browser and survive a reload. Click **Reset sample data** at the top of any screen to start over with the five sample clients.
+
+## Class demo: when things go wrong
+
+Pick a case from the **Class demo…** menu in the top bar: Happy path, Misheard intake, Shaky Urgent or Stale match. `DEMO.md` has the script and how to trigger each failure with the real AI.
 
 ## Acceptance criteria and test
 

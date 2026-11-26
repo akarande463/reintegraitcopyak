@@ -26,7 +26,7 @@ async function approveAndre(p) {
   await p.waitForSelector('#seenote:not([hidden])', { timeout: 10000 }); await p.click('#seenote');
   await p.selectOption('#fx-f1', 'Male'); await p.selectOption('#fxs-f1', 'Asked client'); await p.click('[data-fix=\"f1\"]');
   await p.fill('#fx-f2', '773-555-0186'); await p.click('[data-fix=\"f2\"]'); await pickWhy(p);
-  await p.check('#rv1'); await approveNote(p);
+  await p.check('#rv1'); for (const kf of await p.$$('[data-keyfact]:not(:checked)')) await kf.check(); await approveNote(p);
   await p.waitForSelector('#ms-board');
 }
 const bucket = cat => `.ms-bucket:has(.ms-bopen b:text-is("${cat}"))`;
