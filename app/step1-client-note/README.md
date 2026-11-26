@@ -4,6 +4,8 @@ A clickable prototype of Step 1 from the user journey storyboard. A case manager
 
 **Step 2 (Matched services)** is a tab in the same prototype. See [STEP2.md](STEP2.md).
 
+**Matched services tab (home screen)** maps services across Chicago's 77 community areas from public data, shows gaps block by block, and tracks every referral to its outcome. See [MATCHED-SERVICES.md](MATCHED-SERVICES.md).
+
 **Real AI for voice to text:** run `python3 backend/server.py` instead of `python3 -m http.server 8000` to send uploaded recordings to a real Whisper model on Hugging Face, and have Claude draft the note from that transcript. Setup, model switching and the test log are in [backend/README.md](backend/README.md).
 
 The AI is simulated. Nothing is sent anywhere, and there is no server or login. Client records are saved in your browser only (see Records below).
