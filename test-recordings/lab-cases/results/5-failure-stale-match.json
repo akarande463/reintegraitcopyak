@@ -1,0 +1,23 @@
+{
+  "order": [
+    "Teamwork Englewood CRSC",
+    "Southside Men's Transitional House",
+    "In-house housing workshop"
+  ],
+  "cards": [
+    {
+      "name": "Teamwork Englewood CRSC",
+      "text": "#1 EXTERNAL REAL LISTING Teamwork Englewood CRSC 815 W. 63rd St., 2nd floor · 0.4 mi from Englewood (773) 488-6600 · Mon–Fri 9:00–5:00 AVAILABILITY Housing navigation slots this week: 3 Updated Oct 1 (simulated) · may be stale ELIGIBILITY CHECK ✓ Meets: Chicago resident with a prior conviction Rule: City of Chicago reentry page · Andre: Note, 00:02:40 (released from Sheridan) CREDIBILITY Accepted 2 of 2 referrals · Responds within 1 day · Rated 5.0/5 by 1 case manager From pooled referral history (simulated) Why it's suggested: Closest option with confirmed openings, and it can start a housing search before his cousin's couch runs out. Listing: City of Chicago reentry resources page (real public data). Openings and credibility are simulated. Refer Not this one"
+    },
+    {
+      "name": "Southside Men's Transitional House",
+      "text": "#2 EXTERNAL SIMULATED LISTING Southside Men's Transitional House 7020 S. Racine Ave. · 2.1 mi from Englewood 773-555-0166 · Intake Mon, Wed 10:00–2:00 AVAILABILITY Beds open: 1 Updated Nov 6 (simulated) · may be stale ELIGIBILITY CHECK ✓ Meets: Men 18+ Rule: House rules sheet (simulated) · Andre: Client record ✓ Meets: No sex-offense history Rule: House rules sheet (simulated) · Andre: Release papers (simulated) ✗ Doesn't meet: Needs state ID (Andre is getting it) Rule: House rules sheet (simulated) · Andre: Note, 00:06:15 CREDIBILITY Accepted 5 of 9 referrals · Responds within 3 days · Rated 3.9/5 by 4 case managers From pooled referral history (simulated) Why it's suggested: Has a bed, but only once his ID comes through. Pair it with the ID need. Listing: Demo listing (simulated). Openings and credibility are simulated. Refer Not this one"
+    },
+    {
+      "name": "In-house housing workshop",
+      "text": "#3 INTERNAL SIMULATED LISTING In-house housing workshop 6255 S. Halsted St. · 0.8 mi from Englewood 773-555-0102 · Thursdays 2:00 AVAILABILITY Every Thursday at 2:00, no sign-up Updated Nov 11 (simulated) ELIGIBILITY CHECK ✓ Meets: Enrolled client Rule: Program list (simulated) · Andre: Client record Why it's suggested: No wait. Covers the basics while external referrals are pending. Listing: Southside Reentry Services program list (simulated). Openings and credibility are simulated. Refer Not this one"
+    }
+  ],
+  "refer_panel": " Referral request to Teamwork Englewood CRSCExternal Draft message to the provider (AI draft, edit freely)Hi, this is Denise R. at Southside Reentry Services. I'd like to refer Andre (34), released from IDOC this month, who needs housing support within 2 to 3 weeks. He lives in Englewood and has consented to this referral. Is there a housing navigation slot this week? Reach me at 773-555-0100. Andre agreed to share this information with Teamwork Englewood CRSC How will you contact them? Message Call Send message Cancel Tick consent to send. ",
+  "can_send_after_consent_only": true
+}

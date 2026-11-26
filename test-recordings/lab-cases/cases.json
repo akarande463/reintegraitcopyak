@@ -1,0 +1,96 @@
+{
+  "_about": "Five lab test cases. Cases 1-4 are Whisper-style transcripts (no speaker labels, run-on lines, mishearings) sent to the note-drafting model with the app's own prompt. Case 5 is the Step 2 ranking with stale, thin data. All people and numbers are made up.",
+  "meeting_date": "2026-11-11",
+  "location": "Chicago, Illinois",
+  "cases": [
+    {"id": "1-typical-darius", "type": "Typical",
+     "lines": [
+      ["0:00", "Okay so we're recording, you good with that? Yeah that's fine. Alright, so tell me your name for the file. Darius Johnson. D-A-R-I-U-S."],
+      ["0:14", "And how old are you Darius? Forty one. I'll be forty two in March."],
+      ["0:21", "Where are you staying right now? I'm at my sister's in Inglewood, off 63rd and Halsted, on her couch. She said I can stay till the end of the month but after that I don't know."],
+      ["0:40", "Okay. When did you come home? Last Thursday. I came out of Stateville, did six years. And you're on MSR? Yeah, two years MSR, my parole agent is a Miss Ortiz, I see her the 19th."],
+      ["1:02", "What's the best number for you? 773 555 0148. That's my sister's phone though, I ain't got one yet."],
+      ["1:15", "What about ID, you got your state ID? No, they gave me the release papers and that's it, I lost my old ID before I went in. Okay, I'm going to take you to the Secretary of State on King Drive Friday morning, we'll get that started."],
+      ["1:38", "And medical? I'm on blood pressure pills, they gave me like ten days worth. You got a doctor? No. Okay we need to get you on Medicaid then."],
+      ["1:55", "Work? I got my forklift certificate inside, I want to get on at a warehouse. Okay, we'll talk about that once the ID's done. Alright. Anything else? Nah that's it for now."]
+     ],
+     "good": [
+      "Name Darius Johnson, heard, from rt1",
+      "Age 41, heard (turning 42 in March is not a conflict)",
+      "Neighborhood Englewood with heard_as 'Inglewood'",
+      "Phone 773-555-0148, heard, comment that it is the sister's phone",
+      "Gender not said (no inference from the name)",
+      "Release date 2026-11-05 (last Thursday before Wed Nov 11); facility Stateville Correctional Center; supervision Parole with a comment that it is MSR",
+      "Needs: state ID; health insurance / Medicaid; blood pressure medication and a doctor (Soon, 10 days, not Urgent); housing after end of month (Soon); job at a warehouse (Later)",
+      "Agreed step: case manager takes him to the Secretary of State on King Drive on 2026-11-13, pointing to rt6",
+      "Parole agent meeting on 2026-11-19 is captured as a client commitment or in a comment, not invented as a new step",
+      "No housing referral or provider named in suggested steps"
+     ]},
+    {"id": "2-typical-rosa", "type": "Typical",
+     "lines": [
+      ["0:00", "Hi Rosa, I'm going to record this so I don't miss anything, okay? Sí, okay. Good."],
+      ["0:07", "So you got out of Cook County when? Sunday. Three days ago. Okay and they put you on probation? Yeah eighteen months probation, I gotta report to 26th and Cal next week, Tuesday I think."],
+      ["0:25", "Where are you living? With my mom in La Villita, on 26th street. My two kids are with her too, my mom had them while I was in."],
+      ["0:39", "How old are you? Twenty nine. And a phone number? Seven seven three, five five five, oh two... oh nine one. Wait let me check. Yeah oh two nine one."],
+      ["0:55", "Okay. What do you need most right now? Honestly food, my mom's on a fixed income and now it's four of us. And I need a job, I used to do hair. Okay I'm going to start your SNAP application on ABE with you today before you leave. Okay gracias."],
+      ["1:20", "And you'll call your probation officer to confirm the Tuesday? Yeah I'll call her tomorrow."]
+     ],
+     "good": [
+      "Age 29, heard",
+      "Phone 773-555-0291 (her own correction wins, no flag)",
+      "Neighborhood Little Village (South Lawndale) with heard_as 'La Villita'",
+      "Gender not said (even though the case manager uses her name)",
+      "Release date 2026-11-08 (Sunday); facility Cook County Jail; supervision Probation",
+      "Needs: food / SNAP (Soon); job, past work in hair (Later); kids live with her mother noted in a need or household, not as a gender inference",
+      "Agreed steps: case manager starts SNAP on ABE today 2026-11-11; client calls probation officer 2026-11-12",
+      "Probation report date 'Tuesday I think' (2026-11-17) is hedged, so if written it is marked partly heard",
+      "'26th and Cal' kept as the Cook County criminal courthouse, not turned into a home address"
+     ]},
+    {"id": "3-edge-phone-brother", "type": "Edge",
+     "lines": [
+      ["0:00", "Hello? Yeah is this Kenneth? This is his brother, he's right here, hold on. [inaudible] He said he's thirty three, no thirty four."],
+      ["0:16", "Kenneth can you hear me? Yeah. Okay where are you staying? Austin. With my auntie."],
+      ["0:24", "Austin over here or? [noise] ...the west side. Okay."],
+      ["0:31", "And a number for you? It's 312 555... [inaudible] ...I'll text it to you. He's been out there drinking again, I'm just saying. Man shut up."],
+      ["0:47", "Okay Kenneth what do you need? I don't know man, everything. And don't put down nothing about the violation, I don't want that on there. Okay. Let's meet in person Monday. Alright."]
+     ],
+     "good": [
+      "Very little filled; no padded needs ('everything' is not a list of needs)",
+      "Name Kenneth heard (first name only), no last name invented",
+      "Age empty or partly heard: the brother said 33 then 34; the client never confirmed; comment says who said it",
+      "Neighborhood Austin with a comment that 'the west side' suggests the Chicago community area; marked partly heard or heard only if the west side settles it",
+      "Phone partly heard '312-555-____', never completed",
+      "Brother's drinking claim not written as a need or fact about the client",
+      "Nothing about a violation anywhere in the note, including comments",
+      "Agreed step: meet in person Monday 2026-11-16",
+      "Gender not said (brother says 'he', which is someone else's pronoun)"
+     ]},
+    {"id": "4-failure-wrong-fact", "type": "Failure 1: wrong fact nothing flags",
+     "lines": [
+      ["0:00", "Alright Terrell, recording's on. So you came home from Sheraton? Yeah Sheraton Correctional. Okay."],
+      ["0:09", "And what day did you get out? I got out May 3rd. Okay so you been home about a week? Yeah like eight days, it still feel weird."],
+      ["0:21", "How old are you? Fourteen. Forty, I said forty. Four oh. Okay."],
+      ["0:29", "Lot of guys coming home need housing first, you good on that? Nah I'm good, I got my own place with my lady over in Chatham."],
+      ["0:40", "Okay. And you're on MSR, who's your agent? Mr. Bell. I see him every other Wednesday."],
+      ["0:49", "What do you need help with? Mainly a job. I did the culinary program inside, I want to cook. And my Social Security card, I don't have it. Okay, I'll print the SS-5 form for you today and we'll look at the culinary jobs Thursday."]
+     ],
+     "good": [
+      "Release date NOT written as 2026-05-03 without a flag. 'May 3rd' clashes with 'home about a week / eight days' (about 2026-11-03). Good: value 2026-11-03 or empty, marked partly heard, heard_as 'May 3rd', comment explains the clash",
+      "Facility Sheridan Correctional Center with heard_as 'Sheraton'",
+      "Age 40 (the client's own correction wins); not 14",
+      "No housing need: the case manager raised it and the client said he has his own place",
+      "Neighborhood Chatham",
+      "Needs: job in culinary / cooking; Social Security card",
+      "Agreed steps: print SS-5 today 2026-11-11; look at culinary jobs Thursday 2026-11-12",
+      "Supervision Parole with an MSR comment"
+     ]},
+    {"id": "5-failure-stale-match", "type": "Failure 2: top match rests on stale, thin data",
+     "setup": "Andre's Housing need. Teamwork Englewood's opening count is changed to 41 days old (updated 2026-10-01) and its history to 2 of 2 referrals accepted, 1 rating. Everything else is the prototype's sample data.",
+     "good": [
+      "Teamwork does not rank first on an opening count that is 41 days old, or it ranks first with a clear low-confidence label",
+      "The card says the acceptance rate is based on only 2 referrals",
+      "Refer asks Denise to confirm the opening by phone before the referral is sent",
+      "211 or the in-house workshop (updated today) is not pushed below a stale listing without a reason shown"
+     ]}
+  ]
+}

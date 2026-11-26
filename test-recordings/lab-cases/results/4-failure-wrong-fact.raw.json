@@ -1,0 +1,47 @@
+{"turns":[
+{"id":"rt1-1","line_id":"rt1","speaker":"Case manager","text":"Alright Terrell, recording's on. So you came home from Sheraton?"},
+{"id":"rt1-2","line_id":"rt1","speaker":"Client","text":"Yeah Sheraton Correctional."},
+{"id":"rt1-3","line_id":"rt1","speaker":"Case manager","text":"Okay."},
+{"id":"rt2-1","line_id":"rt2","speaker":"Case manager","text":"And what day did you get out?"},
+{"id":"rt2-2","line_id":"rt2","speaker":"Client","text":"I got out May 3rd."},
+{"id":"rt2-3","line_id":"rt2","speaker":"Case manager","text":"Okay so you been home about a week?"},
+{"id":"rt2-4","line_id":"rt2","speaker":"Client","text":"Yeah like eight days, it still feel weird."},
+{"id":"rt3-1","line_id":"rt3","speaker":"Case manager","text":"How old are you?"},
+{"id":"rt3-2","line_id":"rt3","speaker":"Client","text":"Fourteen. Forty, I said forty. Four oh."},
+{"id":"rt3-3","line_id":"rt3","speaker":"Case manager","text":"Okay."},
+{"id":"rt4-1","line_id":"rt4","speaker":"Case manager","text":"Lot of guys coming home need housing first, you good on that?"},
+{"id":"rt4-2","line_id":"rt4","speaker":"Client","text":"Nah I'm good, I got my own place with my lady over in Chatham."},
+{"id":"rt5-1","line_id":"rt5","speaker":"Case manager","text":"Okay. And you're on MSR, who's your agent?"},
+{"id":"rt5-2","line_id":"rt5","speaker":"Client","text":"Mr. Bell. I see him every other Wednesday."},
+{"id":"rt6-1","line_id":"rt6","speaker":"Case manager","text":"What do you need help with?"},
+{"id":"rt6-2","line_id":"rt6","speaker":"Client","text":"Mainly a job. I did the culinary program inside, I want to cook. And my Social Security card, I don't have it."},
+{"id":"rt6-3","line_id":"rt6","speaker":"Case manager","text":"Okay, I'll print the SS-5 form for you today and we'll look at the culinary jobs Thursday."}
+],
+"key_info":[
+{"key":"name","value":"Terrell","status":"heard","heard_as":"","comment":"","source_line":"rt1-1"},
+{"key":"age","value":"40","status":"heard","heard_as":"","comment":"","source_line":"rt3-2"},
+{"key":"gender","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"locality","value":"Chatham","status":"heard","heard_as":"","comment":"","source_line":"rt4-2"},
+{"key":"contact","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"client_number","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"birth_date","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"household","value":"Lives with partner","status":"heard","heard_as":"","comment":"","source_line":"rt4-2"},
+{"key":"emergency_contact","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"release_date","value":"2026-11-03","status":"partly heard","heard_as":"I got out May 3rd","comment":"Client said May 3rd but also said he has been home about eight days, which points to November 3rd; confirm the date.","source_line":"rt2-2"},
+{"key":"facility","value":"Sheridan Correctional Center","status":"heard","heard_as":"Sheraton Correctional","comment":"","source_line":"rt1-2"},
+{"key":"supervision_type","value":"Parole","status":"partly heard","heard_as":"","comment":"Case manager said MSR (mandatory supervised release), which is the closest choice to parole.","source_line":"rt5-1"},
+{"key":"supervision_officer","value":"Mr. Bell","status":"heard","heard_as":"","comment":"","source_line":"rt5-2"},
+{"key":"conditions","value":"Report every other Wednesday","status":"heard","heard_as":"","comment":"","source_line":"rt5-2"},
+{"key":"referral_source","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"consent_signed","value":"","status":"not said","heard_as":"","comment":"","source_line":""},
+{"key":"roi_signed","value":"","status":"not said","heard_as":"","comment":"","source_line":""}
+],
+"meeting_type":"In-person visit",
+"immediate_needs":[
+{"category":"Work","detail":"Wants a cooking job; did culinary program inside","priority":"Soon","service_type":"Jobs","source_line":"rt6-2"},
+{"category":"ID","detail":"Needs Social Security card","priority":"Soon","service_type":"ID and documents","source_line":"rt6-2"}
+],
+"next_steps":[
+{"kind":"agreed","action":"Print SS-5 form for Social Security card","owner":"Case manager","due":"2026-11-11","addresses":["ID"],"source_line":"rt6-3"},
+{"kind":"agreed","action":"Look at culinary jobs together","owner":"Both","due":"2026-11-12","addresses":["Work"],"source_line":"rt6-3"}
+]}
