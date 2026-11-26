@@ -36,7 +36,7 @@ const check = (name, ok) => { console.log((ok ? 'PASS  ' : 'FAIL  ') + name); if
   check('4. "Not known" resolves the flag without guessing', (await p.textContent('#flags')).includes('Set to Not stated · Not known'));
 
   // 5. Declined urgent suggestion needs a reason
-  await p.check('#rv1');
+  await p.check('#rv1'); for (const kf of await p.$$('[data-keyfact]:not(:checked)')) await kf.check();
   check('5. Approval blocked until the declined urgent suggestion has a reason',
     await p.isDisabled('#btn-save') && (await p.textContent('#chk-why')).includes('declined without a reason'));
   await p.selectOption('[data-why]', 'Not now, revisit next visit');

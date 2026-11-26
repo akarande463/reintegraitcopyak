@@ -112,12 +112,43 @@ function msEval(s, c, F) {
   const docOnly = fails.length > 0 && fails.every(x => x.r.document) && msClientHasOpenNeed(c, "ID");
   const match = fails.length === 0 || docOnly;
   const a = msAvail(s), h = msHist(s);
-  let score = W.availability_points[a.kind] ?? W.availability_points.unknown;
-  if (h && h.total) score += W.acceptance_weight * (h.accepted / h.total) + (h.rating ? W.rating_weight * (h.rating - 3) : 0);
+  /* Openings older than unknown_after_days count as unknown: an old "3 slots open" is not evidence of an opening today. */
+  const old = msDaysOld(a.updated), aged = old != null && old > (W.unknown_after_days ?? Infinity) && a.kind !== "unknown";
+  let score = W.availability_points[aged ? "unknown" : a.kind] ?? W.availability_points.unknown;
+  /* Acceptance is shrunk toward prior_rate as if prior_n referrals had already been seen, so 2 of 2 does not beat 9 of 11.
+     Rating counts in proportion to raters / (raters + rating_prior_n), so one 5-star rating moves the score a little. */
+  if (h && h.total) {
+    const pn = W.prior_n || 0, rate = (h.accepted + (W.prior_rate || 0) * pn) / (h.total + pn);
+    score += W.acceptance_weight * rate + (h.rating ? W.rating_weight * (h.rating - 3) * h.raters / (h.raters + (W.rating_prior_n || 0)) : 0);
+  }
   else if (s.type === "Internal") score += W.internal_credibility;
   score += W.per_mile * (s.distance_mi || 0);
   score += W.document_gap * fails.filter(x => x.r.document).length + W.unknown_rule * checks.filter(x => x.v === "q").length;
-  return { s, checks, fails, docOnly, match, score, avail: a, hist: h };
+  const e = { s, checks, fails, docOnly, match, score, avail: a, hist: h, old, aged };
+  e.conf = msConf(e);
+  return e;
+}
+/* Low confidence: openings older than unknown_after_days, fewer than low_conf_min_referrals referrals, or not a partner yet.
+   A low-confidence card needs a call before the referral can be sent (msReferPanel). Internal services are always known. */
+function msConf(e) {
+  const W = msCfg().ranking, s = e.s, h = e.hist, why = [], ok = [];
+  if (s.type === "Internal") return { low: false, why, ok };
+  if (e.aged) why.push(`openings updated ${e.old} days ago`);
+  if (s.newToYou) why.push("not one of your partners yet");
+  if (!h || !h.total) why.push("no referral history yet");
+  else if (h.total < (W.low_conf_min_referrals || 0)) why.push(`based on ${h.total} referral${h.total === 1 ? "" : "s"}`);
+  if (!why.length) {
+    if (e.old != null) ok.push(`openings updated ${e.old === 0 ? "today" : e.old + " day" + (e.old === 1 ? "" : "s") + " ago"}`);
+    ok.push(`based on ${h.total} referrals`);
+  }
+  return { low: why.length > 0, why, ok };
+}
+const msCap = t => t.charAt(0).toUpperCase() + t.slice(1);
+function msConfLine(e) {
+  const C = e.conf;
+  if (!C.low && !C.ok.length) return "";
+  return C.low ? `<p class="ms-conf low" data-conf="low"><b>Low confidence:</b> ${esc(C.why.join(" · "))}. Call before you send.</p>`
+    : `<p class="ms-conf ok" data-conf="ok">Confidence: ${esc(C.ok.join(" · "))}</p>`;
 }
 /* All services for one need, sorted into the card grid, Not a match and Turned down. */
 function msMatches(c, need) {
@@ -243,6 +274,7 @@ function msNeedDetail(c, n) {
    ${block && !msNearOffice(c) ? `<p class="small ms-faroff" id="ms-faroff">These sample listings are around the Englewood office, and distances are from there. ${esc(c.name.split(" ")[0])} lives in ${esc(c.locality || "a neighborhood not recorded")}: use the link below the cards for real services near ${esc(c.locality || "them")}.</p>` : ""}
    ${!block ? `<p class="small muted">The directory has no services for “${esc(n.cat)}”. Search below or add one by hand.</p>` : ""}
    ${M.cards.length ? `<div class="ms-cards" id="ms-cards">${M.cards.map((e, i) => msCard(c, n, e, i, M)).join("")}</div>` : block ? `<p class="small muted" style="margin-block:8px">No matching services left. Check “Not a match” or search for one.</p>` : ""}
+   ${typeof fhNewCard === "function" ? fhNewCard(c, n) : ""}
    <p class="small" style="margin:8px 0 4px"><button class="linkbtn" type="button" data-net-goarea="${esc(c.locality)}" data-net-gocat="${esc(n.cat)}" id="ms-netlink">See every ${esc(n.cat.toLowerCase())} service near ${esc(c.locality)}, with outcomes from the network</button></p>
    <details class="ms-more" id="ms-notmatch" ${B.overriding ? "open" : ""}><summary>Not a match (${M.notMatch.length})</summary>
     ${M.notMatch.length ? `<ul class="ms-list">${M.notMatch.map(e => `<li><span class="grow"><b>${esc(e.s.name)}</b> ${msKindTag(e.s)}<br><span class="small">${e.fails.map(f => `<span aria-hidden="true">✗</span> ${esc(f.r.label)}`).join(" · ")}${e.docOnly ? "" : ""}</span><span class="small muted"> · rule from ${esc(e.fails[0].r.source)}</span></span>
@@ -265,10 +297,11 @@ function msCard(c, n, e, i, M) {
   return `<article class="ms-card ${i === 0 ? "top1" : ""}" data-svc="${s.id}" aria-label="${esc(s.name)}">
    <header><span class="ms-rank">#${rank}</span>${msKindTag(s)}${msRealTag(s)}<h3>${esc(s.name)}</h3></header>
    <p class="meta">${esc(s.address)}${s.distance_mi ? ` · ${s.distance_mi} mi from ${msNearOffice(c) ? esc(c.locality) : "the Englewood office"}` : ""}<br>${esc(s.phone)} · ${esc(s.hours)}</p>
-   <div class="blk"><b>Availability</b>${esc(a.text)}<br><span class="small muted">Updated ${a.updated ? fmt(parseDate(a.updated)) : "unknown"}${a.simulated ? " (simulated)" : ""}</span>${stale ? ` <span class="ms-stale small">· may be stale</span>` : ""}</div>
+   ${msConfLine(e)}
+   <div class="blk"><b>Availability</b>${e.aged ? `<span class="ms-aged">Last reported ${fmt(parseDate(a.updated))}: ${esc(a.text.replace(/confirmed/gi, "reported"))}. That is ${e.old} days old, so the ranking treats openings as unknown.</span>` : esc(a.text)}<br><span class="small muted">Updated ${a.updated ? fmt(parseDate(a.updated)) : "unknown"}${a.simulated ? " (simulated)" : ""}</span>${stale ? ` <span class="ms-stale small">· may be stale</span>` : ""}</div>
    <div class="blk"><b>Eligibility check</b><ul class="ms-checks">${e.checks.length ? e.checks.map(x => { const f = F[x.r.fact]; return `<li class="${x.v}"><i aria-hidden="true">${msCheckIcon[x.v][0]}</i><span><span class="ms-sr">${msCheckIcon[x.v][1]}: </span>${esc(x.r.label)}${x.v === "n" && x.r.document ? ` (${esc(c.name.split(" ")[0])} is getting it)` : ""}${x.v === "q" ? " (ask)" : ""}<span class="src">Rule: ${esc(x.r.source)}${f && !x.r.always ? ` · ${esc(c.name.split(" ")[0])}: ${esc(f.source)}` : ""}</span></span></li>`; }).join("") : `<li class="q"><i aria-hidden="true">?</i><span>No rules on file. Ask the provider.</span></li>`}</ul></div>
    ${s.type === "External" ? `<div class="blk"><b>Credibility</b>${esc(msCredText(e.hist)) || "No referral history yet"}${e.hist && e.hist.last ? `<br><span class="small">Last answer: ${esc(e.hist.last)}</span>` : ""}<br><span class="small muted">${s.addedBy ? "" : "From pooled referral history (simulated)"}</span></div>` : ""}
-   <p class="ms-why"><b>Why it's suggested:</b> ${esc(s.why || "Added by hand.")}</p>
+   <p class="ms-why"><b>Why it's suggested:</b> ${esc(s.why || "Added by hand.")}${e.aged ? " The openings data behind this is old: call to check." : ""}</p>
    <p class="ms-prov">Listing: ${esc(s.listing_source || "Added by Denise")}${s.real ? " (real public data)" : ""}. ${s.addedBy ? "" : "Openings and credibility are simulated."}</p>
    ${B.declining === s.id ? `<div class="ms-reasons" role="group" aria-label="Why not this one?"><p>Why not this one?</p>${msCfg().turn_down_reasons.map(r => `<button type="button" class="btn" data-ms="turn" data-svc="${s.id}" data-reason="${esc(r)}">${esc(r)}</button>`).join("")}<button type="button" class="btn ghost" data-ms="turn-cancel">Cancel</button></div>`
     : `<div class="btns"><button type="button" class="btn primary" data-ms="refer" data-svc="${s.id}">Refer</button><button type="button" class="btn" data-ms="decline" data-svc="${s.id}">Not this one</button></div>`}
@@ -294,7 +327,8 @@ function msResults(c, n, q) {
 /* Step 3: referral request */
 function msReferPanel(c, n, P) {
   const s = msFindSvc(c, n, P.svc), first = c.name.split(" ")[0];
-  const block = msCfg().needs[n.cat] || {};
+  const block = msCfg().needs[n.cat] || {}, G = msEval(s, c, msFacts(c)).conf, canSend = P.consent && msGateOk(P);
+  P.low = G.low; P.gateReasons = G.why;
   return `<section class="ms-panel" id="ms-refer" aria-label="Referral request">
    <div class="ms-head" style="margin:0"><h3>Referral request to ${esc(s.name)}</h3>${msKindTag(s)}</div>
    ${P.override ? `<p class="small"><span class="tag warn">Override</span> Referring anyway: ${esc(P.override)}</p>` : ""}
@@ -305,13 +339,22 @@ function msReferPanel(c, n, P) {
     <label class="chk"><input type="radio" name="ms-method" value="call" ${P.method === "call" ? "checked" : ""}> Call</label>
    </fieldset>
    ${P.method === "call" ? `<div class="ms-callbox" id="ms-callbox"><span class="small muted">Call</span><div class="num">${esc(s.phone)}</div><p style="margin-top:6px"><b>Script:</b> ${esc(msFill(block.call_script || "Say who you are and that {first} agreed to the referral, then ask about openings.", msVars(c, n, s)))}</p></div>` : ""}
+   ${G.low ? `<fieldset class="ms-gate" id="ms-gate"><legend>Call first: low confidence</legend>
+    <p class="small">${esc(msCap(G.why.join(" · ")))}. Call ${esc(s.phone)} before you send, so ${esc(first)} isn't sent somewhere that can't take them.</p>
+    <label class="chk"><input type="radio" name="ms-gate" value="called" ${P.gate === "called" ? "checked" : ""}> I called, they have an opening</label>
+    <label class="chk"><input type="radio" name="ms-gate" value="unreached" ${P.gate === "unreached" ? "checked" : ""}> Couldn't reach them, send anyway</label>
+    ${P.gate === "unreached" ? `<input id="ms-gatewhy" placeholder="Why send anyway? (required)" aria-label="Why send anyway" value="${esc(P.gateWhy || "")}">` : ""}
+   </fieldset>` : ""}
    <div class="btns">
-    <button class="btn primary" type="button" id="ms-send" data-ms="send" ${P.consent ? "" : "disabled"}>${P.method === "call" ? "Log call" : "Send message"}</button>
+    <button class="btn primary" type="button" id="ms-send" data-ms="send" ${canSend ? "" : "disabled"}>${P.method === "call" ? "Log call" : "Send message"}</button>
     <button class="btn" type="button" data-ms="refer-cancel">Cancel</button>
-    <span class="small muted" id="ms-sendhint">${P.consent ? "Nothing is really sent in this prototype." : "Tick consent to send."}</span>
+    <span class="small muted" id="ms-sendhint">${msSendHint(P)}</span>
    </div>
   </section>`;
 }
+
+const msGateOk = P => !P.low || P.gate === "called" || (P.gate === "unreached" && !!String(P.gateWhy || "").trim());
+const msSendHint = P => !P.consent ? "Tick consent to send." : !msGateOk(P) ? (P.gate === "unreached" ? "Say why you're sending without reaching them." : "Call first, then choose what happened.") : "Nothing is really sent in this prototype.";
 
 /* Step 4: provider's answer */
 function msPendingPanel(c, n) {
@@ -367,7 +410,7 @@ function msLogPanel(c) {
 function msFindSvc(c, n, id) {
   const B = msBoard(c);
   const pool = [...(msCfg().needs[n.cat]?.candidates || []), ...(B.added[n.rec.Id] || [])];
-  return pool.find(s => s.id === id) || Object.values(msCfg().needs).flatMap(b => b.candidates).find(s => s.id === id);
+  return pool.find(s => s.id === id) || Object.values(msCfg().needs).flatMap(b => b.candidates).find(s => s.id === id) || (typeof fhSvcById === "function" ? fhSvcById(id) : undefined);
 }
 function msCtx() {
   const c = clients().find(x => x.id === state.sel), B = msBoard(c), needs = msNeeds(c), n = needs.find(x => x.rec.Id === B.open);
@@ -420,8 +463,9 @@ app.addEventListener("click", e => {
     case "undo-turn": { const s = msFindSvc(c, n, b.dataset.svc); delete (B.turned[n.rec.Id] || {})[s.id]; logEvent(c.name, "Turn-down undone", `${n.cat} · "${s.name}"`); break; }
     case "refer": {
       const s = msFindSvc(c, n, b.dataset.svc), M = msMatches(c, n), rank = M.ranked.findIndex(e => e.s.id === s.id) + 1;
-      msOpenReferral(c, n, s); B.panel.rank = s.addedBy ? "added by hand" : String(rank);
-      logEvent(c.name, "Refer chosen", `${n.cat} · "${s.name}" · ${s.addedBy ? "added by hand" : `rank #${rank} of ${M.ranked.length}`}`);
+      msOpenReferral(c, n, s); B.panel.rank = s.addedBy ? "added by hand" : s.newToYou ? "new to you" : String(rank);
+      const conf = msEval(s, c, msFacts(c)).conf;
+      logEvent(c.name, "Refer chosen", `${n.cat} · "${s.name}" · ${s.addedBy ? "added by hand" : s.newToYou ? "new to you" : `rank #${rank} of ${M.ranked.length}`}${conf.low ? ` · low confidence: ${conf.why.join(", ")}` : ""}`);
       renderServices(); document.getElementById("ms-refer").scrollIntoView({ behavior: "smooth", block: "nearest" }); return;
     }
     case "refer-cancel": logEvent(c.name, "Referral cancelled", `${n.cat} · "${msFindSvc(c, n, B.panel.svc).name}"`); B.panel = null; break;
@@ -442,16 +486,21 @@ app.addEventListener("click", e => {
       break;
     }
     case "send": {
-      const P = B.panel; if (!P || !P.consent) return;
+      const P = B.panel; if (!P || !P.consent || !msGateOk(P)) return;
       const s = msFindSvc(c, n, P.svc), draft = document.getElementById("ms-draft").value.trim();
+      const gate = P.low ? { Reasons: P.gateReasons, Choice: P.gate === "called" ? "Called, they have an opening" : "Couldn't reach them, sent anyway", Why: P.gate === "unreached" ? P.gateWhy.trim() : null } : null;
       const it = Store.insert("Interaction", { ClientId: c.id, Date: TODAY_ISO, Type: "Referral sent", Channel: P.method === "call" ? "Phone" : "Message", Template: "Referral request", SourceName: null,
-        Summary: `Referred to ${s.name} (${s.type}) for ${n.cat.toLowerCase()}: ${n.line}. Request sent by ${P.method === "call" ? "phone" : "message"}, awaiting answer. ${first} agreed to share this information.` });
+        Summary: `Referred to ${s.name} (${s.type}) for ${n.cat.toLowerCase()}: ${n.line}. Request sent by ${P.method === "call" ? "phone" : "message"}, awaiting answer. ${first} agreed to share this information.${gate ? ` Low confidence (${gate.Reasons.join(", ")}): ${gate.Choice.toLowerCase()}${gate.Why ? ": " + gate.Why : ""}.` : ""}` });
       const r = Store.insert("Referral", { ClientId: c.id, InteractionId: it.Id, NeedId: n.rec.Id, Partner: s.name, Service: n.cat, ServiceId: s.id, ServiceType: s.type,
-        Status: "Sent", SentDate: TODAY_ISO, SentAt: msNow(), Method: P.method, Consent: true, Draft: draft, Rank: P.rank, Override: P.override });
+        Status: "Sent", SentDate: TODAY_ISO, SentAt: msNow(), Method: P.method, Consent: true, Draft: draft, Rank: P.rank, Override: P.override,
+        ...(gate ? { CallFirst: gate } : {}), ...(s.netPid ? { ProviderId: s.netPid, NewToYou: true } : {}) });
+      if (gate) logEvent(c.name, "Call-first gate", `${n.cat} · "${s.name}" · ${gate.Reasons.join(", ")} · ${gate.Choice}${gate.Why ? " · reason: " + gate.Why : ""}`);
+      /* A call that found an opening is fresh data about the service, so the listing is updated for everyone. */
+      if (P.gate === "called") msSvcState(s).avail = { kind: "openings", text: `Opening confirmed by phone (${fmt(TODAY)})`, updated: TODAY_ISO, simulated: false };
       Store.update("Client", c.id, { Status: "Referral pending" });
       Store.save();
       logEvent(c.name, "Consent recorded", `${n.cat} · ${first} agreed to share with "${s.name}": yes`);
-      logEvent(c.name, P.method === "call" ? "Call logged" : "Referral sent", `${n.cat} · "${s.name}" · by ${P.method} · rank ${P.rank === "override" || P.rank === "added by hand" ? P.rank : "#" + P.rank} · draft ${draft === P.aiDraft ? "not edited" : `edited: ${P.aiDraft.length} → ${draft.length} chars`}`);
+      logEvent(c.name, P.method === "call" ? "Call logged" : "Referral sent", `${n.cat} · "${s.name}" · by ${P.method} · rank ${/^\d+$/.test(P.rank) ? "#" + P.rank : P.rank} · draft ${draft === P.aiDraft ? "not edited" : `edited: ${P.aiDraft.length} → ${draft.length} chars`}`);
       if (!B.sentFirst) { B.sentFirst = true; logEvent(c.name, "First request sent", `${secs(msNow() - B.openedAt)} from opening the board`); }
       B.panel = null; toast(`Request sent to ${s.name}. Awaiting answer.`);
       void r; break;
@@ -547,6 +596,7 @@ app.addEventListener("input", e => {
   if (t.id === "ms-draft" && B.panel) B.panel.draft = t.value;
   if (t.id === "ms-ctext") { const p = document.getElementById("ms-preview"); if (p) p.textContent = t.value; }
   if (t.id === "ms-ovnote") document.getElementById("ms-ovgo").disabled = !t.value.trim();
+  if (t.id === "ms-gatewhy" && B.panel) { B.panel.gateWhy = t.value; document.getElementById("ms-send").disabled = !(B.panel.consent && msGateOk(B.panel)); document.getElementById("ms-sendhint").textContent = msSendHint(B.panel); }
   if (t.id === "ms-q") document.getElementById("ms-results").innerHTML = msResults(c, n, t.value);
 });
 
@@ -562,6 +612,11 @@ app.addEventListener("change", e => {
     B.panel.method = t.value; B.panel.draft = document.getElementById("ms-draft").value;
     logEvent(c.name, "Contact method chosen", `${n.cat} · ${t.value === "call" ? "Call" : "Message"}`);
     renderServices();
+  }
+  if (t.name === "ms-gate" && B.panel) {
+    B.panel.gate = t.value; B.panel.draft = document.getElementById("ms-draft").value;
+    logEvent(c.name, "Call-first choice", `${n.cat} · "${msFindSvc(c, n, B.panel.svc).name}" · ${t.value === "called" ? "I called, they have an opening" : "Couldn't reach them, send anyway"}`);
+    renderServices(); if (t.value === "unreached") document.getElementById("ms-gatewhy").focus();
   }
   if (t.name === "ms-ans" && n.ref) { B.answerKind[n.ref.Id] = t.value; renderServices(); }
 });

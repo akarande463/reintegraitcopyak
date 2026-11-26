@@ -271,6 +271,7 @@ li.skip .dot{border-style:dashed}
 </style>
 <link rel="stylesheet" href="matched-services.css">
 <link rel="stylesheet" href="matched-network.css">
+<link rel="stylesheet" href="failure-handling.css">
 
 <header>
   <div class="wrap top">
@@ -325,7 +326,7 @@ const SAMPLE_CLIENTS=[
  {id:"c1",name:"Marcus Reed",age:41,gender:"Male",locality:"Austin",phone:"773-555-0142",since:"2026-10-02",status:"Referral pending",
   needs:[["Job readiness program","Jobs"],["Steady housing (staying with sister)","Housing"]],
   reminder:{date:"2026-11-11",type:"Referral check",text:"Did Marcus attend the Cara Collective orientation on Tue Nov 10?"},
-  entries:[{date:"2026-11-03",type:"Referral sent",text:"Referred to Cara Collective job readiness. Orientation Tue Nov 10, 9am.",referral:{partner:"Cara Collective",service:"Job readiness"},mt:"Phone call",min:10,svc:["Jobs"]},
+  entries:[{date:"2026-11-03",type:"Referral sent",text:"Referred to Cara Collective job readiness. Orientation Tue Nov 10, 9am.",referral:{partner:"Cara Collective",service:"Job readiness",answered:"2026-11-04",appointment:{date:"2026-11-10",time:"09:00"}},mt:"Phone call",min:10,svc:["Jobs"]},
            {date:"2026-10-20",type:"Second visit",text:"Has state ID now. Wants warehouse work. Sister's place is stable through December.",mt:"In-person visit",min:30,svc:["Jobs","Housing"]},
            {date:"2026-10-02",type:"Intake note",text:"Released Sep 28 from Stateville. Needs ID, job, and SNAP.",mt:"In-person visit",min:55,svc:["ID and documents","Jobs","Benefits"]}]},
  {id:"c2",name:"Tanya Brooks",age:29,gender:"Female",locality:"Roseland",phone:"312-555-0178",since:"2026-09-14",status:"Active",
@@ -360,7 +361,8 @@ function sampleRecords(){
   s.entries.slice().reverse().forEach(e=>{const iid=id("int");
    R.Interaction.push({Id:iid,ClientId:s.id,Date:e.date,Type:e.type,Summary:e.text,Channel:"Sample",Template:null,SourceName:null,MeetingType:e.mt,Minutes:e.min});
    splitMinutes(e.min,e.svc).forEach(([st,m])=>R.Service.push({Id:id("ser"),ClientId:s.id,InteractionId:iid,Date:e.date,ServiceType:st,Minutes:m,MeetingType:e.mt}));
-   if(e.referral)R.Referral.push({Id:id("ref"),ClientId:s.id,InteractionId:iid,Partner:e.referral.partner,Service:e.referral.service,Status:"Sent",SentDate:e.date});
+   if(e.referral)R.Referral.push({Id:id("ref"),ClientId:s.id,InteractionId:iid,Partner:e.referral.partner,Service:e.referral.service,Status:e.referral.appointment?"Accepted":"Sent",SentDate:e.date,
+    ...(e.referral.appointment?{AnswerDate:e.referral.answered,Appointment:e.referral.appointment}:{})});
   });
   R.Goal.push({Id:id("goa"),ClientId:s.id,Text:s.reminder.text,Type:s.reminder.type,DueDate:s.reminder.date,Status:"Open",InteractionId:null});
  });
@@ -545,6 +547,7 @@ function applyDraft(n,d){
  applyStepRules(n);
  if(d.meeting_type)n.log.meeting_type=d.meeting_type;
  n.drafted=true;
+ if(typeof addNoteChecks==="function")addNoteChecks(n);
 }
 /* Real drafting for typed updates to an existing client (backend/README.md).
    Only runs for typed (not audio) updates to an existing client, so new-client
@@ -586,7 +589,7 @@ function render(){
  app.querySelectorAll("[data-aimode]").forEach(b=>b.onclick=()=>{if(!AI.on&&!AI.key_found&&!AI.draft_key_found){toast("No key found. Add a key to backend/.env, then restart the helper.");return}AI.on=!AI.on;logEvent("","AI switch",AI.on?"Real ("+AI.model+")":"Simulated");render();toast(AI.on?"Real AI on.":"Simulated responses on.")});
  app.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>{Store.reset();Files.clear();state.sel="c1";state.newIds.clear();state.note=null;state.update=null;go(state.view==="clients"?"clients":"home");toast("Sample data restored.")});
 }
-const mockbar=()=>`<div class="mockbar"><span class="tag sim">Prototype</span>Sample clients, saved in this browser. ${AI.on?`Voice to text uses the real model <b>${esc(AI.model)}</b>.${AI.note&&AI.note.enabled&&AI.note.key_found&&AI.note.sdk_installed?` The new-client note is drafted by <b>${esc(AI.note.model)}</b>.`:""}${AI.draft_key_found?` Typed updates are drafted by <b>${esc(AI.draft_model||"a real model")}</b>.`:""} Everything else comes from simulated_responses.json.`:"AI output comes from simulated_responses.json."}${AI.helper?`<button class="btn ghost small" type="button" data-aimode aria-pressed="${AI.on}" title="${AI.key_found||AI.draft_key_found?"":"No key found in backend/.env"}">AI: ${AI.on?"Real":"Simulated"} · switch</button>`:""}<button class="btn ghost small" type="button" data-reset>Reset sample data</button></div>`;
+const mockbar=()=>`<div class="mockbar"><span class="tag sim">Prototype</span>Sample clients, saved in this browser. ${AI.on?`Voice to text uses the real model <b>${esc(AI.model)}</b>.${AI.note&&AI.note.enabled&&AI.note.key_found&&AI.note.sdk_installed?` The new-client note is drafted by <b>${esc(AI.note.model)}</b>.`:""}${AI.draft_key_found?` Typed updates are drafted by <b>${esc(AI.draft_model||"a real model")}</b>.`:""} Everything else comes from simulated_responses.json.`:"AI output comes from simulated_responses.json."}${AI.helper?`<button class="btn ghost small" type="button" data-aimode aria-pressed="${AI.on}" title="${AI.key_found||AI.draft_key_found?"":"No key found in backend/.env"}">AI: ${AI.on?"Real":"Simulated"} · switch</button>`:""}<button class="btn ghost small" type="button" data-reset>Reset sample data</button>${typeof demoBar==="function"?demoBar():""}</div>`;
 
 /* ---------- Home ---------- */
 function renderHome(){
@@ -598,6 +601,7 @@ function renderHome(){
   <button class="choice" id="btn-existing" type="button"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 14h8"/></svg></span><b>Existing client</b><span>Open a case file to add a referral response, visit or check-in.</span></button>
   <button class="choice" id="btn-network" type="button"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><b>Matched services</b><span>Find services block by block across Chicago and track every referral to its outcome.</span></button>
  </div>
+ ${typeof fhOutcomesBox==="function"?fhOutcomesBox():""}
  <div class="pane"><h2>Reminders due today and this week <span class="tag warn">${due.length}</span></h2><div class="rem" id="reminders">
    ${due.map(c=>{const dd=dayDiff(c.reminder.date);return`<div class="row"><span class="rd ${dd<0?"due over":dd===0?"due today":""}">${dd<0?"Overdue · ":dd===0?"Today · ":""}${fmt(c.reminder.date)}</span><span><button class="rn" type="button" data-open="${c.id}">${esc(c.name)}</button><span class="rt">${esc(c.reminder.type)}: ${esc(c.reminder.text)}</span></span><button class="btn" type="button" data-logresp="${c.id}">Log response</button></div>`}).join("")||`<p class="muted small">Nothing due this week.</p>`}
  </div></div>`;
@@ -707,7 +711,7 @@ function openUpload(opts){
    const sim=clone(SIM.new_client_intake);
    state.note={...sim.note,transcript:sim.transcript,processing:sim.processing,reminder:sim.reminder,source,rv1:false,startedAt:Date.now(),edits:0,tsOpened:0};state.editing=false;
    state.note.log={meeting_type:sim.note.meeting.type,minutes:source.kind==="audio"?durToMin(source.dur):"",services:[]};
-   applyStepRules(state.note);startRealTx(state.note,source);
+   applyStepRules(state.note);if(typeof addNoteChecks==="function")addNoteChecks(state.note);startRealTx(state.note,source);
    logEvent(sim.note.key_info.name.value,"Upload",source.kind==="audio"?`Voice note ${source.name} (${source.mb.toFixed(1)} MB${source.dur?", "+source.dur:""})`:"Typed notes");
    close();startProcess("note");
   }else{
@@ -819,6 +823,7 @@ function checkFix(f,v,how){
 }
 function sampleBanner(job){
  if(job.realDraft&&job.realDraft.status==="failed")return`<div class="flagitem banner" role="alert" id="sample-banner"><b><span class="ic" aria-hidden="true">⚠</span> The transcript is from your recording, but the note below is the sample note.</b>Note drafting failed: ${esc(job.realDraft.error)} Fill the note from the transcript yourself, or switch to Simulated.</div>`;
+ if(job.drafted&&job.realDraft.replay)return`<p class="small muted" id="draft-note-info" style="margin-bottom:10px"><span class="tag sim">Saved real-AI run</span> This transcript and note are the real models' output from a lab-case run, replayed so the demo works without the helper. The checks below run live. Check every line against the transcript before you approve.</p>`;
  if(job.drafted)return`<p class="small muted" id="draft-note-info" style="margin-bottom:10px">Drafted by ${esc(job.realDraft.model)} from your recording. Check every line against the transcript before you approve.</p>`;
  if(!(job.real&&job.real.status==="failed"))return"";
  return`<div class="flagitem banner" role="alert" id="sample-banner"><b><span class="ic" aria-hidden="true">⚠</span> This draft is from the sample transcript, not your recording.</b>The real model failed: ${esc(job.real.error)} Check every field against the recording yourself, or switch to Simulated.</div>`;
@@ -1090,7 +1095,8 @@ function renderNote(){
  const open=n.flags.filter(f=>!f.resolved).length;
  ensureKeys(n);
  const fld=d=>{const key=d.key,label=d.label,f=k[key];const flagged=n.flags.some(x=>x.field===key&&!x.resolved);const mark=flagged?`<span aria-hidden="true">⚠ </span>`:"";
-  const head=`<span>${mark}${esc(label)}${flagged?" (to confirm)":""} ${f.by?"":srcBtn(f.source,L,S)}</span>`;
+  const checking=n.flags.some(x=>x.field===key&&!x.resolved&&x.kind==="Check");
+  const head=`<span>${mark}${esc(label)}${flagged?" (to confirm)":""}${checking?` <span class="tag warn fh-tag">Check</span>`:""} ${f.by?"":srcBtn(f.source,L,S)}</span>`;
   const heard=f.heard_as&&f.value&&f.heard_as!==f.value?`<span class="heardas">Heard as “${esc(f.heard_as)}”</span>`:"";
   const ver=f.verified&&f.value&&f.verified.value===f.value?`<span class="verified" data-verified="${key}"><span aria-hidden="true">✓ </span>Verified · ${esc(f.verified.docs.join(", "))}</span>`:"";
   const opts=key==="gender"?(n.flags.find(x=>x.field==="gender")?.options||["Male","Female","Non-binary","Prefers not to say"]):d.options;
@@ -1118,18 +1124,18 @@ function renderNote(){
    <span>Due: ${state.editing?`<input data-due="${i}" value="${esc(x.due)}" placeholder="not said" aria-label="Due" size="10">`:(x.due?esc(x.due):"not said")}</span>
    ${x.addresses.length?`<span>Addresses: ${esc(x.addresses.join(", "))}</span>`:""}
    ${x.kind==="added"?`<span class="tag info">Added by case manager</span>`:x.kind==="suggested"?`<span>Evidence: need ${ev}</span>`:ev?`<span>Agreed at ${ev}</span>`:""}
-   ${x.creates_reminder&&x.ticked?`<span class="tag info">Creates reminder</span>`:""}</span>
+   ${x.creates_reminder&&x.ticked?`<span class="tag info">Creates reminder</span>`:""}${n.flags.some(f=>f.kind==="Check"&&!f.resolved&&f.step===x.text)?`<span class="tag warn fh-tag">Check due date</span>`:""}</span>
    ${needsWhy(n,x)?`<span class="why ${x.why?"":"missing"}"><span aria-hidden="true">⚠ </span>Urgent need. Why not now? <select data-why="${i}" aria-label="Reason for declining"><option value="">Choose a reason…</option>${WHY.map(o=>`<option ${x.why===o?"selected":""}>${o}</option>`).join("")}</select></span>`:""}</li>`};
  const noneNeeded=!agreedIdx.length;
  const why=n.next_steps.map((x,i)=>i).filter(i=>needsWhy(n,n.next_steps[i]));
  const noWhy=why.filter(i=>!n.next_steps[i].why).length;
- const canSave=()=>!open&&n.rv1&&(!noneNeeded||n.noneConfirmed)&&!untyped&&n.log.minutes>0&&!noWhy;
+ const canSave=()=>!open&&n.rv1&&(!noneNeeded||n.noneConfirmed)&&!untyped&&n.log.minutes>0&&!noWhy&&fhKeyFactsOk(n);
  const txFailed=!!((n.real&&n.real.status==="failed")||(n.realDraft&&n.realDraft.status==="failed"));
  app.innerHTML=mockbar()+`
  <div class="notehead"><div><p class="small muted">New client · ${esc(n.template)}</p><h1>Client note: ${esc(k.name.value||"New client")}</h1></div>
   <div class="btns"><button class="btn" id="btn-edit" type="button" aria-pressed="${state.editing}">${state.editing?"Done editing":"Edit note"}</button></div></div>
  ${sampleBanner(n)}
- <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>!f.resolved&&f.fix==="choose"?chooseFlag(f):f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
+ <div class="flagbar" id="flags" aria-label="Flags">${n.flags.map(f=>f.kind==="Check"?fhFlag(n,f):!f.resolved&&f.fix==="choose"?chooseFlag(f):f.resolved?`<div class="flagitem res"><div><b><span class="ic" aria-hidden="true">✓</span> Resolved · ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> Set to ${esc(f.value||"Not stated")}${f.how?" · "+esc(f.how):""} · entered by ${ME}</div></div>`:`<div class="flagitem"><div><b><span class="ic" aria-hidden="true">⚠</span> ${esc(f.kind)}: ${esc(fieldLabel(n,f.field))}</b> ${esc(f.text)}</div>${f.kind==="Unclear"&&f.placeholder?`<div class="small">Heard in recording: <b class="mono">${esc(f.placeholder)}</b> ${srcBtn(k[f.field]&&k[f.field].source,L,S)}</div>`:""}<div class="row">${f.fix==="select"?`<select id="fx-${f.id}" aria-label="${esc(f.field)}"><option value="">Choose…</option>${f.options.map(o=>`<option ${f.draft===o?"selected":""}>${esc(o)}</option>`).join("")}</select>`:`<input id="fx-${f.id}" placeholder="${esc(f.placeholder||"")}" aria-label="${esc(f.field)}" value="${esc(f.draft||"")}">`}${f.kind==="Missing"?`<select id="fxs-${f.id}" aria-label="Where did this come from?"><option value="">Where did this come from?</option>${SOURCES.map(o=>`<option ${f.drafthow===o?"selected":""}>${o}</option>`).join("")}</select>`:""}<button class="btn" type="button" data-fix="${f.id}">Save</button>${f.warn?`<button class="btn" type="button" data-fixforce="${f.id}">Save anyway</button>`:""}</div>${f.err?`<p class="fxerr" role="alert" id="fxe-${f.id}">${esc(f.err)}</p>`:""}</div>`).join("")}</div>
  <div class="notegrid">
   ${txPane(L,S,n.drafted)}
   <div class="pane note ${state.editing?"editing":""}" id="note">
@@ -1153,6 +1159,7 @@ function renderNote(){
     ${logBox(n.log,false)}
     ${noneNeeded?`<label class="chk"><input type="checkbox" id="rv-none" ${n.noneConfirmed?"checked":""}> I confirm no next steps were agreed in this meeting</label>`:""}
     <div class="auto ${noWhy?"n":"y"}" id="chk-why"><i aria-hidden="true">${noWhy?"⚠":"✓"}</i><span>${noWhy?noWhy+" urgent suggestion"+(noWhy>1?"s":"")+" declined without a reason":"Every urgent need has a step or a reason"}</span></div>
+    ${fhKeyFactsBox(n)}
     <label class="chk"><input type="checkbox" id="rv1" ${n.rv1?"checked":""}> ${esc(reviewText(S))}</label>
     <div id="fastbox"></div>
    </div>
@@ -1173,7 +1180,7 @@ function renderNote(){
   syncNote();const before=k[f.field].value;const val=how==="Not known"?"":v;
   f.resolved=true;f.value=val;f.how=how;f.warn=false;k[f.field].value=val;k[f.field].by=ME;k[f.field].how=how||(force?"Differs from recording":"");
   logEvent(k.name.value,"Flag resolved",`${f.kind} ${f.field}: "${before||"blank"}" → "${val||"Not stated"}" · entered by ${ME}${how?" · source: "+how:""}${force?" · differs from recording (saved anyway)":""}`);renderNote()};
- wireDocs(n);
+ wireDocs(n);fhWireNote(n,canSave);
  app.querySelectorAll("[data-addfields]").forEach(b=>b.onclick=()=>{const e=document.getElementById("btn-edit");if(e&&!state.editing)e.click()});
  app.querySelectorAll("[data-fix]").forEach(b=>b.onclick=()=>fixFlag(n.flags.find(x=>x.id===b.dataset.fix),false));
  app.querySelectorAll("[data-fixforce]").forEach(b=>b.onclick=()=>fixFlag(n.flags.find(x=>x.id===b.dataset.fixforce),true));
@@ -1218,6 +1225,7 @@ function renderNote(){
   n.next_steps.filter(x=>x.kind==="suggested").forEach(x=>logEvent(nm,x.ticked?"Suggestion accepted":"Suggestion declined",x.text+(!x.ticked&&x.why?` · reason: ${x.why}`:"")));
   n.next_steps.filter(x=>x.kind==="agreed"&&!x.ticked).forEach(x=>logEvent(nm,"Agreed step not saved",x.text));
   if(makesReminder)logEvent(nm,"Reminder created",`${r.type}, ${fmt(parseDate(r.date))}: ${r.text}`);
+  logEvent(nm,"Key facts confirmed",fhKeyFacts(n).map(([,l,v])=>`${l}: ${v}`).join(" · "));
   logEvent(nm,"Note approved",`${secs(Date.now()-n.startedAt)} from upload to approval · ${n.edits} edit${n.edits===1?"":"s"} · ${n.tsOpened} time stamp${n.tsOpened===1?"":"s"} opened · sample transcript banner: ${txFailed?"showing":"no"}${n.fastOk?" · fast approval confirmed":""}`);
   Store.save();
   state.sel=c.Id;state.newIds.add(c.Id);state.editing=false;go("services");toast(`Saved. ${nm} is now in your clients. Next: match services.`);
@@ -1315,3 +1323,4 @@ fetch("simulated_responses.json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw new
 </script>
 <script src="matched-services.js"></script>
 <script src="matched-network.js"></script>
+<script src="failure-handling.js"></script>
